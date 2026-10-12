@@ -3,6 +3,7 @@ import DescriptionEditor from './DescriptionEditor.jsx'
 import { parseLevel, formatLevel, effectiveDescription, validateName, newSkill, changeLevel } from '../skillLogic.js'
 import { t } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
+import './skills.css'
 
 function SkillRow({ skill, skills, onChange, onDelete }) {
   const [name, setName] = useState(skill.name)
@@ -32,7 +33,7 @@ function SkillRow({ skill, skills, onChange, onDelete }) {
   }
 
   return (
-    <li>
+    <li className="skill-row">
       <input value={name} onChange={(e) => setName(e.target.value)} />
       <button onClick={saveName}>{t('common.rename')}</button>
       {' '}{t('skills.level')}{' '}<input size="5" inputMode="decimal" value={level} onChange={(e) => setLevel(e.target.value)} />

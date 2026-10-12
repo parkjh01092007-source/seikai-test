@@ -45,4 +45,8 @@
   .settings form.fav-add select { flex: 1 1 0; min-width: 0; max-width: 100%; }
   .settings form.fav-add button { flex: none; }
   .settings form.fav-add .error { flex: 1 1 100%; }
+  /* お気に入りの一覧の「上へ」「下へ」「解除」：間は 8px（決まり1）。li の display は変えない（番号を残す） */
+  .settings li.fav-item > button { margin: 2px var(--space) 2px 0; }
+  /* 書き出し・読み込み：間は 8px */
+  .settings .backup-row { display: flex; flex-wrap: wrap; gap: var(--space); }
 }

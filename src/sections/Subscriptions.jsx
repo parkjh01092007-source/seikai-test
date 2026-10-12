@@ -6,6 +6,7 @@ import {
 } from '../ledgerLogic.js'
 import { today } from '../today.js'
 import { t } from '../text.js'
+import { usePhone } from '../layout.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 
 const EMPTY = { name: '', memo: '', amount: '', day: '', debitId: '', creditId: '' }
@@ -14,6 +15,7 @@ const EMPTY = { name: '', memo: '', amount: '', day: '', debitId: '', creditId: 
 // currentIds は編集フォームだけが渡す（その定期支払いが今使っている科目を選択肢に残す）
 function SubscriptionForm({ accounts, initial, submitLabel, onSubmit, onCancel, currentIds, clearOnSuccess }) {
   const options = entryAccountOptions(accounts, currentIds)
+  const phone = usePhone()
   const [f, setF] = useState(initial)
   const [error, setError] = useState('')
   const set = (k) => (v) => setF((s) => ({ ...s, [k]: v }))
@@ -35,8 +37,10 @@ function SubscriptionForm({ accounts, initial, submitLabel, onSubmit, onCancel, 
       <label>{t('subscriptions.every')}{' '}<input inputMode="numeric" className="day" aria-label={t('subscriptions.dayLabel')} value={f.day} onChange={(e) => set('day')(e.target.value)} />{' '}{t('subscriptions.dayUnit')}</label>
       <AccountSelect label={t('common.debit')} value={f.debitId} onChange={set('debitId')} options={options} />
       <AccountSelect label={t('common.credit')} value={f.creditId} onChange={set('creditId')} options={options} />
-      <button>{submitLabel}</button>
-      {onCancel && <button type="button" onClick={onCancel}>{t('common.cancel')}</button>}
+      {/* スマホの形の編集は、仕訳の編集画面（下から出る画面）と同じ左右の順番：左「やめる」、右「保存」（spec-mobile.md 11.3）。PC は今のまま（保存 → やめる） */}
+      {phone && onCancel && <button type="button" className="sub-cancel" onClick={onCancel}>{t('common.cancel')}</button>}
+      <button className="sub-submit">{submitLabel}</button>
+      {!phone && onCancel && <button type="button" onClick={onCancel}>{t('common.cancel')}</button>}
       {error && <span className="error">{error}</span>}
     </form>
   )

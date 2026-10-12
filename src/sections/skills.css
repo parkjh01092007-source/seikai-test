@@ -1,0 +1,6 @@
+/* スキルの画面の、スマホの形の最小限（spec-mobile.md 11.4。スキルの画面は AI の作業で作り直す予定なので、これ以上は作り込まない）。条件は index.css の「スマホの形」・layout.js の PHONE_QUERY と同じ（変えるときは全部） */
+@media screen and (max-width: 959.98px), screen and (pointer: coarse) and (hover: none) {
+  /* 横に並んだボタンの間は 8px（決まり1）。折り返してもよい。li の display は変えない（黒丸を残す） */
+  .skill-row button { margin-top: 2px; margin-bottom: 2px; }
+  .skill-row button + button { margin-left: var(--space); }
+}

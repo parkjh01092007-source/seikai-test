@@ -17,4 +17,9 @@
   .report .card-button > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   /* 個別ページの「一覧へ戻る」：ボタンの見た目（中身は今のリンクのまま） */
   .report .back a { display: inline-flex; align-items: center; min-height: 44px; box-sizing: border-box; padding: 0 calc(var(--space) * 2); border: 1px solid var(--color-muted); border-radius: 3px; text-decoration: none; }
+  /* カードを追加する欄（spec-mobile.md 11.3）：カード名は幅いっぱい、日の欄は 2桁の幅（定期支払い・設定のクレカの欄と同じ 3em）、決定のボタンは幅いっぱいの1行 */
+  .report .card-form > input:not(.day) { flex: 1 1 100%; min-width: 0; }
+  .report .card-form input.day { width: 3em; }
+  .report .card-form > button { flex: 1 1 100%; }
+  .report .card-form > .error { flex: 1 1 100%; }
 }

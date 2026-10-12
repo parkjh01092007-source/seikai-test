@@ -22,4 +22,7 @@
   .budgets #budget-add form select, .budgets #budget-add form input { flex: 1 1 calc(50% - var(--space)); min-width: 0; }
   .budgets #budget-add form label { display: flex; flex: 1 1 100%; align-items: center; gap: var(--space); }
   .budgets #budget-add form label input { flex: 1; }
+  /* 決定のボタン「追加」は幅いっぱいの1行（11.3） */
+  .budgets #budget-add form > button { flex: 1 1 100%; }
+  .budgets #budget-add form > .error { flex: 1 1 100%; }
 }

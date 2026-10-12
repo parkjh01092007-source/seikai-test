@@ -11,4 +11,9 @@
   /* 空のとき（読み上げの場所だけ）は、場所を取らず、display: none にもしない */
   .adjustment form { position: relative; }
   .adjustment .current:empty { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  /* 「実際の残高」は幅いっぱい（入力欄は残りの幅、単位は右）。決定のボタン「調整する」は幅いっぱいの1行（spec-mobile.md 11.3） */
+  .adjustment form > label { flex: 1 1 100%; display: flex; align-items: center; gap: var(--space); }
+  .adjustment form > label > input { flex: 1 1 0; min-width: 0; }
+  .adjustment form > button { flex: 1 1 100%; }
+  .adjustment form > .error, .adjustment form > .note:not(.current) { flex: 1 1 100%; }
 }

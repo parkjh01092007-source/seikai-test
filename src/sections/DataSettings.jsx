@@ -19,7 +19,7 @@ const saveFirstButton = (openPanel) => (!isSupported() ? null : <button type="bu
 export function BackupSettings({ onExport, onImport }) {
   const fileRef = useRef(null)
   return (
-    <section>
+    <section className="backup-row">
       <button type="button" onClick={onExport}>{t('app.export')}</button>{' '}
       <button type="button" onClick={() => fileRef.current?.click()}>{t('app.import')}</button>
       <input ref={fileRef} type="file" accept=".json" onChange={onImport} hidden />

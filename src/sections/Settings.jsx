@@ -118,7 +118,7 @@ function FavoriteSide({ side, data, update }) {
             const account = accountOf(id)
             if (!account) return null
             return (
-              <li key={id} className={account.active ? '' : 'inactive'}>
+              <li key={id} className={account.active ? 'fav-item' : 'fav-item inactive'}>
                 <span className="name">{account.name}{!account.active && <span className="note"> {t('common.inactive')}</span>}</span>
                 <button type="button" disabled={i === 0} onClick={() => save(moveFavorite(settings, side, id, -1))}>{t('settings.up')}</button>
                 <button type="button" disabled={i === registered.length - 1} onClick={() => save(moveFavorite(settings, side, id, 1))}>{t('settings.down')}</button>

@@ -14,6 +14,10 @@
   .subscriptions form > input[aria-label]:not([inputmode]) { flex: 1 1 100%; min-width: 0; }
   .subscriptions form > input[inputmode] { flex: 1 1 0; min-width: 0; }
   .subscriptions form > label { flex: 0 0 auto; display: flex; align-items: center; gap: var(--space); }
+  /* 決定のボタン（登録）は幅いっぱいの1行。編集の「やめる」「保存」は、2つで1行を半分ずつ（間 8px）。高さは、仕訳の編集画面の「やめる」「保存」と同じ 48px（entries.css の .sheet-actions button） */
+  .subscriptions form > .sub-submit { flex: 1 1 100%; min-width: 0; }
+  .subscriptions form > .sub-cancel, .subscriptions form > .sub-cancel + .sub-submit { flex: 1 1 calc(50% - var(--space) / 2); min-width: 0; min-height: 48px; white-space: nowrap; }
+  .subscriptions form > .error { flex: 1 1 100%; }
   /* 一覧のボタン：間は 8px。「削除」は、仕訳のカードの削除（entries.css の .card-actions .danger）と同じエラーの色の枠 */
   .subscriptions .sub-actions { display: flex; flex-wrap: wrap; gap: var(--space); }
   .subscriptions .sub-actions .danger { border: 1px solid var(--color-error); color: var(--color-error); background: transparent; }
