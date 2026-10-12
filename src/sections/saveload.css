@@ -29,6 +29,9 @@
   .saveload .slot.empty .actions { margin-top: 0; }
   .saveload .slot.empty form { flex: 1 0 100%; margin-top: 0; }
   .saveload .foot { display: flex; justify-content: flex-end; margin-top: var(--space); }
+  /* 画面の頭：「閉じる」は2行に折れない。入りきらないときは、見出しの方を折り返す（10.3 の 5） */
+  .saveload .head h2 { flex: 1 1 0; min-width: 0; overflow-wrap: anywhere; }
+  .saveload .head button { flex: none; white-space: nowrap; }
   /* 「設定へ」のリンクは 44px */
   .saveload a { display: inline-flex; align-items: center; min-height: 44px; }
 }

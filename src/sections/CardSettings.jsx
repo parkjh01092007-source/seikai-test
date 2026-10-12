@@ -20,11 +20,11 @@ function CardRow({ account, data, update }) {
   }
 
   return (
-    <li className={account.active ? '' : 'inactive'}>
+    <li className={account.active ? 'card-row' : 'card-row inactive'}>
       <form onSubmit={save}>
         <strong>{account.name}</strong>{!account.active && <span className="note"> {t('common.inactive')}</span>}{' '}
-        <label>{t('card.closingDay')}{' '}<input inputMode="numeric" aria-label={t('cardSettings.closingAria', { name: account.name })} size={3} value={closing} onChange={(e) => setClosing(e.target.value)} />{' '}{t('card.dayUnit')}</label>{' '}
-        <label>{t('card.payDay')}{' '}<input inputMode="numeric" aria-label={t('cardSettings.payAria', { name: account.name })} size={3} value={pay} onChange={(e) => setPay(e.target.value)} />{' '}{t('card.dayUnit')}</label>{' '}
+        <label><span className="lbl">{t('card.closingDay')}</span>{' '}<input inputMode="numeric" className="day" aria-label={t('cardSettings.closingAria', { name: account.name })} size={3} value={closing} onChange={(e) => setClosing(e.target.value)} />{' '}{t('card.dayUnit')}</label>{' '}
+        <label><span className="lbl">{t('card.payDay')}</span>{' '}<input inputMode="numeric" className="day" aria-label={t('cardSettings.payAria', { name: account.name })} size={3} value={pay} onChange={(e) => setPay(e.target.value)} />{' '}{t('card.dayUnit')}</label>{' '}
         <button>{t('common.save')}</button>
         {error && <span className="error"> {error}</span>}
         {message && <span className="note"> {message}</span>}
@@ -39,7 +39,7 @@ export default function CardSettings({ data, update }) {
     <section>
       <p className="note">{t('cardSettings.note')}</p>
       {cards.length === 0 ? <p className="note">{t('card.empty')}</p> : (
-        <ul>
+        <ul className="card-list">
           {cards.map((a) => <CardRow key={a.id} account={a} data={data} update={update} />)}
         </ul>
       )}

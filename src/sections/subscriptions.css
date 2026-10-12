@@ -7,3 +7,14 @@
 .subscriptions li { border: 1px solid var(--color-border); padding: var(--space); margin-bottom: var(--space); }
 .subscriptions li.inactive { color: var(--color-muted); }
 .subscriptions li form { margin: 0; }
+
+/* スマホの形（spec-mobile.md 10.3）。条件は index.css の「スマホの形」・layout.js の PHONE_QUERY と同じ（変えるときは全部） */
+@media screen and (max-width: 959.98px), screen and (pointer: coarse) and (hover: none) {
+  /* 名前・メモは幅いっぱい。金額は残りの幅いっぱい、「毎月 ○ 日」は右（日の欄は 2桁の幅 = input.day の 3em） */
+  .subscriptions form > input[aria-label]:not([inputmode]) { flex: 1 1 100%; min-width: 0; }
+  .subscriptions form > input[inputmode] { flex: 1 1 0; min-width: 0; }
+  .subscriptions form > label { flex: 0 0 auto; display: flex; align-items: center; gap: var(--space); }
+  /* 一覧のボタン：間は 8px。「削除」は、仕訳のカードの削除（entries.css の .card-actions .danger）と同じエラーの色の枠 */
+  .subscriptions .sub-actions { display: flex; flex-wrap: wrap; gap: var(--space); }
+  .subscriptions .sub-actions .danger { border: 1px solid var(--color-error); color: var(--color-error); background: transparent; }
+}

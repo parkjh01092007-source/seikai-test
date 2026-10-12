@@ -33,4 +33,16 @@
   /* 「日付の開き方」：スマホの幅も PC の幅も、文字が上、選択ボックスが下にそろえる */
   .settings .open-mode { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; margin: 0 0 var(--space); }
   .settings .open-mode select { max-width: 100%; }
+  /* 照会 → クレカ（10.3 の 3）：「・」なし。1行目にカード名、2行目に締め日、3行目に引き落とし日と「保存」。入力欄の左端は、ラベルの幅をそろえてそろえる。日の欄は 2桁の幅（定期支払いの日の欄と同じ 3em） */
+  .settings .card-list { list-style: none; padding: 0; margin: var(--space) 0; }
+  .settings .card-row form > strong { flex: 0 1 auto; min-width: 0; overflow-wrap: anywhere; }
+  .settings .card-row form > label { display: flex; align-items: center; gap: var(--space); }
+  .settings .card-row form > label:first-of-type { flex: 1 1 100%; }
+  .settings .card-row .lbl { display: inline-block; min-width: 6.5em; }
+  .settings .card-row input.day { width: 3em; flex: none; }
+  .settings .card-row form > .error, .settings .card-row form > .note:not(:nth-child(2)) { flex: 1 1 100%; }
+  /* 記帳 → お気に入り（10.3 の 4）：選択ボックスと「追加」を1行。選択ボックスは残りの幅（長い科目名は箱の中で切れる。幅は広げない） */
+  .settings form.fav-add select { flex: 1 1 0; min-width: 0; max-width: 100%; }
+  .settings form.fav-add button { flex: none; }
+  .settings form.fav-add .error { flex: 1 1 100%; }
 }

@@ -66,10 +66,10 @@ function SubscriptionRow({ sub, accounts, currency, editing, onEdit, onCancel, o
       </div>
       {sub.memo && <div className="note">{sub.memo}</div>}
       <div className="note">{t('subscriptions.lastMonth', { month: sub.lastMonth })}</div>
-      <div>
+      <div className="sub-actions">
         <button onClick={onEdit}>{t('common.edit')}</button>
         <button onClick={onToggle}>{sub.active ? t('common.disable') : t('common.enable')}</button>
-        <button onClick={onDelete}>{t('common.delete')}</button>
+        <button className="danger" onClick={onDelete}>{t('common.delete')}</button>
       </div>
     </li>
   )

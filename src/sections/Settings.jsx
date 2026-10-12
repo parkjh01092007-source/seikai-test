@@ -128,7 +128,7 @@ function FavoriteSide({ side, data, update }) {
           })}
         </ol>
       )}
-      <form onSubmit={add}>
+      <form className="fav-add" onSubmit={add}>
         <select aria-label={t('settings.addAria', { side: sideName })} value={addId} onChange={(e) => setAddId(e.target.value)}>
           <option value="">{t('settings.chooseAdd')}</option>
           {groupByType(candidates).map((g) => (
