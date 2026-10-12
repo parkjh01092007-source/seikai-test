@@ -1,0 +1,27 @@
+.ledger { font-size: var(--font-size); color: var(--color-text); }
+.ledger h3 { margin: calc(var(--space) * 2) 0 var(--space); }
+.ledger ul { list-style: none; padding: 0; margin: 0; }
+.ledger li { border: 1px solid var(--color-border); padding: var(--space); margin-bottom: var(--space); }
+.ledger li.inactive { color: var(--color-muted); }
+.ledger .error { color: var(--color-error); }
+.ledger .note { color: var(--color-muted); font-size: 0.85em; }
+.ledger form { display: flex; gap: var(--space); flex-wrap: wrap; align-items: center; margin-bottom: var(--space); }
+
+/* ---- スマホの形（spec-mobile.md 第6章。layout.js の PHONE_QUERY・entries.css などと同じ条件。変えるときは全部） ----
+   一覧は科目名と役割の1行。押すと編集の欄が開く */
+@media screen and (max-width: 959.98px), screen and (pointer: coarse) and (hover: none) {
+  .ledger ul.accts li.acct { padding: 0; }
+  .ledger .acct-toggle { display: flex; align-items: center; gap: var(--space); width: 100%; box-sizing: border-box; padding: 0 var(--space); border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+  .ledger .acct-toggle .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ledger .acct-toggle .role { flex: none; color: var(--color-muted); font-size: 14px; white-space: nowrap; }
+  .ledger li.inactive .acct-toggle .nm { color: var(--color-muted); }
+  .ledger .acct-detail { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space); padding: 0 var(--space) var(--space); }
+  .ledger .acct-detail[hidden] { display: none; }
+  .ledger .acct-detail > input { flex: 1 1 100%; min-width: 0; }
+  .ledger .acct-detail > .note, .ledger .acct-detail > .error { flex: 1 1 100%; margin: 0; }
+  .ledger .acct-detail > .living-month { flex: 1 1 100%; display: flex; flex-direction: column; gap: 2px; color: var(--color-muted); font-size: 13px; } /* 作業22：生活費の月（収益の科目） */
+  .ledger .acct-detail > .living-month select { color: var(--color-text); font-size: max(16px, 1em); }
+  .ledger form select, .ledger form input { min-width: 0; }
+  .ledger form input { flex: 1 1 8em; }
+  .ledger form .error { flex: 1 1 100%; }
+}

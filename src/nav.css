@@ -1,0 +1,151 @@
+/* ホーム・縦タブ・レイアウト。色・余白・文字の大きさは index.css の変数だけを使う */
+:root {
+  --sidetabs-band: 44px; /* 畳んだ縦タブの幅（☰ だけ。押せる場所は 44px 以上） */
+  --sidetabs-width: 12rem; /* 開いた縦タブの幅 */
+  --tap: 44px; /* 押せる場所の高さ（最低） */
+}
+
+.home { text-align: center; color: var(--color-text); font-size: var(--font-size); }
+.home .entries { list-style: none; padding: 0; margin: calc(var(--space) * 3) 0; display: flex; justify-content: center; gap: calc(var(--space) * 2); flex-wrap: wrap; }
+.home .entry-button { display: block; min-width: 8em; padding: calc(var(--space) * 2) calc(var(--space) * 3); border: 1px solid var(--color-border); background: var(--color-bg); color: var(--color-text); text-decoration: none; }
+
+/* 全体：縦タブは画面の左端（高さいっぱい）。右は、書き出し・読み込みのボタン（画面の右上）と、今の最大幅の中身 */
+.frame { display: flex; min-height: 100vh; }
+.main-col { flex: 1; min-width: 0; }
+.content { max-width: 800px; margin: 0 auto; padding: var(--space); }
+
+/* 縦タブ。畳んだときは、左上の ☰ だけが見える（帯の背景・縦線はない。☰ の幅は、中身と重ならないよう場所だけ取る）。
+   PC：☰ に乗せる／キーボードで移動すると、パネル（背景と枠つき）が中身に重なって開く。固定（pinned）すると場所が広がり、中身が右にずれる。
+   スマホの形（下の @media。layout.js の PHONE_QUERY と同じ条件）：☰ を押すと、パネルが画面の上に重なって開く（中身は動かない）。外側（.scrim）を押すと閉じる */
+.sidetabs { position: sticky; top: 0; align-self: flex-start; flex: none; width: var(--sidetabs-band); height: 100vh; z-index: 10; color: var(--color-text); font-size: var(--font-size); }
+.sidetabs.pinned { width: var(--sidetabs-width); }
+.sidetabs .toggle { position: absolute; top: 0; left: 0; z-index: 12; width: var(--sidetabs-band); height: var(--sidetabs-band); border: none; background: transparent; color: var(--color-text); font-size: 1.25em; cursor: pointer; }
+.sidetabs .panel { position: absolute; top: 0; left: 0; bottom: 0; z-index: 11; box-sizing: border-box; width: var(--sidetabs-width); padding: var(--sidetabs-band) var(--space) var(--space); display: flex; flex-direction: column; overflow-y: auto; background: var(--color-bg); border-right: 1px solid var(--color-border); }
+.sidetabs .panel nav { flex: 1; }
+/* 上：「正解」と「最後のセーブ」 */
+.sidetabs .menu-head { display: flex; flex-direction: column; gap: calc(var(--space) / 2); padding: var(--space); border-bottom: 1px solid var(--color-border); }
+.sidetabs .menu-title { font-size: 1.25em; font-weight: bold; }
+.sidetabs .menu-last { color: var(--color-muted); font-size: 0.85em; }
+.sidetabs h3 { margin: var(--space) 0 calc(var(--space) / 2); color: var(--color-muted); font-size: 0.85em; font-weight: normal; }
+.sidetabs ul { list-style: none; padding: 0; margin: 0; }
+.sidetabs a { display: flex; align-items: center; min-height: var(--tap); box-sizing: border-box; padding: 0 var(--space); color: var(--color-text); text-decoration: none; }
+.sidetabs a[aria-current='page'] { font-weight: bold; border-left: 2px solid var(--color-text); }
+/* 下：「セーブ」「ロード」「ホームへ」を横に並べる */
+.sidetabs .bottom { display: flex; gap: var(--space); margin-top: calc(var(--space) * 2); padding-top: var(--space); border-top: 1px solid var(--color-border); }
+.sidetabs .bottom > * { flex: 1; min-width: 0; min-height: var(--tap); box-sizing: border-box; display: flex; align-items: center; justify-content: center; padding: 0 calc(var(--space) / 2); border: none; background: transparent; color: var(--color-text); font: inherit; font-size: 0.9em; text-align: center; cursor: pointer; }
+
+/* スマホの形（幅 960px 未満、または指だけで操作する機械。layout.js の PHONE_QUERY・index.css と同じ条件。変えるときは3か所とも）：
+   縦タブは、画面の上の細い帯（☰、今の画面の名前、知らせ）になり、中身は横幅を全部使う。☰ を押すと、パネルが画面の上に重なって開く。
+   パネルは画面の左から、外側を押す場所（56px）を残す */
+@media screen and (max-width: 959.98px), screen and (pointer: coarse) and (hover: none) {
+  .frame { flex-direction: column; }
+  .sidetabs { display: flex; align-items: center; gap: var(--space); align-self: stretch; box-sizing: border-box; width: 100%; height: var(--sidetabs-band); padding-right: var(--space); background: var(--color-bg); border-bottom: 1px solid var(--color-border); }
+  .sidetabs .toggle { position: relative; flex: none; }
+  .sidetabs .bar-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: bold; }
+  .sidetabs .bar-notice { flex: none; }
+  .sidetabs .scrim { position: fixed; inset: 0; z-index: 10; background: var(--color-backdrop); }
+  .sidetabs .bottom > * { font-size: 16px; }
+  .sidetabs .panel { position: fixed; width: min(var(--menu-width-phone, 20rem), calc(100vw - 56px)); }
+}
+
+/* ---- プリセットのメニュー（共通の規則は :where で特異度を 0 にして、下のプリセットごとの規則が必ず勝つようにする）（spec-design.md 第4・8章。見本は design-ref の phone・pc）。基本は上のまま。
+   色の値は themes.css の --menu-*（--menu-rgb に --menu-opacity をかけた地、文字、線、印など）。形はここ。飾り・背景の絵・書体は、まだ ---- */
+:where(:root[data-theme]:not([data-theme='basic'])) .sidetabs .scrim { background: var(--menu-scrim, var(--color-backdrop)); }
+:where(:root[data-theme]:not([data-theme='basic'])) .sidetabs .toggle { border: 1px solid var(--color-field-border); border-radius: 3px; }
+:where(:root[data-theme]:not([data-theme='basic'])) .sidetabs.open .toggle { color: var(--menu-text); border-color: var(--menu-toggle-line); }
+:where(:root[data-theme]:not([data-theme='basic'])) .sidetabs .panel {
+  background: rgb(var(--menu-rgb) / var(--menu-opacity, 1)); color: var(--menu-text);
+  -webkit-backdrop-filter: blur(var(--menu-blur, 0px)) saturate(var(--menu-saturate, 1)); backdrop-filter: blur(var(--menu-blur, 0px)) saturate(var(--menu-saturate, 1));
+  border-right: 1px solid var(--menu-edge, transparent); box-shadow: var(--menu-glow, none);
+}
+/* 上の「正解」と「最後のセーブ」は、☰ の右に並べる */
+:where(:root[data-theme]:not([data-theme='basic'])) .sidetabs .menu-head { flex-direction: row; align-items: center; gap: var(--space); min-height: var(--sidetabs-band); margin-top: calc(var(--sidetabs-band) * -1); padding: 0 var(--space) 0 calc(var(--sidetabs-band) + var(--space)); border-bottom: 1px solid var(--menu-line); }
+:where(:root[data-theme]:not([data-theme='basic'])) .sidetabs .menu-last { color: var(--menu-muted); font-size: 0.7em; line-height: 1.6; }
+:where(:root[data-theme]:not([data-theme='basic'])) .sidetabs h3 { color: var(--menu-muted); }
+:where(:root[data-theme]:not([data-theme='basic'])) .sidetabs a { color: var(--menu-text); border-left: 0; }
+:where(:root[data-theme]:not([data-theme='basic'])) .sidetabs .bottom { border-top: 1px solid var(--menu-line); }
+:where(:root[data-theme]:not([data-theme='basic'])) .sidetabs .bottom > * { color: var(--menu-text); }
+:where(:root[data-theme]:not([data-theme='basic'])) .sidetabs a[aria-current='page'] { font-weight: bold; }
+
+/* 群青：平らな紺。今いるタブは白い箱とずらした影。下の3つは枠つきの箱 */
+:root[data-theme='gunjo'] .sidetabs .menu-title { display: flex; align-items: center; justify-content: center; flex: none; width: 50px; height: 50px; border-radius: 50%; background: var(--menu-mark-bg); color: var(--color-accent); writing-mode: vertical-rl; font-size: 1em; font-weight: 500; }
+:root[data-theme='gunjo'] .sidetabs h3 { margin: 0; padding: 10px 24px 4px; font-size: 0.65em; letter-spacing: 0.35em; }
+:root[data-theme='gunjo'] .sidetabs a { padding: 0 24px 0 40px; }
+:root[data-theme='gunjo'] .sidetabs a[aria-current='page'] { margin: 2px 24px 6px; padding: 0 16px; background: var(--menu-mark-bg); color: var(--menu-mark-text); box-shadow: 5px 5px 0 var(--menu-shadow); }
+:root[data-theme='gunjo'] .sidetabs .bottom > * { border: 1px solid var(--menu-toggle-line); box-shadow: 3px 3px 0 var(--menu-shadow); }
+:root[data-theme='gunjo'] .sidetabs .bottom { margin-top: var(--space); padding-top: calc(var(--space) * 2); }
+
+/* 最深部：縁に強調色の線と光。今いるタブは、斜めの層（上下は水平のまま、左右だけ斜め。文字は傾けない）に線・淡い地・光 */
+:root[data-theme='shinbu'] .sidetabs .menu-head { align-items: flex-start; }
+:root[data-theme='shinbu'] .sidetabs .menu-title { writing-mode: vertical-rl; font-size: 2.2em; font-weight: 800; line-height: 1.1; text-shadow: 0 0 6px var(--color-accent), 0 0 18px color-mix(in srgb, var(--color-accent) 70%, transparent); }
+:root[data-theme='shinbu'] .sidetabs h3 { font-size: 0.75em; font-style: italic; }
+:root[data-theme='shinbu'] .sidetabs a { padding: 0 6px; }
+:root[data-theme='shinbu'] .sidetabs a[aria-current='page'] { position: relative; isolation: isolate; margin: 3px 0; padding: 0 12px; font-weight: 600; text-shadow: 0 0 6px var(--color-accent); }
+:root[data-theme='shinbu'] .sidetabs a[aria-current='page']::before { content: ''; position: absolute; inset: 0; z-index: -1; border: 1px solid var(--menu-edge); background: color-mix(in srgb, var(--color-accent) 15%, transparent); box-shadow: 0 0 12px color-mix(in srgb, var(--color-accent) 55%, transparent); transform: skewX(-16deg); }
+:root[data-theme='shinbu'] .sidetabs .bottom { justify-content: space-between; }
+:root[data-theme='shinbu'] .sidetabs .bottom > * { color: var(--menu-muted); flex: none; padding: 0 var(--space); }
+
+/* 星図：ぼかしたガラス。今いるタブは、頭に強調色の✦（4つの角の星） */
+:root[data-theme='seizu'] .sidetabs .menu-head { flex-direction: column; align-items: flex-start; gap: 0; justify-content: center; }
+:root[data-theme='seizu'] .sidetabs .toggle, :root[data-theme='seizu'] .sidetabs.open .toggle { border-radius: 50%; }
+:root[data-theme='seizu'] .sidetabs.open .toggle { background: rgb(var(--menu-rgb) / 0.4); }
+:root[data-theme='seizu'] .sidetabs .menu-title { color: var(--color-accent); font-size: 1.4em; font-weight: 700; line-height: 1.2; }
+:root[data-theme='seizu'] .sidetabs h3 { font-size: 0.7em; letter-spacing: 0.25em; }
+:root[data-theme='seizu'] .sidetabs a { padding: 0 0 0 20px; }
+:root[data-theme='seizu'] .sidetabs a[aria-current='page'] { gap: 8px; padding: 0; color: var(--menu-mark-text); font-weight: 700; }
+:root[data-theme='seizu'] .sidetabs a[aria-current='page']::before { content: ''; flex: none; width: 12px; height: 12px; background: var(--color-accent); clip-path: polygon(50% 0, 58.3% 41.7%, 100% 50%, 58.3% 58.3%, 50% 100%, 41.7% 58.3%, 0 50%, 41.7% 41.7%); }
+:root[data-theme='seizu'] .sidetabs .bottom { justify-content: space-between; }
+:root[data-theme='seizu'] .sidetabs .bottom > * { color: var(--menu-muted); flex: none; padding: 0 var(--space); }
+
+/* プリズム：白いガラス（不透明度は上から下へ、標準で 62％ → 30％ の比）。右の縁に虹の線と白い内側の線。今いるタブは、角を2つ切ったガラスの箱 */
+:root[data-theme='prism'] .sidetabs .panel {
+  background: var(--menu-rainbow) right top / 2px 100% no-repeat, linear-gradient(170deg, rgb(var(--menu-rgb) / calc(var(--menu-opacity, 1) * 1.38)), rgb(var(--menu-rgb) / calc(var(--menu-opacity, 1) * 0.67)));
+  border-right: 0; box-shadow: inset -1px 0 0 var(--menu-inner);
+}
+:root[data-theme='prism'] .sidetabs .menu-head { flex-direction: column; align-items: flex-start; gap: 0; justify-content: center; }
+:root[data-theme='prism'] .sidetabs .menu-title { font-size: 1.6em; font-weight: 300; letter-spacing: 0.35em; line-height: 1.2; text-shadow: var(--menu-title-shadow); }
+:root[data-theme='prism'] .sidetabs h3 { padding: 12px 12px 4px; margin: 0; font-size: 0.75em; }
+:root[data-theme='prism'] .sidetabs a { padding: 0 12px; }
+:root[data-theme='prism'] .sidetabs a[aria-current='page'] { font-weight: 500; background: var(--menu-mark-bg); box-shadow: var(--menu-mark-shadow); clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px); }
+:root[data-theme='prism'] .sidetabs .bottom { justify-content: flex-start; gap: 22px; }
+:root[data-theme='prism'] .sidetabs .bottom > * { flex: none; padding: 0 var(--space); }
+
+/* 商人：茶色の革の目次。金の細い枠（内側に2本と、暗い1本）。今いるタブは、左に赤いしおり */
+:root[data-theme='merchant'] .sidetabs .panel { padding: var(--sidetabs-band) 24px 28px; border-right: 0; }
+:root[data-theme='merchant'] .sidetabs .panel::before { content: ''; position: absolute; inset: 10px; border: 1px solid var(--menu-gold); outline: 1px solid var(--menu-gold); outline-offset: -6px; opacity: 0.7; pointer-events: none; }
+:root[data-theme='merchant'] .sidetabs .panel::after { content: ''; position: absolute; inset: 20px; border: 1px solid var(--menu-frame-dark); opacity: 0.5; pointer-events: none; }
+:root[data-theme='merchant'] .sidetabs .menu-head { margin-top: calc(var(--sidetabs-band) * -1); padding-left: calc(var(--sidetabs-band) + var(--space)); }
+:root[data-theme='merchant'] .sidetabs .menu-title { color: var(--menu-title); font-size: 1.4em; letter-spacing: 0.3em; }
+:root[data-theme='merchant'] .sidetabs h3 { margin: 0; padding: 14px 6px 4px; font-size: 0.75em; }
+:root[data-theme='merchant'] .sidetabs a { position: relative; padding: 0 6px 0 18px; border-bottom: 1px solid var(--menu-line); }
+:root[data-theme='merchant'] .sidetabs a[aria-current='page'] { color: var(--menu-mark-text); font-size: 1.05em; font-weight: normal; }
+:root[data-theme='merchant'] .sidetabs a[aria-current='page']::before { content: ''; position: absolute; left: -4px; top: 0; width: 14px; height: 100%; background: var(--menu-ribbon); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 83%, 0 100%); }
+:root[data-theme='merchant'] .sidetabs .bottom { justify-content: flex-start; gap: 22px; border-top-color: var(--menu-line); }
+:root[data-theme='merchant'] .sidetabs .bottom > * { flex: none; padding: 0 var(--space); color: var(--menu-title); }
+
+/* 光条：暗い紫のすりガラス。右の縁が斜め（-16度に近い切り口）で、その外側に紫→桃の帯。今いるタブは、斜めの帯（文字はまっすぐ）。
+   帯：パネルを10px 広げて帯の色を敷き、その上に、10px 狭いガラス（::before）を同じ斜めで重ねる */
+:root[data-theme='kousou'] .sidetabs .panel { width: calc(var(--sidetabs-width) + 10px); padding-right: 12%; background: var(--menu-band); backdrop-filter: none; -webkit-backdrop-filter: none; border-right: 0; clip-path: polygon(0 0, 100% 0, var(--menu-slant) 100%, 0 100%); }
+:root[data-theme='kousou'] .sidetabs .panel::before { content: ''; position: absolute; z-index: -1; top: 0; bottom: 0; left: 0; width: calc(100% - 10px); background: rgb(var(--menu-rgb) / var(--menu-opacity, 1)); -webkit-backdrop-filter: blur(var(--menu-blur)); backdrop-filter: blur(var(--menu-blur)); clip-path: polygon(0 0, 100% 0, var(--menu-slant) 100%, 0 100%); }
+:root[data-theme='kousou'] .sidetabs.open .toggle { background: var(--menu-toggle-bg); border: 0; transform: skewX(-16deg); }
+:root[data-theme='kousou'] .sidetabs .menu-head { border-bottom: 0; }
+:root[data-theme='kousou'] .sidetabs .menu-title { font-size: 1.75em; font-weight: bold; transform: skewX(-12deg); }
+:root[data-theme='kousou'] .sidetabs h3 { padding: 12px 8px 4px; margin: 0; font-size: 0.75em; }
+:root[data-theme='kousou'] .sidetabs a { padding: 0 10px; border-bottom: 1px solid var(--menu-line); }
+:root[data-theme='kousou'] .sidetabs a[aria-current='page'] { position: relative; isolation: isolate; color: var(--menu-mark-text); font-weight: 700; border-bottom: 0; }
+:root[data-theme='kousou'] .sidetabs a[aria-current='page']::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, var(--menu-mark-from), var(--menu-mark-to)); box-shadow: 0 0 16px var(--menu-mark-glow); transform: skewX(-16deg); }
+:root[data-theme='kousou'] .sidetabs .bottom { justify-content: flex-start; gap: 18px; border-top: 0; }
+:root[data-theme='kousou'] .sidetabs .bottom > * { flex: none; padding: 0 var(--space); }
+@media screen and (max-width: 959.98px), screen and (pointer: coarse) and (hover: none) { /* スマホの形（上と同じ条件） */
+  :root[data-theme='kousou'] { --menu-slant: 86%; }
+  :root[data-theme='kousou'] .sidetabs .panel { width: min(calc(var(--menu-width-phone) + 10px), calc(100vw - 46px)); }
+}
+
+/* メニューの上の「正解」は、ホームへのリンク（<a>）。見た目は、<span> だったときと同じに戻す（「.sidetabs a」の規則を打ち消す。書体・大きさ・色は、今までの .menu-title の規則のまま）。
+   マウスを乗せたときだけ下線を出す。フォーカスの輪郭は、ブラウザ標準（基本）と themes.css（プリセット）のもの */
+:root .sidetabs a.menu-title { display: inline; min-height: 0; margin: 0; padding: 0; border: 0; box-shadow: none; color: inherit; text-decoration: none; }
+:root .sidetabs a.menu-title:hover { text-decoration: underline; text-underline-offset: 0.2em; }
+/* スマホの形（上と同じ条件）：押す場所は 44px 以上。高さが足りないときだけ、上下の余白を負にして、並びの高さは今のまま（縦書きの群青・深部は、もともと 44px より高い） */
+@media screen and (max-width: 959.98px), screen and (pointer: coarse) and (hover: none) {
+  :root:not([data-theme='gunjo'], [data-theme='shinbu']) .sidetabs a.menu-title { display: inline-flex; align-items: center; min-height: var(--tap); margin-top: calc((1lh - var(--tap)) / 2); margin-bottom: calc((1lh - var(--tap)) / 2); }
+}

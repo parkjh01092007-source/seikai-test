@@ -1,0 +1,34 @@
+/* セーブ・ロード。色・余白・文字の大きさは変数だけ */
+.save-settings .folder-name { font-weight: bold; }
+.saveload { width: calc(100% - var(--space) * 4); max-width: 40rem; max-height: 90vh; overflow-y: auto; padding: calc(var(--space) * 2); border: 1px solid var(--color-border); background: var(--color-bg); color: var(--color-text); font-size: var(--font-size); }
+.saveload::backdrop { background: var(--color-backdrop); }
+.saveload .head { display: flex; justify-content: space-between; align-items: center; gap: var(--space); }
+.saveload h2, .saveload h3 { margin: 0; }
+.saveload .note { color: var(--color-muted); font-size: 0.85em; }
+.saveload .error { color: var(--color-error); }
+.saveload .slots { list-style: none; margin: var(--space) 0 0; padding: 0; }
+.saveload .slot { border: 1px solid var(--color-border); padding: var(--space); margin-bottom: var(--space); }
+.saveload .slot p { margin: calc(var(--space) / 2) 0; }
+.saveload .slot .nodata { color: var(--color-muted); }
+.saveload .slot dl { display: flex; flex-wrap: wrap; gap: var(--space) calc(var(--space) * 3); margin: calc(var(--space) / 2) 0; }
+.saveload .slot dt { color: var(--color-muted); font-size: 0.85em; }
+.saveload .slot dd { margin: 0; }
+.saveload .slot .actions { display: flex; gap: var(--space); margin-top: var(--space); }
+.saveload .slot form { display: flex; flex-wrap: wrap; gap: var(--space); align-items: center; margin-top: var(--space); }
+.saveload .slot form p { flex-basis: 100%; }
+.autosave-problem { margin-right: var(--space); border: none; background: transparent; color: var(--color-error); font-size: 0.8em; text-decoration: underline; cursor: pointer; }
+.save-settings .row { display: flex; gap: var(--space); flex-wrap: wrap; align-items: center; margin: var(--space) 0; }
+
+/* スマホの形（spec-mobile.md 第6章）。条件は index.css の「スマホの形」・layout.js の PHONE_QUERY と同じ（変えるときは3か所とも） */
+@media screen and (max-width: 959.98px), screen and (pointer: coarse) and (hover: none) {
+  .saveload { box-sizing: border-box; } /* 幅に余白と枠が足されて、画面より 2px 広がっていた */
+  /* 空のスロット（NO DATA）は1行：名前・NO DATA・ボタン。メモの入力を開いたときだけ、次の行に折り返す */
+  .saveload .slot.empty { display: flex; flex-wrap: wrap; align-items: center; gap: calc(var(--space) / 2) var(--space); }
+  .saveload .slot.empty h3 { flex: 0 0 auto; }
+  .saveload .slot.empty .nodata { flex: 1 1 0; min-width: 0; margin: 0; }
+  .saveload .slot.empty .actions { margin-top: 0; }
+  .saveload .slot.empty form { flex: 1 0 100%; margin-top: 0; }
+  .saveload .foot { display: flex; justify-content: flex-end; margin-top: var(--space); }
+  /* 「設定へ」のリンクは 44px */
+  .saveload a { display: inline-flex; align-items: center; min-height: 44px; }
+}

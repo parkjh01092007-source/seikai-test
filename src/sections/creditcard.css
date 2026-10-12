@@ -1,0 +1,20 @@
+/* クレカの一覧・個別・設定。色と余白は index.css の変数だけを使う（balance.css の .report と一緒に使う） */
+.report .cards { list-style: none; padding: 0; margin: var(--space) 0; display: grid; gap: var(--space); }
+.report .card-button { box-sizing: border-box; text-decoration: none; display: flex; justify-content: space-between; align-items: center; gap: var(--space); width: 100%; padding: var(--space); border: 1px solid var(--color-border); background: var(--color-bg); color: var(--color-text); font-size: var(--font-size); text-align: left; cursor: pointer; }
+.report .card-button .amount { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.report .card-button.inactive { color: var(--color-muted); }
+.report .card-form { display: flex; flex-wrap: wrap; gap: var(--space); align-items: center; margin: var(--space) 0; }
+.report .card-form input.day { width: 4em; }
+.report .back { margin-bottom: var(--space); }
+.report .back a { color: var(--color-text); }
+.report .open-period { color: var(--color-muted); }
+
+/* ---- スマホの形（spec-mobile.md 第6章。layout.js の PHONE_QUERY・balance.css などと同じ条件。変えるときは全部） ---- */
+@media screen and (max-width: 959.98px), screen and (pointer: coarse) and (hover: none) {
+  /* 一覧のカードのボタン：44px 以上。長い名前は幅で「…」（使わない設定のカードも同じ形） */
+  .report .cards { grid-template-columns: minmax(0, 1fr); } /* 長い名前で、列（ボタン）が画面より広がらないように */
+  .report .card-button { min-height: 44px; }
+  .report .card-button > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* 個別ページの「一覧へ戻る」：ボタンの見た目（中身は今のリンクのまま） */
+  .report .back a { display: inline-flex; align-items: center; min-height: 44px; box-sizing: border-box; padding: 0 calc(var(--space) * 2); border: 1px solid var(--color-muted); border-radius: 3px; text-decoration: none; }
+}

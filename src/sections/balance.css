@@ -1,0 +1,63 @@
+/* 残高・クレカ・貯蓄の3画面で共通 */
+.report { font-size: var(--font-size); color: var(--color-text); }
+.report h3 { margin: calc(var(--space) * 2) 0 var(--space); }
+.report .note { color: var(--color-muted); font-size: 0.85em; }
+.report .error, .report .neg { color: var(--color-error); }
+.report .view-toggle { display: flex; gap: var(--space); margin: var(--space) 0; }
+.report .view-toggle button[aria-pressed="true"] { font-weight: bold; }
+.report .free { color: var(--color-key); font-weight: bold; margin: var(--space) 0; }
+.report .free .note { font-weight: normal; }
+.report table { border-collapse: collapse; width: 100%; }
+.report th, .report td { border-bottom: 1px solid var(--color-border); padding: var(--space); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* 科目名の列（元帳・貯蓄はメモの列も）は、長いときだけ折り返す。ページ全体が横に動かないようにするため（PC の幅も。spec-mobile.md 第6章、作業20(c)）。ふつうの長さでは、折り返さず見た目は同じ */
+.report td.wrap { white-space: normal; overflow-wrap: anywhere; }
+.report th:first-child, .report td:first-child, .report th.text, .report td.text { text-align: left; }
+.report th { color: var(--color-muted); font-weight: normal; font-size: 0.85em; }
+.report .month-bar { display: flex; gap: var(--space); align-items: center; }
+.report details { margin-top: var(--space); }
+.report summary { cursor: pointer; }
+.report summary h2 { display: inline; }
+.report summary .value { margin-left: var(--space); font-weight: bold; }
+.report summary .living-note { display: block; font-weight: normal; } /* 作業22：生活費のやりくりの見出しの下の小さな説明 */
+.report tr.total td { font-weight: bold; }
+
+/* 報告書の形の表（P/L、B/S の勘定式） */
+.report table.statement td { white-space: normal; }
+.report table.statement .head, .report table.statement .subtotal, .report table.statement .total { font-weight: bold; }
+.report table.statement tr.item > td:first-child, .report table.statement td.name.item { padding-left: calc(var(--space) * 3); }
+.report table.statement tr.subtotal > td:first-child, .report table.statement td.name.subtotal { padding-left: calc(var(--space) * 2); }
+.report table.statement .none { color: var(--color-muted); }
+.report table.statement tr.total > td { border-top: 1px solid var(--color-text); }
+.report table.statement.bs td.right { border-left: 1px solid var(--color-border); }
+.report .print-title { margin-bottom: var(--space); }
+.report .issued { margin: 0 0 var(--space); }
+.report tr.inactive td { color: var(--color-muted); }
+.report tr.inactive td.neg { color: var(--color-error); }
+
+/* ---- スマホの形（spec-mobile.md 第6章。layout.js の PHONE_QUERY・index.css・nav.css・entries.css・opening.css と同じ条件。変えるときは全部） ----
+   .rows2：1件を2行で出す形（1行目に名前と値、2行目に小さい薄い文字）。残高・元帳・貯蓄・予算・クレカで共有する */
+@media screen and (max-width: 959.98px), screen and (pointer: coarse) and (hover: none) {
+  .report .rows2 { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--color-border); }
+  .report .rows2 > li { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--space); row-gap: 2px; align-items: baseline; padding: 9px 2px; border-bottom: 1px solid var(--color-border); }
+  .report .rows2 .name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* 使わない設定の科目：「（使わない設定）」の印は、長い名前で省略されず、名前の方が「…」になる */
+  .report .rows2 .name.with-note { display: flex; }
+  .report .rows2 .with-note .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .report .rows2 .with-note .note { flex: none; white-space: nowrap; }
+  .report .rows2 .value { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .report .rows2 .sub { grid-column: 1 / -1; min-width: 0; color: var(--color-muted); font-size: 13px; font-weight: normal; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .report .rows2 > li.total { font-weight: bold; }
+  .report .rows2 > li.inactive .name { color: var(--color-muted); }
+  .report .rows2 .sub > * + * { margin-left: var(--space); } /* 2行目に並べる項目（残高・種類・メモ・累計）の間 */
+
+  /* 残高：自由に使える額（見本） */
+  .report .free-head { display: flex; align-items: center; gap: var(--space); }
+  .report .free-label { margin: 0; color: var(--color-muted); font-size: 14px; font-weight: normal; }
+  .report .segmented { margin: 0 0 0 auto; gap: 0; border: 1px solid var(--color-muted); border-radius: 6px; overflow: hidden; }
+  .report .segmented button { border: 0; border-radius: 0; padding: 0 14px; background: var(--color-bg); color: var(--color-text); font-weight: normal; }
+  .report .segmented button[aria-pressed="true"] { background: var(--color-accent); color: var(--color-on-accent); font-weight: normal; }
+  .report .free { margin: var(--space) 0 0; }
+  .report .free-amount { font-size: 36px; font-variant-numeric: tabular-nums; }
+  .report .free-unit { margin-left: 4px; font-size: 18px; }
+  .report .free-items { margin: 2px 0 var(--space); color: var(--color-muted); font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; }
+}

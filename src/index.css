@@ -1,0 +1,61 @@
+/* ここ（:root）は、基本の見た目（今までの見た目）。印刷、プリセットがかからないとき、基本（data-theme="basic"）で使う。プリセットの色は themes.css（画面だけ）。
+   基本は、メニューの地（--menu-rgb）と不透明度（--menu-opacity）を持たない */
+:root {
+  --color-bg: #ffffff;
+  --color-text: #222222;
+  --color-muted: #666666;
+  --color-border: #cccccc;
+  --color-error: #c00000; /* マイナスの金額もこの色 */
+  --color-warn-bg: #fff3b0;
+  --color-accent: #222222; /* 強調（フォーカスの輪郭など。プリセットで変わる） */
+  --color-key: #222222; /* 一番大事な数字（自由に使える額） */
+  --color-on-accent: #ffffff; /* 強調色の上に置く文字（基本の強調 #222222 の上は白。プリセットは applyTheme が決める） */
+  --color-mark-bg: #fff3b0; /* 今いる場所の強調（説明文の今有効な段階） */
+  --space: 8px;
+  --font-size: 16px;
+}
+
+body { font-family: sans-serif; margin: 0; } /* 中身の最大幅（800px）は、nav.css の .content が持つ。縦タブは画面の左端 */
+header { display: flex; justify-content: flex-end; border-bottom: 1px solid var(--color-border); padding: var(--space); }
+
+.migration {
+  background: var(--color-warn-bg);
+  border: 1px solid var(--color-border);
+  padding: var(--space);
+  font-size: var(--font-size);
+}
+
+/* 読み込みの警告（エラーではない：一部の項目だけ無視した） */
+.warning {
+  background: var(--color-warn-bg);
+  border: 1px solid var(--color-border);
+  padding: var(--space);
+  white-space: pre-line;
+}
+.warning, .migration { color: var(--color-text); }
+
+/* スマホだけに出す塊（設定 → データの書き出し・読み込み、ホームの「オートセーブできません」）。PC では出さない */
+.phone-only { display: none; }
+
+/* ---- スマホの形（spec-mobile.md 第2〜4章）：幅 960px 未満、または指だけで操作する機械。layout.js の PHONE_QUERY・nav.css と同じ条件（変えるときは3か所とも）。
+   印刷には当たらない（screen だけ） ---- */
+@media screen and (max-width: 959.98px), screen and (pointer: coarse) and (hover: none) {
+  .main-col > header { display: none; } /* 右上の書き出し・読み込みの帯は出さない（設定 → データにある） */
+  .phone-only { display: block; }
+  /* 画面より横に広い中身があっても、ブラウザの「枠」（レイアウトの画面）を広げさせない。広がると、帯（sticky）・パネル（fixed）・100vh の基準が、画面ではなく広がった枠になり、
+     帯が流れ、パネルが縦に伸びる。hidden ではなく clip（hidden だとスクロールの箱になり、sticky が効かなくなる） */
+  .frame { overflow-x: clip; }
+
+  /* はみ出し止め（20(a) 区切り2）：表は箱の中だけ横スクロール。ほかの横並びは折り返す／枠の中だけ横スクロール。入力欄は置かれた幅に収める */
+  .table-box { max-width: 100%; overflow-x: auto; }
+  .entries .day, .opening section { max-width: 100%; overflow-x: auto; }
+  .month-bar { flex-wrap: wrap; }
+  input, select, textarea { max-width: 100%; box-sizing: border-box; }
+
+  /* 文字 16px 以上、押せる場所 44px 以上（:root を付けて、画面ごとの規則より先に効かせる。大きさを決めている規則はない） */
+  :root :is(input:not([type=checkbox], [type=radio], [type=range], [type=color], [type=file]), select, textarea, button) { font-size: max(16px, 1em); min-height: 44px; }
+  :root button { min-width: 44px; }
+  :root :is(input[type=range], input[type=color]) { min-height: 44px; }
+  :root label:has(> input[type=checkbox], > input[type=radio]) { display: inline-flex; align-items: center; gap: calc(var(--space) / 2); min-height: 44px; }
+  :root :is(.content, .saveload, .confirm) .note { font-size: max(14px, 0.85em); }
+}

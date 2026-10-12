@@ -1,0 +1,36 @@
+.settings { font-size: var(--font-size); color: var(--color-text); }
+/* 見出しの大きさ・太さ・余白は、タグ（h3・h4…）ではなく、クラスで決める（作業21：見出しのタグを1段ずつ下げても、見た目が変わらないように）。
+   項目の見出し（set-title）と項目の中の見出し（sub-title）は、今までの h3 と同じ。項目の中の小見出し（sub-sub）は、今までの h4 と同じ */
+.settings .set-title, .settings .sub-title { font-size: 1.17em; font-weight: bold; margin: calc(var(--space) * 2) 0 var(--space); }
+.settings .sub-sub { font-size: 1em; font-weight: bold; margin: var(--space) 0; }
+/* 危ない操作（仕訳の一括削除・全体の初期化）：エラーの色の枠で囲む（spec-ui.md 4.1）。線は 2px。色は --color-error（7つの見た目すべてで、地との比が 3:1 以上。themes.check.js が 4.5:1 以上を確かめている） */
+.settings .set-danger { border: 2px solid var(--color-error); border-radius: 4px; padding: 0 var(--space) var(--space); margin: calc(var(--space) * 2) 0; }
+.settings .set-danger .set-title { margin-top: var(--space); }
+/* タブ（spec-ui.md 4.1。グループ：記帳・照会・データ・一般）。選ばれているタブは、太字と太い下線（色だけに頼らない）。押す場所は 44px 以上。4つが幅いっぱいに等分される */
+.settings .set-tabs { display: flex; margin: var(--space) 0; border-bottom: 1px solid var(--color-border); }
+.settings .set-tab { flex: 1 1 0; min-width: 0; min-height: 44px; box-sizing: border-box; padding: 0 calc(var(--space) / 2); border: 0; border-bottom: 3px solid transparent; margin-bottom: -1px; border-radius: 0; background: none; color: var(--color-muted); font: inherit; white-space: nowrap; cursor: pointer; }
+.settings .set-tab[aria-selected='true'] { border-bottom-color: var(--color-text); color: var(--color-text); font-weight: bold; }
+.settings .set-tab:hover { color: var(--color-text); }
+.settings .error { color: var(--color-error); }
+.settings .note { color: var(--color-muted); font-size: 0.85em; }
+.settings ol { padding-left: calc(var(--space) * 3); margin: var(--space) 0; }
+.settings li { margin-bottom: var(--space); }
+.settings li.inactive .name { color: var(--color-muted); }
+.settings li .name { margin-right: var(--space); }
+.settings form { display: flex; gap: var(--space); flex-wrap: wrap; align-items: center; margin: var(--space) 0; }
+.settings input.limit { width: 5em; text-align: right; }
+.settings .columns { display: flex; gap: calc(var(--space) * 4); flex-wrap: wrap; }
+.settings .display-row { display: flex; gap: var(--space); flex-wrap: wrap; align-items: center; margin: var(--space) 0; }
+.settings input[type='range'] { width: 12em; }
+.settings .swatch { display: inline-block; width: 1.25em; height: 1.25em; border: 1px solid var(--color-muted); border-radius: 3px; vertical-align: middle; }
+.settings input[type='color'] { width: 3em; height: 2em; padding: 0; text-align: left; vertical-align: middle; }
+.settings .quick-colors button { display: inline-flex; gap: calc(var(--space) / 2); align-items: center; }
+.settings .quick-colors button[aria-pressed='true'] { font-weight: bold; }
+
+/* ---- スマホの形（spec-mobile.md 第6章。layout.js の PHONE_QUERY・entries.css などと同じ条件。変えるときは全部） ----
+   （作業21：項目の開閉をやめ、グループのタブに変えた。ここには、スマホだけの項目の中身の規則が残る） */
+@media screen and (max-width: 959.98px), screen and (pointer: coarse) and (hover: none) {
+  /* 「日付の開き方」：スマホの幅も PC の幅も、文字が上、選択ボックスが下にそろえる */
+  .settings .open-mode { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; margin: 0 0 var(--space); }
+  .settings .open-mode select { max-width: 100%; }
+}

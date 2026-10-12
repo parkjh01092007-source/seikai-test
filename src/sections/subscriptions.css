@@ -1,0 +1,9 @@
+.subscriptions { font-size: var(--font-size); color: var(--color-text); }
+.subscriptions .error { color: var(--color-error); }
+.subscriptions .note { color: var(--color-muted); font-size: 0.85em; }
+.subscriptions form { display: flex; gap: var(--space); flex-wrap: wrap; align-items: center; margin: var(--space) 0; }
+.subscriptions input.day { width: 3em; text-align: right; }
+.subscriptions ul { list-style: none; padding: 0; margin: var(--space) 0 0; }
+.subscriptions li { border: 1px solid var(--color-border); padding: var(--space); margin-bottom: var(--space); }
+.subscriptions li.inactive { color: var(--color-muted); }
+.subscriptions li form { margin: 0; }

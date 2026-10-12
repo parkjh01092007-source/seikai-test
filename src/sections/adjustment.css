@@ -1,0 +1,14 @@
+.adjustment { font-size: var(--font-size); color: var(--color-text); }
+.adjustment .error { color: var(--color-error); }
+.adjustment .note { color: var(--color-muted); font-size: 0.85em; }
+.adjustment form { display: flex; flex-wrap: wrap; gap: var(--space); align-items: center; margin: var(--space) 0; }
+.adjustment input { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* スマホの形（entries.css などと同じ条件。変えるときは全部） */
+@media screen and (max-width: 959.98px), screen and (pointer: coarse) and (hover: none) {
+  .adjustment form > select { flex: 1 1 100%; min-width: 0; }
+  .adjustment .current { flex: 1 1 100%; margin: 0; text-align: left; }
+  /* 空のとき（読み上げの場所だけ）は、場所を取らず、display: none にもしない */
+  .adjustment form { position: relative; }
+  .adjustment .current:empty { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+}

@@ -1,0 +1,31 @@
+/* 印刷（PDF保存）用。月次の「印刷用表示」で使う。A4縦、白地・黒字（色に頼らない：マイナスは「-」の記号で分かる） */
+@page { size: A4; margin: 15mm; }
+
+@media print {
+  :root {
+    --color-bg: #fff;
+    --color-text: #000;
+    --color-muted: #000;
+    --color-border: #000;
+    --color-error: #000;
+    --font-size: 12px;
+  }
+  body { max-width: none; padding: 0; background: var(--color-bg); color: var(--color-text); }
+
+  /* ブラウザの印刷（どの画面でも）：縦タブと上の書き出し・読み込みのボタンを隠し、中身のずれ・幅の制限をなくす */
+  .sidetabs,
+  header { display: none; }
+  .frame { display: block; }
+  .content { max-width: none; margin: 0; padding: 0; }
+
+  /* 印刷用表示のときだけ、ボタン・入力欄を隠す */
+  .print-view .no-print,
+  .print-view button,
+  .print-view input,
+  .print-view select { display: none; }
+
+  .print-view table { width: 100%; page-break-inside: avoid; }
+  .print-view th, .print-view td { white-space: normal; padding: calc(var(--space) / 2) var(--space); }
+  .print-view h2, .print-view h3 { page-break-after: avoid; }
+  .print-view .print-section { page-break-inside: avoid; margin-top: var(--space); }
+}

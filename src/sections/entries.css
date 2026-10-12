@@ -1,0 +1,80 @@
+.entries { font-size: var(--font-size); color: var(--color-text); --cols: 2.5em 9em 9em 6em 1fr 9em; }
+.entries form { display: flex; gap: var(--space); flex-wrap: wrap; align-items: center; margin-bottom: var(--space); }
+.entries .error { color: var(--color-error); }
+.entries .field { display: contents; } /* PC：入力欄のラベル（Field）は箱も文字も出さない */
+.entries .field-label { display: none; }
+
+/* 新しい選択ボックス（base-select）に対応したブラウザだけ、項目の間に線を引く。非対応ブラウザは従来のまま */
+@supports (appearance: base-select) {
+  .entries select,
+  .entries select::picker(select) { appearance: base-select; }
+  .entries select::picker(select) { background: var(--color-bg); border: 1px solid var(--color-border); }
+  .entries select option { border-bottom: 1px solid var(--color-border); }
+}
+.entries ul, .entries ol { list-style: none; padding: 0; margin: var(--space) 0 0; }
+.entries li { border: 1px solid var(--color-border); padding: var(--space); margin-bottom: var(--space); }
+.entries li form { margin-bottom: 0; }
+.entries .note { color: var(--color-muted); font-size: 0.85em; }
+
+.entries .day { border: 1px solid var(--color-border); padding: var(--space); margin-top: var(--space); }
+.entries .day h3 { margin: 0 0 var(--space); font-size: var(--font-size); }
+/* 日付の見出し：押すと、その日の仕訳を開閉する（spec-mobile.md 5.3）。見た目は見出しの文字のまま、右端に ▼／▶ */
+.entries .day-toggle { display: flex; align-items: center; gap: var(--space); width: 100%; padding: 0; border: 0; background: none; color: inherit; font: inherit; font-weight: bold; text-align: left; cursor: pointer; }
+.entries .day-toggle .mark { margin-left: auto; font-size: 0.8em; font-weight: normal; }
+.entries .day li { border: 0; border-bottom: 1px solid var(--color-border); margin-bottom: 0; }
+.entries .day li:last-child { border-bottom: 0; }
+
+/* 列をそろえた一覧。見出しと全行が同じ --cols を使う */
+.entries .head, .entries .day li.row { display: grid; grid-template-columns: var(--cols); column-gap: var(--space); align-items: center; }
+.entries .head { color: var(--color-muted); padding: 0 var(--space); } /* 左右の余白は行（li）と同じ */
+.entries .head > span { font-size: 0.85em; } /* 列幅はem指定なので、文字を小さくするのは中身だけ（.head自体は行と同じ文字の大きさ）*/
+.entries .cell { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.entries .debit { border-right: 1px solid var(--color-border); padding-right: var(--space); }
+.entries .amount { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* ---- スマホの形（spec-mobile.md 5.1・5.2。layout.js の PHONE_QUERY・index.css・nav.css と同じ条件。変えるときは4か所とも） ---- */
+@media screen and (max-width: 959.98px), screen and (pointer: coarse) and (hover: none) {
+  /* 入力の欄：日付・金額、借方・貸方を2列に。その下に、メモと追加を1行に */
+  .entries form { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .entries form .field { display: flex; flex-direction: column; gap: 2px; grid-column: span 2; min-width: 0; }
+  .entries form .field-label { display: block; color: var(--color-muted); font-size: 13px; }
+  .entries form .field > :not(.field-label) { width: 100%; }
+  .entries form .memo-input { grid-column: span 3; width: 100%; }
+  .entries form .field.living { grid-column: 1 / -1; } /* 作業22：生活費の月は、借方・貸方の下に1行全部 */
+  .entries form > button[type='button'], .entries form > .error { grid-column: 1 / -1; }
+  .entries .head { display: none; }
+  /* 日付の見出しの帯：枠の余白と見出しの下の余白をなくし、帯の高さを 44px（見本）にする */
+  .entries .day { padding: 0; }
+  .entries .day h3 { margin: 0; }
+  .entries .day-toggle { padding: 0 var(--space); }
+  .entries .day ol { margin: 0; }
+
+  /* 一覧の1件：2行のカード。1行目は 番号・科目／科目・金額、2行目はメモ。幅に入りきらない分は「…」（開くと全部） */
+  .entries .day li.card { padding: 0; }
+  .entries .card-toggle { display: grid; grid-template-columns: 2em minmax(0, 1fr) auto; column-gap: calc(var(--space) / 2); row-gap: 2px; align-items: center; width: 100%; box-sizing: border-box; padding: var(--space); border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+  .entries .card-toggle .no { color: var(--color-muted); }
+  .entries .card-toggle .names, .entries .card-toggle .memo { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .entries .card-toggle .memo { grid-column: 2 / 4; color: var(--color-muted); font-size: 0.9em; }
+  .entries .card.open .card-toggle .names, .entries .card.open .card-toggle .memo { white-space: normal; overflow-wrap: anywhere; }
+  .entries .card-actions { display: flex; align-items: center; gap: var(--space); padding: 0 var(--space) var(--space) calc(2em + var(--space) + var(--space) / 2); }
+  .entries .card-actions[hidden] { display: none; }
+  .entries .card-actions > button { flex: 1; }
+  .entries .card-actions .danger { border: 1px solid var(--color-error); color: var(--color-error); background: transparent; }
+
+  /* 下から出る編集画面（5.4）。画面の下に貼り付き、高さは画面の高さまで（長ければ中だけスクロール）。色は変数だけ（プリセットごとの作り込みは 19(d)） */
+  .sheet-layer { position: fixed; inset: 0; z-index: 20; }
+  .sheet-scrim { position: absolute; inset: 0; background: var(--color-backdrop); }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; box-sizing: border-box; max-height: 100%; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 10px; padding: 10px 16px calc(24px + env(safe-area-inset-bottom)); border-top: 1px solid var(--color-border); border-radius: 18px 18px 0 0; background: var(--color-bg); color: var(--color-text); font-size: var(--font-size); }
+  .sheet-grip { align-self: center; flex: none; width: 40px; height: 5px; border-radius: 3px; background: var(--color-border); }
+  .sheet-head { display: flex; align-items: center; gap: var(--space); }
+  .sheet-title { font-size: 1.125em; font-weight: bold; }
+  .sheet-title { flex: none; }
+  .sheet-nth { min-width: 0; margin-left: auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-muted); font-size: 14px; } /* 幅に入りきらないときは、右側を「…」で省略 */
+  .entries .sheet-form { display: flex; flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 10px; margin: 0; } /* 「.entries form」の align-items: center に負けない：欄は幅いっぱい */
+  .sheet-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space); }
+  .entries .sheet-pair .field { grid-column: auto; } /* 「.entries form .field」の span 2 に負けない：半分ずつ */
+  .sheet-form .memo-input { min-height: 0; resize: vertical; font-family: inherit; }
+  .sheet-actions { display: flex; gap: var(--space); margin-top: 4px; }
+  .entries .sheet-actions button { flex: 1; min-width: 0; min-height: 48px; white-space: nowrap; } /* :root の高さ 44px の規則（index.css）より先に効かせる */
+  .entries .sheet-actions .primary { border: 0; background: var(--color-accent); color: var(--color-on-accent); }
+}

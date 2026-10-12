@@ -1,0 +1,25 @@
+/* 予算の画面。表・月の選択・色の基本は balance.css（.report）を共用する */
+.budgets .budget-table { margin-bottom: var(--space); }
+.budgets tr.over td { color: var(--color-error); } /* 上限の超過の行 */
+.budgets form { display: flex; gap: var(--space); flex-wrap: wrap; align-items: center; margin: var(--space) 0; }
+.budgets details.inactive summary { color: var(--color-muted); }
+.budgets ul { list-style: none; padding: 0; margin: var(--space) 0; }
+.budgets li { display: flex; gap: var(--space); flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--color-border); padding: var(--space) 0; }
+.budgets li .start { min-width: 8em; }
+.budgets li .amount { min-width: 8em; text-align: right; font-variant-numeric: tabular-nums; }
+.budgets li input { width: 8em; text-align: right; }
+
+/* ---- スマホの形（spec-mobile.md 第6章。layout.js の PHONE_QUERY・balance.css などと同じ条件。変えるときは全部） ---- */
+@media screen and (max-width: 959.98px), screen and (pointer: coarse) and (hover: none) {
+  /* 2行の形（.rows2 は balance.css）。超過の行は、PC の表と同じくエラーの色（未達・達成は赤くしない） */
+  .budgets .rows2 { margin-bottom: var(--space); }
+  .budgets .rows2 .sub { word-break: keep-all; } /* 「達成率 15%」などを、文字の途中で折り返さない（区切りは空白） */
+  .budgets .rows2 > li.over, .budgets .rows2 > li.over .sub { color: var(--color-error); }
+  /* 予算を追加する欄：表の上の開閉。見出しの文字は見出しのまま、右端に ▼／▶ */
+  .budgets .add-head { margin: var(--space) 0; }
+  .budgets .add-toggle { display: flex; align-items: center; gap: var(--space); width: 100%; padding: 0; border: 0; background: none; color: inherit; font: inherit; font-weight: bold; text-align: left; cursor: pointer; }
+  .budgets .add-toggle .mark { margin-left: auto; font-size: 0.8em; font-weight: normal; }
+  .budgets #budget-add form select, .budgets #budget-add form input { flex: 1 1 calc(50% - var(--space)); min-width: 0; }
+  .budgets #budget-add form label { display: flex; flex: 1 1 100%; align-items: center; gap: var(--space); }
+  .budgets #budget-add form label input { flex: 1; }
+}

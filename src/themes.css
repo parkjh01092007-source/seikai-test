@@ -1,0 +1,92 @@
+/* プリセットの色（spec-design.md 8.1）。画面だけ（@media screen）。印刷にはかからず、index.css の基本値と print.css のまま。
+   基本（data-theme="basic"）のブロックはない：index.css の :root が基本の見た目。
+   プリセットを足す：ここにブロックを足し、themes.js の PRESETS と辞書にも足す。
+   メニューの地（--menu-rgb）に --menu-opacity（themes.js が html に入れる）をかけるのは、メニューの作業（19(b)）。 */
+@media screen {
+  /* プリセット共通（基本は除く） */
+  :root[data-theme]:not([data-theme='basic']) {
+    --color-mark-bg: color-mix(in srgb, var(--color-accent) 18%, var(--color-bg));
+    accent-color: var(--color-accent);
+  }
+  :root[data-theme]:not([data-theme='basic']) body { background: var(--color-bg); color: var(--color-text); }
+  :root[data-theme]:not([data-theme='basic']) :focus-visible { outline: 2px solid var(--color-accent); }
+
+  /* 入力欄・選択ボックス・ボタン：ブラウザ任せにせず、プリセットの色に合わせる（基本は除く）。:where で特異度を 0 にし、縦タブのボタンなど、個別のCSSが勝つようにする。
+     枠は、薄い文字を地に75%混ぜた色（--color-border は薄すぎる）。チェックボックスなどは accent-color に任せる */
+  :root[data-theme]:not([data-theme='basic']) {
+    --color-field-border: color-mix(in srgb, var(--color-muted) 75%, var(--color-bg));
+    --color-button-bg: color-mix(in srgb, var(--color-text) 10%, var(--color-bg));
+  }
+  :where(:root[data-theme]:not([data-theme='basic'])) :where(input:not([type='checkbox'], [type='radio'], [type='range'], [type='file']), select) {
+    background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-field-border); border-radius: 3px;
+  }
+  :where(:root[data-theme]:not([data-theme='basic'])) :where(button) {
+    background: var(--color-button-bg); color: var(--color-text); border: 1px solid var(--color-field-border); border-radius: 3px;
+  }
+  :where(:root[data-theme]:not([data-theme='basic'])) :where(button:disabled) { opacity: 0.5; }
+  :where(:root[data-theme]:not([data-theme='basic'])) ::placeholder { color: var(--color-muted); opacity: 1; }
+
+  :root[data-theme='gunjo'] {
+    --color-bg: #F7F7FB; --color-text: #12123A; --color-muted: #55567A; --color-border: #DCDBEF;
+    --color-accent: #2A1BFF; --color-key: #2A1BFF; --menu-rgb: 18 8 110;
+    --color-error: #C00000; --color-warn-bg: #FFF3B0;
+    --sidetabs-width: 270px; --menu-width-phone: 332px;
+    --menu-text: #FFFFFF; --menu-muted: #D6D5FF; --menu-line: rgba(255, 255, 255, 0.2); --menu-scrim: rgba(8, 4, 60, 0.35); --menu-shadow: #0B0670;
+    --menu-toggle-line: rgba(255, 255, 255, 0.7); --menu-mark-bg: #FFFFFF; --menu-mark-text: var(--color-accent);
+  }
+  :root[data-theme='shinbu'] {
+    color-scheme: dark;
+    --color-bg: #0E0814; --color-text: #FFFFFF; --color-muted: #F5C6DA; --color-border: rgba(255, 92, 158, 0.25);
+    --color-accent: #FF3D8B; --color-key: #FFD54A; --menu-rgb: 20 8 24;
+    --color-error: #FF6B6B; --color-warn-bg: #4D3B00;
+    --sidetabs-width: 280px; --menu-width-phone: 320px; --menu-blur: 4px;
+    --menu-text: #FFFFFF; --menu-muted: var(--color-muted); --menu-line: color-mix(in srgb, var(--menu-edge) 30%, transparent); --menu-scrim: rgba(0, 0, 0, 0.35);
+    --menu-edge: #FF5C9E; --menu-glow: 0 0 18px color-mix(in srgb, var(--color-accent) 45%, transparent); --menu-toggle-line: color-mix(in srgb, var(--menu-edge) 60%, transparent);
+  }
+  :root[data-theme='shinbu'][data-accent='purple'] { --menu-edge: #B98AFF; --color-accent: #A65BFF; --color-border: rgba(185, 138, 255, 0.25); --color-muted: #DCCBFF; }
+  :root[data-theme='shinbu'][data-accent='blue'] { --menu-edge: #6FAEFF; --color-accent: #3D8BFF; --color-border: rgba(111, 174, 255, 0.25); --color-muted: #C9DDFF; }
+  :root[data-theme='shinbu'][data-accent='red'] { --menu-edge: #FF7070; --color-accent: #FF4040; --color-border: rgba(255, 112, 112, 0.25); --color-muted: #FFC9C9; }
+  :root[data-theme='shinbu'][data-accent='jade'] { --menu-edge: #5BE6BE; --color-accent: #22D3A0; --color-border: rgba(91, 230, 190, 0.25); --color-muted: #C4F5E6; }
+  :root[data-theme='seizu'] {
+    color-scheme: dark;
+    --color-bg: #0E1238; --color-text: #E8E6FF; --color-muted: #C9C5F0; --color-border: rgba(183, 168, 255, 0.25);
+    --color-accent: #F3E3A6; --color-key: #F3E3A6; --menu-rgb: 12 16 48;
+    --color-error: #FF6B6B; --color-warn-bg: #4D3B00;
+    --sidetabs-width: 290px; --menu-width-phone: 300px; --menu-blur: 10px;
+    --menu-text: #E8E6FF; --menu-muted: #C9C5F0; --menu-line: rgba(183, 168, 255, 0.3); --menu-scrim: transparent;
+    --menu-edge: rgba(183, 168, 255, 0.45); --menu-toggle-line: rgba(183, 168, 255, 0.5); --menu-mark-text: #FFF6D6;
+  }
+  :root[data-theme='prism'] {
+    --color-bg: #E8ECF3; --color-text: #172036; --color-muted: #4A5470; --color-border: rgba(110, 130, 170, 0.18);
+    --color-accent: #2B3554; --color-key: #172036; --menu-rgb: 255 255 255;
+    --color-error: #C00000; --color-warn-bg: #FFF3B0;
+    --sidetabs-width: 300px; --menu-width-phone: 332px; --menu-blur: 18px; --menu-saturate: 1.5;
+    --menu-text: var(--color-text); --menu-muted: var(--color-muted); --menu-line: var(--color-border); --menu-scrim: rgba(23, 32, 54, 0.16);
+    --menu-toggle-line: transparent; --menu-inner: rgba(255, 255, 255, 0.9);
+    --menu-rainbow: linear-gradient(180deg, rgba(255, 90, 95, 0.75), rgba(255, 159, 67, 0.75), rgba(255, 224, 102, 0.75), rgba(92, 214, 160, 0.75), rgba(78, 168, 255, 0.75), rgba(155, 123, 255, 0.75));
+    --menu-title-shadow: -1px 0 rgba(255, 90, 95, 0.4), 1px 0 rgba(78, 168, 255, 0.45);
+    --menu-mark-bg: linear-gradient(115deg, rgba(255, 255, 255, 0) 62%, rgba(255, 255, 255, 0.95) 62.6%, rgba(255, 255, 255, 0) 64%), linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.55));
+    --menu-mark-shadow: inset 0 1px 0 #FFFFFF, inset 0 -1px 0 rgba(110, 130, 170, 0.3), inset 1px 0 0 rgba(255, 90, 95, 0.45), inset -1px 0 0 rgba(78, 168, 255, 0.5);
+  }
+  :root[data-theme='merchant'] {
+    --color-bg: #EEDDB4; --color-text: #2B1D12; --color-muted: #5A3F26; --color-border: rgba(43, 29, 18, 0.22);
+    --color-accent: #8E2A1E; --color-key: #2B1D12; --menu-rgb: 78 48 32;
+    --color-error: #A01818; --color-warn-bg: #F6D77A;
+    --sidetabs-width: 300px; --menu-width-phone: 332px;
+    --menu-text: #EBD9AE; --menu-muted: #C9AC72; --menu-line: rgba(184, 149, 74, 0.22); --menu-scrim: rgba(26, 13, 5, 0.3);
+    --menu-glow: 6px 0 14px rgba(26, 13, 5, 0.5); --menu-toggle-line: rgba(184, 149, 74, 0.7); --menu-gold: #B8954A; --menu-frame-dark: #2A160A;
+    --menu-title: #E3CC96; --menu-mark-text: #FFF0C8;
+    --menu-ribbon: linear-gradient(90deg, #3E1010, #7A2A26 28%, #521616 50%, #6A2422 78%, #360E0E);
+  }
+  :root[data-theme='kousou'] {
+    --color-bg: #F5F1F8; --color-text: #1C1024; --color-muted: #5E4E6E; --color-border: rgba(28, 16, 36, 0.18);
+    --color-accent: #8A2BB8; --color-key: #1C1024; --menu-rgb: 30 12 40;
+    --color-error: #C00000; --color-warn-bg: #FFF3B0;
+    --sidetabs-width: 300px; --menu-width-phone: 332px; --menu-blur: 12px; --menu-slant: 78%;
+    --menu-text: #F1E6F6; --menu-muted: #C7A6D9; --menu-line: rgba(255, 141, 190, 0.12); --menu-scrim: rgba(28, 16, 36, 0.18);
+    --menu-band: linear-gradient(180deg, #6A3BFF, #B23BE6 50%, #FF2D87); /* パネルの右の縁の帯（見本のまま） */
+    --menu-toggle-bg: linear-gradient(90deg, #6A3BFF, #FF2D87); --menu-toggle-line: transparent;
+    /* 今いるタブの帯：桃の端は、白い文字が 4.5:1 になるように #FF2D87 から少し暗くした（19(d) の背景の帯は見本の #FF2D87 のまま） */
+    --menu-mark-from: #6A3BFF; --menu-mark-to: #E1197A; --menu-mark-text: #FFFFFF; --menu-mark-glow: rgba(255, 45, 135, 0.4);
+  }
+}

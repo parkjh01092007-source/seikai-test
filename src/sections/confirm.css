@@ -1,0 +1,23 @@
+/* アプリ内の確認画面。色・余白・文字の大きさは変数だけ */
+:root { --color-backdrop: rgba(0, 0, 0, 0.4); }
+
+.confirm { max-width: 32rem; width: calc(100% - var(--space) * 4); padding: calc(var(--space) * 2); border: 1px solid var(--color-border); background: var(--color-bg); color: var(--color-text); font-size: var(--font-size); }
+.confirm::backdrop { background: var(--color-backdrop); }
+.confirm .message { margin: 0 0 var(--space); white-space: pre-line; }
+.confirm .extra { margin-bottom: var(--space); }
+.confirm .rename-all { margin-bottom: var(--space); }
+.confirm .rename-list { list-style: none; padding: 0; margin: 0; max-height: 40vh; overflow-y: auto; }
+.confirm .rename-list li { margin-bottom: calc(var(--space) / 2); }
+.confirm .rename-list .note { color: var(--color-muted); font-size: 0.85em; }
+.confirm .typed { display: block; margin-bottom: var(--space); }
+.confirm .typed input { display: block; width: 100%; box-sizing: border-box; margin-top: calc(var(--space) / 2); }
+.confirm .actions { display: flex; justify-content: flex-end; gap: var(--space); }
+
+/* スマホの形（spec-mobile.md 第6章）：「はい」「いいえ」は縦に、幅いっぱい・高さ 48px・間 16px。順は DOM のまま（上が「はい」）。
+   条件は index.css の「スマホの形」・layout.js の PHONE_QUERY と同じ（変えるときは3か所とも）。
+   dialog は、幅に余白と枠が足されて画面より 2px 広がっていたので、ここだけ border-box にする（PC の幅は変えない） */
+@media screen and (max-width: 959.98px), screen and (pointer: coarse) and (hover: none) {
+  .confirm { box-sizing: border-box; }
+  .confirm .actions { flex-direction: column; justify-content: stretch; gap: calc(var(--space) * 2); }
+  .confirm .actions button { width: 100%; min-height: 48px; }
+}

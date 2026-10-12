@@ -1,0 +1,20 @@
+.opening { font-size: var(--font-size); color: var(--color-text); }
+.opening h3 { margin: calc(var(--space) * 2) 0 var(--space); }
+.opening .error { color: var(--color-error); }
+.opening .note { color: var(--color-muted); font-size: 0.85em; }
+.opening form { display: flex; flex-direction: column; gap: var(--space); align-items: flex-start; }
+.opening section { width: 100%; }
+.opening .row { display: grid; grid-template-columns: 12em 10em auto; column-gap: var(--space); align-items: center; padding: var(--space) 0; border-bottom: 1px solid var(--color-border); }
+.opening .row input { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* スマホの形（entries.css などと同じ条件）：科目名を上、入力欄を下に並べる（spec-mobile.md 第6章）。幅 360px でも入力欄が箱からはみ出さない */
+@media screen and (max-width: 959.98px), screen and (pointer: coarse) and (hover: none) {
+  .opening .row { grid-template-columns: minmax(0, 1fr) auto; row-gap: calc(var(--space) / 2); }
+  .opening .row > span:first-child { grid-column: 1 / -1; min-width: 0; overflow-wrap: anywhere; } /* 科目名を上、入力欄と単位を下の1行に */
+  .opening .row input { width: 100%; min-width: 0; }
+  /* 保存ボタンは一番上（開始日の右。入りきらなければ次の行）と一番下の2か所。知らせとエラーは、押したボタンの下に、説明文と同じ大きさ・薄い文字（エラーはエラーの色）で出す */
+  .opening .date-row, .opening .save-bar { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space); width: 100%; }
+  .opening .date-row > .error, .opening .date-row > .note, .opening .save-bar > .error, .opening .save-bar > .note { flex: 1 1 100%; font-size: max(14px, 0.85em); }
+  /* 空の知らせ（読み上げの場所だけ）は、場所も余白も取らず、読み上げの対象には残す（display: none にしない） */
+  .opening .date-row > .error:empty, .opening .date-row > .note:empty, .opening .save-bar > .error:empty, .opening .save-bar > .note:empty { position: absolute; flex: none; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+}
