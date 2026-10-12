@@ -91,7 +91,6 @@ export default {
   'common.edit': '編集',
   'common.delete': '削除',
   'common.rename': '名前を変更',
-  'common.cancel': 'キャンセル',
   'common.enable': '使う',
   'common.disable': '使わない',
   'common.inactive': '（使わない設定）', // 科目・定期支払いの名前の後ろ。前の空白は画面側
@@ -409,6 +408,12 @@ export default {
   'app.exportDo': '書き出す',
   'app.migrate': '移行する',
   'app.notFound': '画面が見つかりません',
+  'app.newerData': '新しい版のデータです。更新してください。', // 保存されているデータの版（schemaVersion）が、このアプリより新しいとき（spec-pwa.md 6章）
+  // PWA（spec-pwa.md 5章）：新しい版のお知らせ、今の版
+  'pwa.updateAvailable': '新しい版があります',
+  'pwa.update': '更新する',
+  'pwa.version': '版：{version}', // 設定 → 一般 の一番下。version はビルドした日時（なければ版の印）
+  'pwa.versionUnknown': '不明',
 
   // 区分・role・予算の種類の名前（ledgerLogic の TYPE_LABELS、ROLE_LABELS、BUDGET_RULES）
   // 初期科目の名前（仕様 6.5）。ledgerLogic.js の初期科目の表が使う

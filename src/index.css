@@ -18,7 +18,7 @@
 body { font-family: sans-serif; margin: 0; } /* 中身の最大幅（800px）は、nav.css の .content が持つ。縦タブは画面の左端 */
 header { display: flex; justify-content: flex-end; border-bottom: 1px solid var(--color-border); padding: var(--space); }
 
-.migration {
+.migration, .newer-data {
   background: var(--color-warn-bg);
   border: 1px solid var(--color-border);
   padding: var(--space);
@@ -32,7 +32,11 @@ header { display: flex; justify-content: flex-end; border-bottom: 1px solid var(
   padding: var(--space);
   white-space: pre-line;
 }
-.warning, .migration { color: var(--color-text); }
+.warning, .migration, .newer-data { color: var(--color-text); }
+
+/* 新しい版のお知らせ（spec-pwa.md 5章）。PC は右上の帯の中、スマホは中身の一番上（.phone-only）。重ねずに流れの中に置く */
+.update-notice { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--space); margin-right: var(--space); color: var(--color-text); }
+.phone-only > .update-notice { display: flex; margin: 0 0 var(--space); padding: var(--space); border: 1px solid var(--color-border); background: var(--color-warn-bg); }
 
 /* スマホだけに出す塊（設定 → データの書き出し・読み込み、ホームの「オートセーブできません」）。PC では出さない */
 .phone-only { display: none; }

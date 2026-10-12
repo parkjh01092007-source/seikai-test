@@ -15,6 +15,7 @@ import { today } from '../today.js'
 import { OPEN_MODES, OPEN_MODE_LABELS, loadOpenMode, rememberOpenMode } from '../entryView.js'
 import { SETTINGS_GROUPS, SETTINGS_SECTIONS, tabDomId, panelDomId } from '../settingsSections.js'
 import Tabs from './Tabs.jsx'
+import { versionLabel, BUILT_AT, CURRENT_BUILD } from '../pwa.js'
 import { usePhone } from '../layout.js'
 
 const SIDE_KEYS = { debit: 'common.debit', credit: 'common.credit' } // 借方・貸方の名前（辞書のキー）
@@ -264,6 +265,8 @@ export default function Settings({ data, update, openPanel, replaceData, autosav
           // 危ない操作（仕訳の一括削除・全体の初期化）は、エラーの色の枠で囲む（ボタンの動き・確認画面は変えない）。ほかの項目は、枠も囲みも足さない
           return danger ? <div key={id} className="set-danger">{item}</div> : <Fragment key={id}>{item}</Fragment>
         })}
+        {/* 一般のタブの一番下に、今の版（ビルドした日時）を小さく出す。更新できたかを確かめるため（spec-pwa.md 5章） */}
+        {tab === 'general' && <p className="note app-version">{t('pwa.version', { version: versionLabel(BUILT_AT, CURRENT_BUILD) ?? t('pwa.versionUnknown') })}</p>}
       </div>
     </div>
   )

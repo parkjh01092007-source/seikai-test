@@ -124,7 +124,6 @@ export default {
   'common.edit': '편집',
   'common.delete': '삭제',
   'common.rename': '이름 변경',
-  'common.cancel': '취소',
   'common.enable': '사용',
   'common.disable': '사용 안 함',
   'common.inactive': '(사용 안 함)', // 科目・定期支払いの名前の後ろ。前の空白は画面側
@@ -408,6 +407,11 @@ export default {
   'app.exportDo': '내보내기',
   'app.migrate': '옮기기',
   'app.notFound': '화면을 찾을 수 없습니다',
+  'app.newerData': '새 버전의 데이터입니다. 업데이트해 주세요.',
+  'pwa.updateAvailable': '새 버전이 있습니다',
+  'pwa.update': '업데이트',
+  'pwa.version': '버전: {version}',
+  'pwa.versionUnknown': '알 수 없음',
 
   // 区分・role・予算の種類の名前
   // 초기 계정과목의 이름(사양 6.5). ledgerLogic.js의 초기 계정과목 표가 사용합니다

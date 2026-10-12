@@ -21,6 +21,10 @@ export function saveData(data) {
 
 export const needsMigration = (data) => data.schemaVersion < SCHEMA_VERSION
 
+// 保存されているデータが、このアプリより新しい版のもの（新しい版のアプリが書いた）か。そのときは、画面に「新しい版のデータです」とだけ出し、
+// 定期支払いの記入・保存・オートセーブのどれも書かない（古い版の決まりで書き換えて壊さないため。spec-pwa.md 6章）
+export const isNewerData = (data) => Number.isInteger(data?.schemaVersion) && data.schemaVersion > SCHEMA_VERSION
+
 // v1（スキルのみ）・v2〜v8 → v9。スキルはそのまま引き継ぐ。成功: { data, warnings } / 失敗: { error }（渡したデータは変えない）
 // v1：初期科目（language の名前）・仕訳なし。v2：key を付ける（欠けたら error）。v3：そのまま。v4：定期支払いもそのまま。v5：設定（お気に入り）もそのまま。v6：予算もそのまま。
 // 負債に role を付ける（v7。key が credit-card → card・締め日31・引き落とし日27、ほか → other）。
