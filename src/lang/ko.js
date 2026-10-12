@@ -316,6 +316,8 @@ export default {
   'budgets.rowSubLimit': '실적 {actual}／예산 {budget}　남은 금액 {remaining}　달성률 {rate}%', // スマホの2行目（上限）
   'budgets.rowSubGoal': '실적 {actual}／목표 {budget}　부족 {shortfall}　달성률 {rate}%', // スマホの2行目（目標）
   'budgets.addTitle': '예산 추가',
+  'budgets.tabMonth': '월 예산',
+  'budgets.tabManage': '등록・이력',
   'budgets.kind': '종류',
   'budgets.startMonth': '적용 시작월',
   'budgets.note': '어떤 달의 예산은 그 계정과목의 예산 중, 적용 시작월이 그 달 이전이고 가장 새로운 것입니다. 적용 시작월을 바꾸고 싶을 때는 삭제하고 다시 입력해 주세요.',

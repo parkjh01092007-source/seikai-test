@@ -1,4 +1,4 @@
-import { useState, useRef, Fragment } from 'react'
+import { useState, Fragment } from 'react'
 import './settings.css'
 import CardSettings from './CardSettings.jsx'
 import { BackupSettings, PurgeSettings, ResetSettings } from './DataSettings.jsx'
@@ -13,7 +13,8 @@ import {
 } from '../ledgerLogic.js'
 import { today } from '../today.js'
 import { OPEN_MODES, OPEN_MODE_LABELS, loadOpenMode, rememberOpenMode } from '../entryView.js'
-import { SETTINGS_GROUPS, SETTINGS_SECTIONS, tabDomId, panelDomId, nextTab } from '../settingsSections.js'
+import { SETTINGS_GROUPS, SETTINGS_SECTIONS, tabDomId, panelDomId } from '../settingsSections.js'
+import Tabs from './Tabs.jsx'
 import { usePhone } from '../layout.js'
 
 const SIDE_KEYS = { debit: 'common.debit', credit: 'common.credit' } // 借方・貸方の名前（辞書のキー）
@@ -249,38 +250,14 @@ export default function Settings({ data, update, openPanel, replaceData, autosav
   }
 
   // タブ（spec-ui.md 4.1）：設定の画面の上にグループのタブを並べ、押したタブの項目だけを出す（PC もスマホも同じ。項目は開閉しない）。
-  // 開いているタブは App の状態（tab・onTab。覚えない）。左右の矢印・Home・End で、フォーカスを移すと同時にそのタブを開く（フォーカスはタブに残る）。
+  // 作り（role・aria・左右の矢印・Home・End）は共通の Tabs.jsx。開いているタブは App の状態（tab・onTab。覚えない）。
   // 見出しの階層：設定の題 h2 → 項目 h3 → 項目の中の見出し h4・h5。タブは見出しでなく、グループの名前は、パネルの aria-labelledby で伝わる。
   // 見た目は、クラス（set-title・sub-title・sub-sub）で決める（タグの大きさに頼らない）
-  const tabIds = SETTINGS_GROUPS.map((g) => g.id)
-  const tabRefs = useRef({})
-  const onTabKeyDown = (e) => {
-    const next = nextTab(tabIds, tab, e.key)
-    if (next === tab && !['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(e.key)) return
-    e.preventDefault()
-    onTab(next)
-    tabRefs.current[next]?.focus()
-  }
   const items = SETTINGS_SECTIONS.filter((s) => s.group === tab && (phone || !s.phoneOnly)) // スマホの形だけの項目（書き出し・読み込み）は、PC では出さない
   return (
     <div className="settings">
       <h2>{t('settings.title')}</h2>
-      <div role="tablist" aria-label={t('settings.title')} className="set-tabs" onKeyDown={onTabKeyDown}>
-        {SETTINGS_GROUPS.map((g) => (
-          <button
-            key={g.id}
-            ref={(el) => { tabRefs.current[g.id] = el }}
-            type="button"
-            role="tab"
-            id={tabDomId(g.id)}
-            aria-selected={g.id === tab}
-            aria-controls={panelDomId(g.id)}
-            tabIndex={g.id === tab ? 0 : -1}
-            className="set-tab"
-            onClick={() => onTab(g.id)}
-          >{t(g.title)}</button>
-        ))}
-      </div>
+      <Tabs label={t('settings.title')} tabs={SETTINGS_GROUPS.map((g) => ({ id: g.id, title: t(g.title) }))} current={tab} onChange={onTab} prefix="settings" />
       <div role="tabpanel" id={panelDomId(tab)} aria-labelledby={tabDomId(tab)} className="set-panel">
         {items.map(({ id, title, danger }) => {
           const item = <><h3 className="set-title">{t(title)}</h3>{BODIES[id]()}</>

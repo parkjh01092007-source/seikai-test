@@ -9,6 +9,8 @@ import { today } from '../today.js'
 import { t } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import { usePhone } from '../layout.js'
+import Tabs from './Tabs.jsx'
+import { tabDomId, panelDomId } from '../tabs.js'
 
 const Yen = ({ n, currency }) => <>{formatMoney(n, currency)}</>
 const Rate = ({ n }) => <>{n}%</>
@@ -143,7 +145,7 @@ export default function Budgets({ data, update }) {
 
   const confirm = useConfirm()
   const phone = usePhone()
-  const [addOpen, setAddOpen] = useState(false) // スマホの幅の「予算を追加」の開閉。初めは閉じる。覚えない
+  const [tab, setTab] = useState('month') // 開いているタブ（月の予算・登録・履歴）。初めは月の予算。覚えない（画面を移ると戻る）。追加・変更・削除のあとも変えない
 
   const add = async (e) => {
     e.preventDefault()
@@ -157,7 +159,7 @@ export default function Budgets({ data, update }) {
 
   const budgeted = accounts.filter((a) => hasBudget(a, budgets))
 
-  // 予算を追加する欄。PC は表の下、スマホは表の上に、開閉できる形（押せるボタン＋aria-expanded。初めは閉じる）
+  // 予算を追加する欄（「登録・履歴」のタブ。開閉せず、開いた形。PC もスマホも同じ）
   const addForm = (
     <>
       <form onSubmit={add}>
@@ -180,80 +182,74 @@ export default function Budgets({ data, update }) {
   return (
     <div className="report budgets">
       <h2>{t('budgets.title')}</h2>
-      <div className="month-bar">
-        <input type="month" aria-label={t('common.month')} value={month} onChange={(e) => setMonth(e.target.value)} />
-        <button type="button" onClick={() => setMonth(today().slice(0, 7))}>{t('common.thisMonth')}</button>
-        <button type="button" onClick={() => setMonth(previousMonth(today()))}>{t('common.lastMonth')}</button>
+      <Tabs label={t('budgets.title')} tabs={[{ id: 'month', title: t('budgets.tabMonth') }, { id: 'manage', title: t('budgets.tabManage') }]} current={tab} onChange={setTab} prefix="budgets" />
+      <div role="tabpanel" id={panelDomId('budgets', tab)} aria-labelledby={tabDomId('budgets', tab)} className={tab === 'manage' ? 'tab-panel panel-manage' : 'tab-panel'}>
+        {tab === 'month' ? (
+          <>
+            <div className="month-bar">
+              <input type="month" aria-label={t('common.month')} value={month} onChange={(e) => setMonth(e.target.value)} />
+              <button type="button" onClick={() => setMonth(today().slice(0, 7))}>{t('common.thisMonth')}</button>
+              <button type="button" onClick={() => setMonth(previousMonth(today()))}>{t('common.lastMonth')}</button>
+            </div>
+            {!month ? <p className="note">{t('common.chooseMonth')}</p> : (
+              <>
+                <h3>{t('budgets.limitTitle')}</h3>
+                <LimitTable limits={status.limits} currency={currency} phone={phone} />
+                {status.unset.length > 0 && (
+                  <>
+                    <h3>{t('budgets.unsetTitle')}</h3>
+                    {phone ? (
+                      // スマホの幅：科目名と実績の2列は、長い科目名で表が広がるので、1行の形（名前は幅で「…」）にする
+                      <ul className="rows2">
+                        {status.unset.map((r) => (
+                          <li key={r.account.id}>
+                            <span className="name">{r.account.name}</span>
+                            <span className="value"><Yen n={r.actual} currency={currency} /></span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="table-box"><table className="budget-table">
+                        <thead>
+                          <tr><th>{t('common.account')}</th><th>{t('budgets.actual')}</th></tr>
+                        </thead>
+                        <tbody>
+                          {status.unset.map((r) => <tr key={r.account.id}><td className="wrap">{r.account.name}</td><td><Yen n={r.actual} currency={currency} /></td></tr>)}
+                        </tbody>
+                      </table></div>
+                    )}
+                  </>
+                )}
+                <h3>{t('budgets.goalTitle')}</h3>
+                <GoalTable goals={status.goals} currency={currency} phone={phone} />
+              </>
+            )}
+          </>
+        ) : (
+          <>
+            <h3>{t('budgets.addTitle')}</h3>
+            {addForm}
+
+            <h3>{t('budgets.historyTitle')}</h3>
+            {budgeted.length === 0 ? <p className="note">{t('budgets.empty')}</p> : budgeted.map((account) => {
+              const history = budgetHistory(budgets, account.id)
+              const now = effectiveBudget(budgets, account.id, today().slice(0, 7))
+              return (
+                <details key={account.id} className={account.active ? '' : 'inactive'}>
+                  <summary>
+                    {account.name}{t('budgets.kindWrap', { kind: BUDGET_RULES[history[0].kind]?.label })}
+                    {!account.active && <span className="note"> {t('common.inactive')}</span>}
+                    <span className="note"> {now ? t('budgets.thisMonthNow', { amount: formatMoney(now.amount, currency) }) : t('budgets.noBudgetThisMonth')}</span>
+                  </summary>
+                  <ul>
+                    {history.map((b) => <HistoryRow key={`${b.id}:${b.amount}`} budget={b} data={data} update={update} />)}
+                  </ul>
+                </details>
+              )
+            })}
+          </>
+        )}
       </div>
-      {phone && (
-        <>
-          <h3 className="add-head">
-            <button type="button" className="add-toggle" aria-expanded={addOpen} aria-controls="budget-add" onClick={() => setAddOpen((o) => !o)}>
-              <span>{t('budgets.addTitle')}</span>
-              <span className="mark" aria-hidden="true">{addOpen ? '▼' : '▶'}</span>
-            </button>
-          </h3>
-          <div id="budget-add" hidden={!addOpen}>{addForm}</div>
-        </>
-      )}
-      {!month ? <p className="note">{t('common.chooseMonth')}</p> : (
-        <>
-          <h3>{t('budgets.limitTitle')}</h3>
-          <LimitTable limits={status.limits} currency={currency} phone={phone} />
-          {status.unset.length > 0 && (
-            <>
-              <h3>{t('budgets.unsetTitle')}</h3>
-              {phone ? (
-                // スマホの幅：科目名と実績の2列は、長い科目名で表が広がるので、1行の形（名前は幅で「…」）にする
-                <ul className="rows2">
-                  {status.unset.map((r) => (
-                    <li key={r.account.id}>
-                      <span className="name">{r.account.name}</span>
-                      <span className="value"><Yen n={r.actual} currency={currency} /></span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="table-box"><table className="budget-table">
-                  <thead>
-                    <tr><th>{t('common.account')}</th><th>{t('budgets.actual')}</th></tr>
-                  </thead>
-                  <tbody>
-                    {status.unset.map((r) => <tr key={r.account.id}><td className="wrap">{r.account.name}</td><td><Yen n={r.actual} currency={currency} /></td></tr>)}
-                  </tbody>
-                </table></div>
-              )}
-            </>
-          )}
-          <h3>{t('budgets.goalTitle')}</h3>
-          <GoalTable goals={status.goals} currency={currency} phone={phone} />
-        </>
-      )}
-
-      {!phone && (
-        <>
-          <h3>{t('budgets.addTitle')}</h3>
-          {addForm}
-        </>
-      )}
-
-      <h3>{t('budgets.historyTitle')}</h3>
-      {budgeted.length === 0 ? <p className="note">{t('budgets.empty')}</p> : budgeted.map((account) => {
-        const history = budgetHistory(budgets, account.id)
-        const now = effectiveBudget(budgets, account.id, today().slice(0, 7))
-        return (
-          <details key={account.id} className={account.active ? '' : 'inactive'}>
-            <summary>
-              {account.name}{t('budgets.kindWrap', { kind: BUDGET_RULES[history[0].kind]?.label })}
-              {!account.active && <span className="note"> {t('common.inactive')}</span>}
-              <span className="note"> {now ? t('budgets.thisMonthNow', { amount: formatMoney(now.amount, currency) }) : t('budgets.noBudgetThisMonth')}</span>
-            </summary>
-            <ul>
-              {history.map((b) => <HistoryRow key={`${b.id}:${b.amount}`} budget={b} data={data} update={update} />)}
-            </ul>
-          </details>
-        )
-      })}
     </div>
   )
 }

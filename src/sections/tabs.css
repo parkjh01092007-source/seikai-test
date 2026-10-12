@@ -1,0 +1,5 @@
+/* タブ（設定の画面と予算の画面で共通。Tabs.jsx。spec-ui.md 4.1・spec-ledger.md 5.15）。選ばれているタブは、太字と太い下線（色だけに頼らない）。押す場所は 44px 以上。4つが幅いっぱいに等分される */
+.tabs { display: flex; margin: var(--space) 0; border-bottom: 1px solid var(--color-border); }
+.tabs .tab { flex: 1 1 0; min-width: 0; min-height: 44px; box-sizing: border-box; padding: 0 calc(var(--space) / 2); border: 0; border-bottom: 3px solid transparent; margin-bottom: -1px; border-radius: 0; background: none; color: var(--color-muted); font: inherit; white-space: nowrap; cursor: pointer; }
+.tabs .tab[aria-selected='true'] { border-bottom-color: var(--color-text); color: var(--color-text); font-weight: bold; }
+.tabs .tab:hover { color: var(--color-text); }

@@ -93,7 +93,7 @@ export function EntryForm({ accounts, initial, submitLabel, onSubmit, onCancel, 
       {fields.living}
       <input className="memo-input" placeholder={t('common.memo')} aria-label={t('common.memo')} value={f.memo} onChange={(e) => set('memo')(e.target.value)} />
       <button>{submitLabel}</button>
-      {onCancel && <button type="button" onClick={onCancel}>{t('common.cancel')}</button>}
+      {onCancel && <button type="button" onClick={onCancel}>{t('entries.sheetClose')}</button>}
       {error && <span className="error">{error}</span>}
     </form>
   )

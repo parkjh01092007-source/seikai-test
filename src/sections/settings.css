@@ -6,11 +6,6 @@
 /* 危ない操作（仕訳の一括削除・全体の初期化）：エラーの色の枠で囲む（spec-ui.md 4.1）。線は 2px。色は --color-error（7つの見た目すべてで、地との比が 3:1 以上。themes.check.js が 4.5:1 以上を確かめている） */
 .settings .set-danger { border: 2px solid var(--color-error); border-radius: 4px; padding: 0 var(--space) var(--space); margin: calc(var(--space) * 2) 0; }
 .settings .set-danger .set-title { margin-top: var(--space); }
-/* タブ（spec-ui.md 4.1。グループ：記帳・照会・データ・一般）。選ばれているタブは、太字と太い下線（色だけに頼らない）。押す場所は 44px 以上。4つが幅いっぱいに等分される */
-.settings .set-tabs { display: flex; margin: var(--space) 0; border-bottom: 1px solid var(--color-border); }
-.settings .set-tab { flex: 1 1 0; min-width: 0; min-height: 44px; box-sizing: border-box; padding: 0 calc(var(--space) / 2); border: 0; border-bottom: 3px solid transparent; margin-bottom: -1px; border-radius: 0; background: none; color: var(--color-muted); font: inherit; white-space: nowrap; cursor: pointer; }
-.settings .set-tab[aria-selected='true'] { border-bottom-color: var(--color-text); color: var(--color-text); font-weight: bold; }
-.settings .set-tab:hover { color: var(--color-text); }
 .settings .error { color: var(--color-error); }
 .settings .note { color: var(--color-muted); font-size: 0.85em; }
 .settings ol { padding-left: calc(var(--space) * 3); margin: var(--space) 0; }

@@ -283,6 +283,8 @@ export default {
   'budgets.rowSubLimit': '実績 {actual}／予算 {budget}　残り {remaining}　達成率 {rate}%', // スマホの2行目（上限）
   'budgets.rowSubGoal': '実績 {actual}／目標 {budget}　不足 {shortfall}　達成率 {rate}%', // スマホの2行目（目標）
   'budgets.addTitle': '予算を追加',
+  'budgets.tabMonth': '月の予算',
+  'budgets.tabManage': '登録・履歴',
   'budgets.kind': '種類',
   'budgets.startMonth': '適用開始月',
   'budgets.note': 'ある月の予算は、その科目の予算のうち、適用開始月がその月以前で、一番新しいものです。適用開始月を変えたいときは、削除して入れ直してください。',

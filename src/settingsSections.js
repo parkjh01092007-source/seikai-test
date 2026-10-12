@@ -25,18 +25,8 @@ export const SETTINGS_SECTIONS = [
   { id: 'display', group: 'general', title: 'theme.title' },
 ]
 
-// タブとパネルの id（aria-controls・aria-labelledby 用）
-export const tabDomId = (group) => `settings-tab-${group}`
-export const panelDomId = (group) => `settings-panel-${group}`
-
-// 矢印キー・Home・End で、次に開くタブ（tabIds は並び順のタブの id、current は今のタブ）。
-// 右は次（最後からは最初へ回る）、左は前（最初からは最後へ回る）、Home は最初、End は最後。知らないキー・知らない current は、current のまま
-export function nextTab(tabIds, current, key) {
-  const i = tabIds.indexOf(current)
-  if (i < 0) return current
-  if (key === 'ArrowRight') return tabIds[(i + 1) % tabIds.length]
-  if (key === 'ArrowLeft') return tabIds[(i - 1 + tabIds.length) % tabIds.length]
-  if (key === 'Home') return tabIds[0]
-  if (key === 'End') return tabIds[tabIds.length - 1]
-  return current
-}
+// タブとパネルの id（aria-controls・aria-labelledby 用）。作りは tabs.js（予算の画面と共通）
+import { tabDomId as tabId, panelDomId as panelId, nextTab } from './tabs.js'
+export const tabDomId = (group) => tabId('settings', group)
+export const panelDomId = (group) => panelId('settings', group)
+export { nextTab }

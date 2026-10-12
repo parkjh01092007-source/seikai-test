@@ -38,9 +38,9 @@ function SubscriptionForm({ accounts, initial, submitLabel, onSubmit, onCancel, 
       <AccountSelect label={t('common.debit')} value={f.debitId} onChange={set('debitId')} options={options} />
       <AccountSelect label={t('common.credit')} value={f.creditId} onChange={set('creditId')} options={options} />
       {/* スマホの形の編集は、仕訳の編集画面（下から出る画面）と同じ左右の順番：左「やめる」、右「保存」（spec-mobile.md 11.3）。PC は今のまま（保存 → やめる） */}
-      {phone && onCancel && <button type="button" className="sub-cancel" onClick={onCancel}>{t('common.cancel')}</button>}
+      {phone && onCancel && <button type="button" className="sub-cancel" onClick={onCancel}>{t('entries.sheetClose')}</button>}
       <button className="sub-submit">{submitLabel}</button>
-      {!phone && onCancel && <button type="button" onClick={onCancel}>{t('common.cancel')}</button>}
+      {!phone && onCancel && <button type="button" onClick={onCancel}>{t('entries.sheetClose')}</button>}
       {error && <span className="error">{error}</span>}
     </form>
   )

@@ -15,14 +15,14 @@
   .budgets .rows2 { margin-bottom: var(--space); }
   .budgets .rows2 .sub { word-break: keep-all; } /* 「達成率 15%」などを、文字の途中で折り返さない（区切りは空白） */
   .budgets .rows2 > li.over, .budgets .rows2 > li.over .sub { color: var(--color-error); }
-  /* 予算を追加する欄：表の上の開閉。見出しの文字は見出しのまま、右端に ▼／▶ */
-  .budgets .add-head { margin: var(--space) 0; }
-  .budgets .add-toggle { display: flex; align-items: center; gap: var(--space); width: 100%; padding: 0; border: 0; background: none; color: inherit; font: inherit; font-weight: bold; text-align: left; cursor: pointer; }
-  .budgets .add-toggle .mark { margin-left: auto; font-size: 0.8em; font-weight: normal; }
-  .budgets #budget-add form select, .budgets #budget-add form input { flex: 1 1 calc(50% - var(--space)); min-width: 0; }
-  .budgets #budget-add form label { display: flex; flex: 1 1 100%; align-items: center; gap: var(--space); }
-  .budgets #budget-add form label input { flex: 1; }
+  /* 予算を追加する欄（「登録・履歴」のタブ。作業26 で、スマホの開閉をやめた）：選択ボックス・金額は 2 列 */
+  .budgets .panel-manage > form select, .budgets .panel-manage > form input { flex: 1 1 calc(50% - var(--space)); min-width: 0; }
+  .budgets .panel-manage > form label { display: flex; flex: 1 1 100%; align-items: center; gap: var(--space); }
+  .budgets .panel-manage > form label input { flex: 1; }
   /* 決定のボタン「追加」は幅いっぱいの1行（11.3） */
-  .budgets #budget-add form > button { flex: 1 1 100%; }
-  .budgets #budget-add form > .error { flex: 1 1 100%; }
+  .budgets .panel-manage > form > button { flex: 1 1 100%; }
+  .budgets .panel-manage > form > .error { flex: 1 1 100%; }
 }
+
+/* 「登録・履歴」のパネルの下の空き：履歴の科目を開いても、中身が画面の下の端に張り付かないようにする（spec-ledger.md 5.15）。画面の高さの 30%（最低 48px）。PC・スマホとも */
+.budgets .panel-manage { padding-bottom: max(calc(var(--space) * 6), 30vh); }
