@@ -123,10 +123,13 @@ async function call(url, init = {}) {
   const token = getToken()
   if (!token) throw new DriveError('login', 'no token')
   let res
+  const t0 = Date.now()
   try {
     res = await fetch(url, { ...init, headers: { ...init.headers, Authorization: `Bearer ${token}` } })
   } catch (e) {
     throw new DriveError('offline', e.message)
+  } finally {
+    if (import.meta.env.DEV) console.info(`[drive] ${init.method ?? 'GET'} ${new URL(url).pathname.replace(/\/[^/]{20,}/g, '/…')} ${Date.now() - t0}ms`) // 開発のときだけ。1つの問い合わせにかかった時間（鍵・ファイルの中身は出さない）
   }
   if (res.status === 401) {
     clearToken(store()) // 切れた鍵は捨てる（設定の欄で「切れています」と出る）
@@ -137,12 +140,15 @@ async function call(url, init = {}) {
   return res
 }
 const CRLF = String.fromCharCode(13, 10) // multipart の改行
-// appDataFolder に、名前つきで新しいファイルを作る（データのファイルも、控えも）
-async function createFile(name, text) {
+// multipart の本体：1つ目がメタデータ（JSON）、2つ目が中身
+function multipart(meta, text) {
   const boundary = `b${[...crypto.getRandomValues(new Uint8Array(8))].map((b) => b.toString(16).padStart(2, '0')).join('')}`
-  const meta = JSON.stringify({ name, parents: ['appDataFolder'] })
-  const body = [`--${boundary}`, 'Content-Type: application/json; charset=UTF-8', '', meta, `--${boundary}`, 'Content-Type: application/json', '', text, `--${boundary}--`].join(CRLF)
-  const res = await call(`${UPLOAD}/files?uploadType=multipart&fields=${FILE_FIELDS}`, { method: 'POST', headers: { 'Content-Type': `multipart/related; boundary=${boundary}` }, body })
+  const body = [`--${boundary}`, 'Content-Type: application/json; charset=UTF-8', '', JSON.stringify(meta), `--${boundary}`, 'Content-Type: application/json', '', text, `--${boundary}--`].join(CRLF)
+  return { headers: { 'Content-Type': `multipart/related; boundary=${boundary}` }, body }
+}
+// appDataFolder に、名前つきで新しいファイルを作る（データのファイルも、控えも、セーブのスロットも）。properties：appProperties に入れる文字（スロットのセーブした日時）
+async function createFile(name, text, properties = null) {
+  const res = await call(`${UPLOAD}/files?uploadType=multipart&fields=${FILE_FIELDS}`, { method: 'POST', ...multipart({ name, parents: ['appDataFolder'], ...(properties ? { appProperties: properties } : {}) }, text) })
   return res.json()
 }
 export const drive = {
@@ -163,26 +169,36 @@ export const drive = {
   async readRevision(fileId, revId) {
     return (await call(`${API}/files/${fileId}/revisions/${encodeURIComponent(revId)}?alt=media`)).text()
   },
-  async createBackup(name, text) {
-    return createFile(name, text)
+  async createBackup(name, text, properties = null) {
+    return createFile(name, text, properties)
   },
-  // appDataFolder の中のファイルを全部読んで、名前で選ぶ（ドライブの「name contains」は、ハイフンつきの名前の前の部分では、思ったとおりに当たらないことがあるため）
-  async listBackups() {
+  // セーブのスロット（作業31）：名前つきで作る。appProperties に、セーブした日時を入れる
+  createNamed(name, text, properties) {
+    return createFile(name, text, properties)
+  },
+  // appDataFolder の中のファイルを全部読んで（先にできた順）、呼ぶ側が名前で選ぶ（ドライブの「name contains」は、ハイフンつきの名前の前の部分では、思ったとおりに当たらないことがあるため）。
+  // スロットの「最後のセーブ」は、読まずに、ここの appProperties と更新日時から出す（問い合わせは1回）
+  async listFiles() {
     const out = []
     let page = ''
     do {
-      const res = await call(`${API}/files?spaces=appDataFolder&q=${encodeURIComponent('trashed=false')}&pageSize=100&fields=nextPageToken,files(id,name)${page}`)
+      const res = await call(`${API}/files?spaces=appDataFolder&q=${encodeURIComponent('trashed=false')}&orderBy=createdTime&pageSize=100&fields=nextPageToken,files(id,name,modifiedTime,appProperties)${page}`)
       const json = await res.json()
-      out.push(...(json.files ?? []).filter((f) => typeof f.name === 'string' && f.name.startsWith(BACKUP_PREFIX)))
+      out.push(...(json.files ?? []).filter((f) => typeof f.name === 'string'))
       page = json.nextPageToken ? `&pageToken=${encodeURIComponent(json.nextPageToken)}` : ''
     } while (page)
     return out
   },
+  async listBackups() {
+    return (await drive.listFiles()).filter((f) => f.name.startsWith(BACKUP_PREFIX))
+  },
   async remove(id) {
     await call(`${API}/files/${id}`, { method: 'DELETE' })
   },
-  async update(id, text) {
-    const res = await call(`${UPLOAD}/files/${id}?uploadType=media&fields=${FILE_FIELDS}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: text })
+  // properties があるとき（スロット）は、中身とメタデータ（appProperties）を一緒に送る multipart。問い合わせは1回のまま
+  async update(id, text, properties = null) {
+    const init = properties ? multipart({ appProperties: properties }, text) : { headers: { 'Content-Type': 'application/json' }, body: text }
+    const res = await call(`${UPLOAD}/files/${id}?uploadType=${properties ? 'multipart' : 'media'}&fields=${FILE_FIELDS}`, { method: 'PATCH', ...init })
     return res.json()
   },
   // 版の履歴。古い順（更新の日時で並べ、同じ日時なら、ドライブが返した順のまま）

@@ -3,10 +3,12 @@ import './saveload.css'
 import { t } from '../text.js'
 import { folderStatus, chooseFolder } from '../saveStore.js'
 import { storeErrorText } from '../saveLogic.js'
+import { getSync } from '../driveStore.js'
 
 // 設定 → セーブ：セーブフォルダーを選ぶ。選んだフォルダの名前を出す（鍵は saveStore が IndexedDB に持つ）。
 // オートセーブの ON・OFF（config.json）は App が持つ autosave（on / broken / reload / toggle）で切り替える
 export default function SaveSettings({ autosave }) {
+  const connected = getSync().connected // ドライブにつないでいる間は、セーブ・ロードはドライブを使う（spec-drive.md 13.2）
   const [status, setStatus] = useState(null) // { state, name }。読むまでは null
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -55,10 +57,12 @@ export default function SaveSettings({ autosave }) {
   }
 
   if (status === null) return <section className="save-settings" />
+  if (connected && status.state === 'unsupported') return <section className="save-settings"><p className="note">{t('save.driveUsed')}</p></section>
   if (status.state === 'unsupported') return <section className="save-settings"><p className="note">{t('save.unsupported')}</p></section>
 
   return (
     <section className="save-settings">
+      {connected && <p className="note">{t('save.driveUsed')}</p>}
       <div className="row">
         <span>{t('save.folder')}<span className="folder-name">{status.name ?? t('save.noFolder')}</span></span>
         <button type="button" onClick={choose}>{status.name === null ? t('save.choose') : t('save.rechoose')}</button>
@@ -72,11 +76,11 @@ export default function SaveSettings({ autosave }) {
       {status.state === 'denied' && <p className="error">{t('save.denied')}</p>}
       <div className="row">
         <label>
-          <input type="checkbox" checked={autosave.on} disabled={busy || status.state !== 'granted'} onChange={(e) => toggle(e.target.checked)} /> {t('save.autosave')}
+          <input type="checkbox" checked={autosave.on} disabled={busy || connected || status.state !== 'granted'} onChange={(e) => toggle(e.target.checked)} /> {t('save.autosave')}
         </label>
-        {status.state === 'none' && <span className="note">{t('save.autosaveNeedFolder')}</span>}
+        {status.state === 'none' && !connected && <span className="note">{t('save.autosaveNeedFolder')}</span>}
       </div>
-      <p className="note">{t('save.autosaveNote')}</p>
+      {!connected && <p className="note">{t('save.autosaveNote')}</p>}
       {autosave.broken && status.state === 'granted' && <p className="error">{t('save.configBroken')}</p>}
       {error && <p className="error">{error}</p>}
       <p className="note">{t('save.caution')}</p>

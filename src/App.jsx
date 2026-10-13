@@ -16,8 +16,11 @@ import './nav.css'
 import { loadData, saveData, exportJson, parseImport, needsMigration, isNewerData, migrate, autoRecord } from './storage.js'
 import { checkForNewBuild } from './pwa.js'
 import { today, nowLocal } from './today.js'
-import { buildConfig, parseConfig, buildSaveFile, autosaveBlocker, storeErrorText } from './saveLogic.js'
-import { folderStatus, readConfig, writeConfig, writeSlot, getAutosaveHint, setAutosaveHint } from './saveStore.js'
+import { buildConfig, parseConfig, buildSaveFile, autosaveBlocker, storeErrorText, errName } from './saveLogic.js'
+import { folderStatus, readConfig, writeConfig, getAutosaveHint, setAutosaveHint } from './saveStore.js'
+import { slotStore } from './slotStore.js'
+
+const DRIVE_WAIT_LIMIT = 8000 // ドライブへの直前のオートセーブを、操作が待つ長さ（ミリ秒）。書き込みそのものは、これを過ぎても続く
 
 // アプリを開いたとき：データを読み、移行が要らなければ、定期支払いの自動記入を行って保存する。
 // このアプリより新しい版のデータ（isNewerData）は、記入も保存もしない（spec-pwa.md 6章）。
@@ -107,48 +110,83 @@ export default function App() {
   useEffect(() => { reloadAutosave() }, [reloadAutosave])
   const autosave = { ...autosaveState, reload: reloadAutosave, toggle: toggleAutosave }
 
-  // オートセーブの書き込み。データは変えない（書くだけ）。確認画面も出さない。
-  // 書き込みは1本のつなぎ（chain）に並べるので、重ならない。書くのは、そのときの一番新しいデータ（latest）。同じデータをもう書いてあれば、書かない
+  // オートセーブの書き込み。データは変えない（書くだけ）。確認画面も出さない。書くのは、そのときの一番新しいデータ（latest）。同じデータをもう書いてあれば、書かない
+  // 書き先：ドライブにつないでいるときはドライブ（ふだんの変化では書かず、大きな操作の直前 beforeReplace だけ。ON・OFF に関係なく書く）、つないでいないときはセーブフォルダー（spec-drive.md 13.2）
   const latest = useRef(data)
-  const written = useRef(null) // 最後に autosave.json へ書けたデータ
+  const written = useRef(null) // 最後に autosave.json へ書けたデータと書き先：{ data, kind }
   const skip = useRef(data) // 起動時のデータと、置き換えの直後のデータ（update の quiet）は、書かない
-  const chain = useRef(Promise.resolve())
-  const writeAutosave = useCallback(() => {
+  const chain = useRef(Promise.resolve()) // フォルダへの書き込みは、1本のつなぎに並べるので、重ならない
+  // ドライブへの書き込み：同期のつなぎ（useDriveSync）には並べず、すぐ始める（同期が触るのは orenoyome-data.json と控えだけで、autosave のファイルとは重ならない）。
+  // ドライブへの書き込み同士は、1本のつなぎ（driveWrite）に並べる（続けて2回書くと、同じ名前のファイルが2つできてしまうため）。
+  // 書き込みは、書くと決めた時点のデータで、最後まで続ける（操作で手元のデータが置き換わっても、取り消さない）。失敗したときだけ「オートセーブできません」を出す
+  const driveWrite = useRef(Promise.resolve())
+  const inflight = useRef(null) // 今書いている（または並んでいる）データと、その書き込み：{ data, job }
+  const writeDrive = useCallback(async (beforeReplace) => {
+    const d = latest.current
+    const store = slotStore()
+    if (written.current?.data === d && written.current.kind === 'drive') return setProblem(null) // もう書いてある
+    const st = await store.status()
+    const why = autosaveBlocker({ on: onRef.current, migrating: needsMigration(d) || isNewerData(d), folderState: st.state, drive: true, beforeReplace })
+    if (why === 'unavailable') return setProblem(storeErrorText(st.state)) // 電波がない・ログインが切れている
+    if (why === 'drive-idle') return // ふだんの変化：書かない。出ている知らせは、そのまま
+    if (why) return setProblem(null) // 移行中・新しい版：書かないだけ
+    if (inflight.current?.data !== d) {
+      const job = driveWrite.current.then(async () => {
+        const t0 = Date.now()
+        try {
+          await store.writeSlot('autosave.json', JSON.stringify(buildSaveFile(d, { kind: 'auto', savedAt: nowLocal(), memo: '' }), null, 2))
+          written.current = { data: d, kind: 'drive' }
+          setProblem(null)
+        } catch (e) {
+          setProblem(storeErrorText(errName(e), e.message))
+        }
+        if (import.meta.env.DEV) console.info(`[autosave] drive write ${Date.now() - t0}ms`)
+      })
+      driveWrite.current = job
+      inflight.current = { data: d, job }
+    }
+    // 操作を待たせるのは、8秒まで。書き込み自体は続く（終われば、ロード画面のオートセーブに出る）
+    await Promise.race([inflight.current.job, new Promise((ok) => setTimeout(ok, DRIVE_WAIT_LIMIT))])
+  }, [])
+  const writeAutosave = useCallback((beforeReplace = false) => {
+    if (slotStore().kind === 'drive') return writeDrive(beforeReplace)
     chain.current = chain.current.then(async () => {
       const d = latest.current
-      if (d === written.current) return setProblem(null) // 書くものがない（もう書いてある）
+      if (written.current?.data === d && written.current.kind === 'folder') return setProblem(null) // 書くものがない（もう書いてある）
       try {
-        const st = await folderStatus() // 許可は求めない
-        const why = autosaveBlocker({ on: onRef.current, migrating: needsMigration(d) || isNewerData(d), folderState: st.state }) // 新しい版のデータも、移行中と同じく書かない
+        const st = await slotStore().status() // 許可は求めない
+        const why = autosaveBlocker({ on: onRef.current, migrating: needsMigration(d) || isNewerData(d), folderState: st.state, beforeReplace }) // 新しい版のデータも、移行中と同じく書かない
         if (why === 'permission') return setProblem(storeErrorText('NotAllowedError'))
         if (why) return setProblem(null) // OFF・移行中・フォルダなし・未対応は、書かないだけ（出さない）
-        await writeSlot('autosave.json', JSON.stringify(buildSaveFile(d, { kind: 'auto', savedAt: nowLocal(), memo: '' }), null, 2))
-        written.current = d
+        await slotStore().writeSlot('autosave.json', JSON.stringify(buildSaveFile(d, { kind: 'auto', savedAt: nowLocal(), memo: '' }), null, 2))
+        written.current = { data: d, kind: 'folder' }
         setProblem(null)
       } catch (e) {
-        setProblem(storeErrorText(e.name, e.message))
+        setProblem(storeErrorText(errName(e), e.message))
       }
     })
     return chain.current
-  }, [])
-  // データを大きく変える操作（読み込み・ロード・全体の初期化・仕訳の一括削除）の直前に呼ぶ。書けるなら、今のデータを今すぐ書く（2秒待たない）。書けなくても、例外は投げない（操作はそのまま進む）
-  const autosaveBeforeReplace = writeAutosave
+  }, [writeDrive])
+  // データを大きく変える操作（読み込み・ロード・全体の初期化・仕訳の一括削除・控えから戻す）の直前に呼ぶ。書けるなら、今のデータを今すぐ書く（2秒待たない）。書けなくても、例外は投げない（操作はそのまま進む）
+  const autosaveBeforeReplace = useCallback(() => writeAutosave(true), [writeAutosave])
 
   // データが変わったら、最後の変化から2秒後に1回だけ書く
   useEffect(() => {
     latest.current = data
     if (data === skip.current) return
-    const timer = setTimeout(writeAutosave, 2000)
+    const timer = setTimeout(() => writeAutosave(), 2000)
     return () => clearTimeout(timer)
   }, [data, writeAutosave])
 
   // 「オートセーブできません」を押したとき：許可を求め、config.json を読み直し、書けていない変化があればすぐ書く
   const retryAutosave = async () => {
     try {
-      await folderStatus({ request: true })
-      await reloadAutosave()
+      if (slotStore().kind === 'folder') {
+        await folderStatus({ request: true })
+        await reloadAutosave()
+      }
     } catch { /* 書くときに、もう一度確かめて表示する */ }
-    await writeAutosave()
+    await writeAutosave(slotStore().kind === 'drive') // ドライブ：押したら、書けていない直前の分をやり直す
   }
 
   useEffect(() => {
@@ -249,10 +287,9 @@ export default function App() {
   }
 
   // Google ドライブの同期（spec-drive.md 4章）。ドライブから下ろしたデータで置き換える（読み込みと同じ検証と移行を通ったもの r）。手元の変更には数えない（driveSkip）。
-  // 置き換える前に、今のデータをオートセーブへ書く。定期支払いの自動記入は、読み込みと同じく置き換えのあとに1回行う（変更には数えない）
+  // 定期支払いの自動記入は、読み込みと同じく置き換えのあとに1回行う（変更には数えない）。置き換える前の、オートセーブへの書き込みはしない（下ろすたびに、直前の状態を残した autosave が上書きされないため。spec-drive.md 13.2）
   const driveSkip = useRef(data)
   const applyRemote = async (r) => {
-    await autosaveBeforeReplace()
     const next = autoRecord(r.data, today()).data
     driveSkip.current = next
     setError('')
@@ -340,7 +377,7 @@ export default function App() {
           )}
         </div>
       </div>
-      {panel && <SaveLoadPanel key={panel} mode={panel} data={data} onClose={() => setPanel(null)} onToSettings={setSettingsTab} onLoad={async (r) => { await applyImported(r); setPanel(null) }} />}
+      {panel && <SaveLoadPanel key={panel} mode={panel} data={data} loadBlocked={Boolean(driveSync.conflict)} onClose={() => setPanel(null)} onToSettings={setSettingsTab} onLoad={async (r) => { await applyImported(r); setPanel(null) }} />}
       {request && <ConfirmDialog key={request.id} request={request} onAnswer={answer} />}
       {conflictOpen && driveSync.conflict && <ConflictDialog key={conflictKey} kind={driveSync.conflict.kind} describe={driveSync.describe} resolve={driveSync.resolve} onClose={() => setConflictOpen(false)} onLogin={() => startLogin(onSettingsScreen ? settingsTab : null)} />}
     </div>

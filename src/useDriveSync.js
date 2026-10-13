@@ -13,6 +13,7 @@ const DEBOUNCE = 2000 // 最後の変化から2秒待って上げる（4.3）
 const RETRY = 3000 // 置き換えたいが画面が開いている・読んでいる間に手元が変わったとき、少し待ってやり直す
 const PATROL = 15000 // 画面が開いている間の見回り（4.7）：15秒ごとに、ドライブの版を見る（変わっていなければ、問い合わせは1回）
 const ONLINE_WAIT = 1000 // 電波が戻ったと知らされてから、通信が使えるようになるまで待つ
+const backupCache = new Map() // 控えの一覧：中身を読んだ控えの結果（id ごと。控えは変わらない。ページを読み直すと消える）
 
 export function useDriveSync({ data, skip, apply, restore }) {
   const latest = useRef(data)
@@ -50,6 +51,7 @@ export function useDriveSync({ data, skip, apply, restore }) {
     },
     canReplace: () => !modalOpen(),
     now: () => new Date().toISOString(),
+    cache: backupCache,
     sleep: (ms) => new Promise((ok) => setTimeout(ok, ms)),
   })
 

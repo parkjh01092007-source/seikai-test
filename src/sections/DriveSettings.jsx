@@ -3,6 +3,7 @@ import './saveload.css'
 import { t } from '../text.js'
 import { versionLabel } from '../pwa.js'
 import { LOGIN_ERROR_KEYS } from '../driveLogic.js'
+import DriveCopy from './DriveCopy.jsx'
 import { CHANGE_EVENT, isConfigured, getSync, getToken, getLoginError, startLogin, disconnect } from '../driveStore.js'
 
 // 設定 → データ → Google ドライブ（spec-drive.md 5章）：つなぐ・切る、つないでいるアカウント、ログインの状態、最後に同期した日時。
@@ -35,6 +36,7 @@ export default function DriveSettings({ tab }) {
             <button type="button" onClick={disconnect}>{t('drive.disconnect')}</button>
           </div>
           <p className="note">{t('drive.keptNote')}</p>
+          <DriveCopy />
         </>
       ) : (
         <div className="row">

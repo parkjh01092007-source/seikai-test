@@ -9,6 +9,7 @@ const STORE = 'handles'
 const KEY = 'folder'
 const HINT_KEY = 'autosave'
 
+export const FOLDER_EVENT = 'orenoyome-folder-change' // フォルダを選び直したとき（画面が読み直す）
 export const isSupported = () => typeof window !== 'undefined' && 'showDirectoryPicker' in window
 
 // ---- IndexedDB（鍵の保存）----
@@ -75,6 +76,7 @@ export async function chooseFolder() {
     throw e
   }
   await putHandle(handle)
+  window.dispatchEvent(new Event(FOLDER_EVENT))
   return handle.name
 }
 

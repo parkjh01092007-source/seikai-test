@@ -5,7 +5,7 @@ import { today } from '../today.js'
 import { t } from '../text.js'
 import { lastSaveLine } from './lastSave.js'
 import { useConfirm } from './ConfirmDialog.jsx'
-import { isSupported } from '../saveStore.js'
+import { slotsAvailable } from '../slotStore.js'
 
 // 設定 → データの3つの項目（spec-ui.md 4.1。作業21 で、1つの「データ」の項目から分けた。中身と動きは今までどおり）。
 // 書き出し・読み込み（スマホの形だけ。右上の帯の代わり。spec-mobile.md 第4章）、仕訳の一括削除（月か全期間）、全体の初期化。
@@ -13,7 +13,7 @@ import { isSupported } from '../saveStore.js'
 // ボタンを押すと、確認画面を「いいえ」で閉じて、セーブ画面を開く（もう一度押し直す）。計算は planEntryPurge（ledgerLogic.js）。画面は結果を出して、update するだけ
 
 // フォルダの読み書きができないブラウザ（スマホなど）では、押しても行き止まりなので出さない（spec-save.md 11章・12章の例外）
-const saveFirstButton = (openPanel) => (!isSupported() ? null : <button type="button" onClick={() => openPanel('save')}>{t('save.saveFirst')}</button>)
+const saveFirstButton = (openPanel) => (!slotsAvailable() ? null : <button type="button" onClick={() => openPanel('save')}>{t('save.saveFirst')}</button>)
 
 // 書き出し・読み込み。処理は App の doExport・doImport のまま
 export function BackupSettings({ onExport, onImport }) {

@@ -17,6 +17,18 @@ export const SLOTS = [
 ]
 export const isSlotFile = (name) => SLOTS.some((s) => s.file === name)
 
+// ドライブでのスロットの名前（spec-drive.md 13.3）。同期のデータ（orenoyome-data.json）・控え（orenoyome-backup-…）と見分けがつく
+export const DRIVE_SLOT_PREFIX = 'orenoyome-'
+export const driveSlotName = (file) => `${DRIVE_SLOT_PREFIX}${file}`
+// ドライブのファイル名から、スロットのファイル名（save01.json など）。スロットの名前でなければ null
+export const slotFileOfDriveName = (name) => (typeof name === 'string' && name.startsWith(DRIVE_SLOT_PREFIX) && isSlotFile(name.slice(DRIVE_SLOT_PREFIX.length)) ? name.slice(DRIVE_SLOT_PREFIX.length) : null)
+
+// 「最後のセーブ」に使う日時の一覧（ドライブ。13.3）。スロットのファイルだけ。セーブした日時（appProperties.savedAt）があればそれ、ないものだけ更新日時
+export const driveSavedAts = (files) => files
+  .filter((f) => slotFileOfDriveName(f?.name) !== null)
+  .map((f) => (typeof f.appProperties?.savedAt === 'string' && !Number.isNaN(Date.parse(f.appProperties.savedAt)) ? f.appProperties.savedAt : f.modifiedTime))
+  .filter((v) => typeof v === 'string')
+
 export const SAVE_ERRORS = {
   get unreadable() { return t('save.errUnreadable') },
   get newer() { return t('save.errNewer') },
@@ -168,9 +180,16 @@ export function parseConfig(text) {
   return { autosave: json.autosave, broken: false }
 }
 
-// オートセーブを書かない理由。書けるなら null。理由：'off' | 'migrating' | 'unsupported' | 'none' | 'permission'
-// on：ON か（許可がなくて読めないときは、最後に分かった値）。folderState は folderStatus の state。'permission' のときだけ「オートセーブできません」を出す
-export function autosaveBlocker({ on, migrating, folderState }) {
+// オートセーブを書かない理由。書けるなら null。理由：'off' | 'migrating' | 'unsupported' | 'none' | 'permission' | 'drive-idle' | 'unavailable'
+// on：ON か（許可がなくて読めないときは、最後に分かった値）。folderState は slotStore の status の state。'permission'・'unavailable' のときだけ「オートセーブできません」を出す
+// drive：ドライブにつないでいるか。つないでいるときは、ON・OFF に関係なく、大きな操作の直前（beforeReplace）だけ書く。ふだんの変化では書かない（'drive-idle'。spec-drive.md 13.2）。
+// 電波がない・ログインが切れている（state が offline・login）ときは 'unavailable'
+export function autosaveBlocker({ on, migrating, folderState, drive = false, beforeReplace = false }) {
+  if (drive) {
+    if (migrating) return 'migrating'
+    if (!beforeReplace) return 'drive-idle'
+    return folderState === 'offline' || folderState === 'login' ? 'unavailable' : null
+  }
   if (!on) return 'off'
   if (migrating) return 'migrating'
   if (folderState === 'unsupported') return 'unsupported'
@@ -179,8 +198,35 @@ export function autosaveBlocker({ on, migrating, folderState }) {
   return null
 }
 
+// セーブフォルダーのセーブを、ドライブへ写す計画（spec-drive.md 13.4）。写すのは手動のファイル1〜20だけ（オートセーブは写さない）。
+// folderRows：フォルダの readSlots の結果（{ file, text, error }）。driveFiles：ドライブにあるスロットのファイル名（save01.json など。中身が壊れていても「ある」）。
+// 返すもの：items（フォルダにファイルがあるスロットの、番号順の一覧：{ file, label, status }。status は 'copy'・'exists'・'newer'・'broken'）、copy（写すもの：{ file, text }）。
+// フォルダのスロットが空なら一覧に入れない。ドライブにあるものは、中身を問わず写さない（上書きしない）
+export function planCopyToDrive(folderRows, driveFiles) {
+  const items = []
+  const copy = []
+  for (const slot of SLOTS.filter((x) => x.kind === 'manual')) {
+    const row = folderRows.find((r) => r.file === slot.file)
+    if (!row || (row.text === null && !row.error)) continue
+    let status
+    if (driveFiles.includes(slot.file)) status = 'exists'
+    else if (row.error || row.text === null) status = 'broken'
+    else {
+      const r = checkSaveFile(row.text)
+      status = r.error ? r.status : 'copy' // 'newer' か 'broken'
+      if (status === 'copy') copy.push({ file: slot.file, text: row.text })
+    }
+    items.push({ file: slot.file, label: slot.label, status })
+  }
+  return { items, copy }
+}
+
 // 書き込み・削除の失敗の文。name は例外の name、detail は例外の message
+// ドライブの失敗（DriveError）は kind（login・offline・failed）、フォルダの失敗は DOMException の name
+export const errName = (e) => e?.kind ?? e?.name
 export function storeErrorText(name, detail = '') {
+  if (name === 'offline') return t('save.errOffline')
+  if (name === 'login') return t('save.errLogin')
   if (name === 'NotAllowedError' || name === 'SecurityError') return t('save.errNotAllowed')
   if (name === 'NotFoundError') return t('save.errNotFound')
   if (name === 'QuotaExceededError') return t('save.errQuota')

@@ -3,17 +3,19 @@ import './saveload.css'
 import { t } from '../text.js'
 import { toHash } from '../route.js'
 import { nowLocal } from '../today.js'
-import { SLOTS, SAVE_ERRORS, slotView, lastSaveText, validateMemo, buildSaveFile, checkSaveFile, storeErrorText } from '../saveLogic.js'
-import { folderStatus, readSlots, readSlot, writeSlot, deleteSlot } from '../saveStore.js'
+import { SLOTS, SAVE_ERRORS, slotView, lastSaveText, validateMemo, buildSaveFile, checkSaveFile, storeErrorText, errName } from '../saveLogic.js'
+import { startLogin } from '../driveStore.js'
+import { slotStore } from '../slotStore.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import { usePhone } from '../layout.js'
 
 const SETTINGS_HASH = toHash({ entry: 'ledger', tab: 'settings', detailId: null })
 
 // セーブ画面（mode 'save'）とロード画面（mode 'load'）。今の画面の上に重ねて出す（標準の <dialog>。外を押しても閉じない。閉じるのは「閉じる」と Esc。# が変わったら App が閉じる）。
-// スロットの読み書きは saveStore、判定と整形は saveLogic。ここは出すだけ
-export default function SaveLoadPanel({ mode, data, onClose, onLoad, onToSettings }) {
+// スロットの読み書きは slotStore（フォルダ・ドライブ）、判定と整形は saveLogic。ここは出すだけ
+export default function SaveLoadPanel({ mode, data, loadBlocked = false, onClose, onLoad, onToSettings }) {
   const confirm = useConfirm()
+  const store = slotStore()
   const phone = usePhone()
   const dialogRef = useRef(null)
   const [status, setStatus] = useState(null) // { state, name }。確かめるまでは null
@@ -30,7 +32,7 @@ export default function SaveLoadPanel({ mode, data, onClose, onLoad, onToSetting
 
   // スロットを読み直す。読めないファイルは、壊れたものとして出す
   const refresh = async () => {
-    const rows = await readSlots()
+    const rows = await store.readSlots()
     setSlots(SLOTS.map((s) => {
       const r = rows.find((x) => x.file === s.file)
       const view = r.error ? { status: 'broken', error: SAVE_ERRORS.unreadable, main: [], small: '', savedAt: null } : slotView(r.text)
@@ -42,11 +44,11 @@ export default function SaveLoadPanel({ mode, data, onClose, onLoad, onToSetting
   const open = async (request = false) => {
     setError('')
     try {
-      const st = await folderStatus({ request })
+      const st = await store.status({ request })
       setStatus(st)
       if (st.state === 'granted') await refresh()
     } catch (e) {
-      setError(storeErrorText(e.name, e.message))
+      setError(storeErrorText(errName(e), e.message))
     }
   }
 
@@ -57,7 +59,7 @@ export default function SaveLoadPanel({ mode, data, onClose, onLoad, onToSetting
 
   // 書く・消す前に、許可を確かめる（なければ求める。ボタンを押した処理の中なので求められる）。許可されていなければ false
   const ensurePermission = async () => {
-    const st = await folderStatus({ request: true })
+    const st = await store.status({ request: true })
     setStatus(st)
     return st.state === 'granted'
   }
@@ -69,7 +71,7 @@ export default function SaveLoadPanel({ mode, data, onClose, onLoad, onToSetting
     try {
       await action()
     } catch (e) {
-      setError(storeErrorText(e.name, e.message))
+      setError(storeErrorText(errName(e), e.message))
       try { await refresh() } catch { /* 一覧は読み直せない。エラーは出してある */ }
     } finally {
       setBusy(false)
@@ -90,7 +92,7 @@ export default function SaveLoadPanel({ mode, data, onClose, onLoad, onToSetting
     if (!(await ensurePermission())) return
     if (slot.view.status !== 'empty' && !(await confirm({ message: t('save.overwriteConfirm', { label: slot.label }) }))) return
     const file = buildSaveFile(data, { kind: 'manual', savedAt: nowLocal(), memo: m.memo })
-    await writeSlot(slot.file, JSON.stringify(file, null, 2))
+    await store.writeSlot(slot.file, JSON.stringify(file, null, 2))
     await refresh()
     setSelected(null)
     setMessage(t('save.saved', { label: slot.label }))
@@ -98,9 +100,10 @@ export default function SaveLoadPanel({ mode, data, onClose, onLoad, onToSetting
 
   // ロード：確認 → ファイルを読み直す（一覧のあとに変わっていても、今の中身で調べる）→ 検証と移行（checkSaveFile）→ App がデータを置き換える。失敗のときは今のデータを変えない
   const load = (slot) => run(async () => {
+    if (loadBlocked) return setError(t('save.loadBlocked'))
     if (!(await confirm({ message: `${t('save.loadHead', { label: slot.label })}\n${t('save.loadConfirm')}` }))) return
     if (!(await ensurePermission())) return
-    const text = await readSlot(slot.file)
+    const text = await store.readSlot(slot.file)
     if (text === null) {
       await refresh()
       return setError(t('save.gone'))
@@ -117,9 +120,9 @@ export default function SaveLoadPanel({ mode, data, onClose, onLoad, onToSetting
     if (!(await confirm({ message: t('save.deleteConfirm', { label: slot.label }) }))) return
     if (!(await ensurePermission())) return
     try {
-      await deleteSlot(slot.file)
+      await store.deleteSlot(slot.file)
     } catch (e) {
-      if (e.name !== 'NotFoundError') throw e // もうなければ、削除できたのと同じ
+      if (errName(e) !== 'NotFoundError') throw e // もうなければ、削除できたのと同じ
     }
     await refresh()
     if (selected === slot.file) setSelected(null)
@@ -132,7 +135,11 @@ export default function SaveLoadPanel({ mode, data, onClose, onLoad, onToSetting
   if (status === null) {
     body = error ? null : <p className="note">{t('save.loading')}</p>
   } else if (status.state === 'unsupported') {
-    body = <p className="note">{t('save.unsupported')}</p>
+    body = <p className="note">{t('save.unsupported')} {t('save.unsupportedHint')} <a href={SETTINGS_HASH} onClick={() => { onToSettings('data'); onClose() }}>{t('save.toSettings')}</a></p>
+  } else if (status.state === 'offline') {
+    body = <p className="error">{t('save.errOffline')}</p>
+  } else if (status.state === 'login') {
+    body = <p>{t('save.needLogin')} <button type="button" onClick={() => startLogin(null)}>{t('save.login')}</button></p>
   } else if (status.state === 'none') {
     body = <p>{t('save.chooseFirst')} <a href={SETTINGS_HASH} onClick={() => { onToSettings('data'); onClose() }}>{t('save.toSettings')}</a></p>
   } else if (status.state === 'prompt') {
@@ -160,7 +167,7 @@ export default function SaveLoadPanel({ mode, data, onClose, onLoad, onToSetting
               )}
               <div className="actions">
                 {mode === 'save' && <button type="button" disabled={busy} onClick={() => select(slot)}>{t('save.pick')}</button>}
-                {mode === 'load' && <button type="button" disabled={busy || view.status !== 'ok'} onClick={() => load(slot)}>{t('save.doLoad')}</button>}
+                {mode === 'load' && <button type="button" disabled={busy || view.status !== 'ok' || loadBlocked} onClick={() => load(slot)}>{t('save.doLoad')}</button>}
                 {view.status !== 'empty' && <button type="button" disabled={busy} onClick={() => remove(slot)}>{t('save.remove')}</button>}
               </div>
               {mode === 'save' && selected === slot.file && (
@@ -186,6 +193,7 @@ export default function SaveLoadPanel({ mode, data, onClose, onLoad, onToSetting
         <button type="button" onClick={onClose}>{t('save.close')}</button>
       </div>
       {lastSave !== null && <p className="note">{t('save.lastSaveLine', { value: lastSave })}</p>}
+      {mode === 'load' && loadBlocked && <p className="note">{t('save.loadBlocked')}</p>}
       {message && <p className="note">{message}</p>}
       {error && <p className="error">{error}</p>}
       {body}

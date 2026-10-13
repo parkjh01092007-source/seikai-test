@@ -3,7 +3,7 @@
 //
 // env：
 //   drive   { find() → { id, headRevisionId } | null, read(id) → 文字, create(text) → { id, headRevisionId }, update(id, text) → { id, headRevisionId }, revisions(id) → 古い順の [{ id }],
-//             readRevision(fileId, revId) → 文字（版がなければ status 404 の DriveError）、createBackup(name, text)、listBackups() → [{ id, name }]、remove(id) }（後ろの4つは作業30(c)）
+//             readRevision(fileId, revId) → 文字（版がなければ status 404 の DriveError）、createBackup(name, text, properties)、listBackups() → [{ id, name, appProperties }]、remove(id) }（後ろの4つは作業30(c)）。cache（Map。省いてもよい）：控えの一覧で、読んだ結果を覚える
 //           失敗は DriveError を投げる（login：ログインが切れた、offline：つながらない、failed：ほか）
 //   state   { get(), set(patch) }   端末が覚えること（driveLogic の readSync の形）
 //   local   { syncable()（移行中・新しい版のデータなら false）, initial()（手元が初めの状態か）, version()（手元のデータが変わるたびに増える数）, text()（今のデータの文字）, data()（今のデータ）,
@@ -140,9 +140,29 @@ async function readTheirs(env, conflict) {
   return { file, rev, text }
 }
 
+// 控えの一覧に出す要約を、控えを作るときに、ファイルの appProperties に入れる（一覧のとき、控えの中身を読まずに済むように。控えは、作ったあと変わらない）。
+// state：ok・broken・newer（読めるか）、entries：仕訳の件数、changed：最後に変えた日時（なければ空）。値は文字（appProperties は文字だけ）
+function backupProps(env, text) {
+  const state = env.local.read(text).kind
+  let summary = null
+  if (state !== 'broken') {
+    try { summary = dataSummary(JSON.parse(text)) } catch { /* 件数は入れない */ }
+  }
+  return summary ? { state, entries: String(summary.entries), changed: summary.changedAt ?? '' } : { state }
+}
+// appProperties から、一覧の1行分（読めなければ null：中身を読んで決める）
+function detailFromProps(info, f) {
+  const p = f.appProperties
+  if (!p || !['ok', 'broken', 'newer'].includes(p.state)) return null
+  if (p.state === 'broken') return { id: f.id, at: info.at, side: info.side, summary: null, state: 'broken' }
+  const entries = Number(p.entries)
+  if (!Number.isInteger(entries) || entries < 0) return null
+  return { id: f.id, at: info.at, side: info.side, summary: { changedAt: p.changed || null, entries }, state: p.state }
+}
+
 // 控えを作る（別のファイル）。新しいものから5個より古い控えは消す（消せなくてもよい）。作れなければ例外（そのとき、選んだことは行わない）
 async function backup(env, side, text) {
-  await env.drive.createBackup(backupName(env.now(), side), text)
+  await env.drive.createBackup(backupName(env.now(), side), text, backupProps(env, text))
   try {
     for (const f of backupsToDelete(await env.drive.listBackups())) await env.drive.remove(f.id)
   } catch { /* 古い控えを消せなくても、あとで消える */ }
@@ -191,12 +211,15 @@ export async function resolveConflict(env, choice) {
 }
 
 // ---- 控えから戻す（4.8。作業30(e)）
-// 控えの一覧（新しい順）：{ id, at, side, summary（最後に変えた日時と仕訳の件数。読めなければ null）, state（ok・broken・newer）}。読むのは、控えの数だけ（最大5個）
+// 控えの一覧（新しい順）：{ id, at, side, summary（最後に変えた日時と仕訳の件数。読めなければ null）, state（ok・broken・newer）}。要約は、ファイルの appProperties から（中身を読まない）。
+// 要約のない古い作りの控えだけ、中身を読む（最大5個。env.cache があれば、読んだ結果を覚えて、2回目からは読まない）
 export async function listBackupDetails(env) {
   const files = (await env.drive.listBackups()).map((f) => ({ f, info: parseBackupName(f.name) })).filter((x) => x.info !== null)
   files.sort((a, b) => (a.info.at < b.info.at ? 1 : a.info.at > b.info.at ? -1 : 0))
   const out = []
   for (const { f, info } of files) {
+    const quick = detailFromProps(info, f) ?? env.cache?.get(f.id) // 要約が入っている控え（作業31 から）・前に読んだ控えは、中身を読まない
+    if (quick) { out.push(quick); continue }
     let text = null
     try {
       text = await env.drive.read(f.id)
@@ -209,7 +232,9 @@ export async function listBackupDetails(env) {
     if (r.kind === 'ok') {
       try { summary = dataSummary(JSON.parse(text)) } catch { /* 件数は出さない */ }
     }
-    out.push({ id: f.id, at: info.at, side: info.side, summary, state: r.kind })
+    const item = { id: f.id, at: info.at, side: info.side, summary, state: r.kind }
+    env.cache?.set(f.id, item) // 控えは、作ったあと変わらないので、前に読んだ結果をそのまま使える（要約のない、古い作りの控えだけ）
+    out.push(item)
   }
   return out
 }
