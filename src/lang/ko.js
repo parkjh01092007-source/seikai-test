@@ -599,4 +599,12 @@ export default {
   'drive.error.denied': '로그인을 취소했습니다.',
   'drive.error.scope': '드라이브 사용이 허용되지 않았습니다.',
   'drive.error.other': '로그인할 수 없었습니다.',
+  'drive.banner.failed': '드라이브에 저장할 수 없습니다',
+  'drive.banner.conflict': '드라이브: 다른 기기에서 바뀌었습니다',
+  'drive.banner.newer': '드라이브의 데이터는 새 버전입니다',
+  'drive.bannerTitle.login': '로그인이 만료되었습니다. 누르면 다시 로그인합니다.',
+  'drive.bannerTitle.offline': '네트워크가 없거나 드라이브에 연결할 수 없습니다. 누르면 다시 시도합니다.',
+  'drive.bannerTitle.failed': '드라이브 오류입니다. 누르면 다시 시도합니다.',
+  'drive.bannerTitle.conflict': '이 기기와 드라이브의 데이터가 서로 다릅니다. 어느 쪽을 남길지 고르는 화면은 아직 없습니다.',
+  'drive.bannerTitle.newer': '새 버전의 데이터입니다. 누르면 앱을 업데이트합니다.',
 }

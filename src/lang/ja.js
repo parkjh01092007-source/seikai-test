@@ -601,4 +601,12 @@ export default {
   'drive.error.denied': 'ログインを取り消しました。',
   'drive.error.scope': 'ドライブの使用が許可されませんでした。',
   'drive.error.other': 'ログインできませんでした。',
+  'drive.banner.failed': 'ドライブに保存できません', // 上の帯。ログインが切れた・電波がない・ドライブの失敗（押すと、ログインかやり直し。title に理由）
+  'drive.banner.conflict': 'ドライブ：ほかの端末で変わっています',
+  'drive.banner.newer': 'ドライブのデータは新しい版です',
+  'drive.bannerTitle.login': 'ログインが切れています。押すと、もう一度ログインします。',
+  'drive.bannerTitle.offline': '電波がないか、ドライブにつながりません。押すと、やり直します。',
+  'drive.bannerTitle.failed': 'ドライブの失敗です。押すと、やり直します。',
+  'drive.bannerTitle.conflict': 'この端末とドライブのデータが食い違っています。どちらを残すかを選ぶ画面は、まだありません。',
+  'drive.bannerTitle.newer': '新しい版のデータです。押すと、アプリを更新します。',
 }

@@ -66,15 +66,28 @@ const remove = (storage, key) => {
 }
 const isObj = (v) => typeof v === 'object' && v !== null && !Array.isArray(v)
 
-export const emptySync = () => ({ connected: false, account: null, lastSyncedAt: null })
+// 端末が覚えること（4.1）：つないでいるか・アカウント・最後に同期した日時、ドライブのファイルの最後に合わせたときの版（baseRev）、
+// まだドライブに上げていない変更があるか（dirty）、上げたあとの確かめが済んでいない上げ（pending）、食い違いの確認待ち（conflict。確認画面は作業30(c)）
+// pending：{ fileId, mine（上げた版）, expectedPrev（上げる前に見た版。なければ null） }。conflict：{ kind, theirsRev }。
+// kind：both（両方が変わった）、first（初めてつなぐとき、どちらにもデータがある）、slipped（上げるすき間で、ほかの端末が上げた）、
+// unverified（上げたあとの確かめができなかった：版の履歴が消えた、など）、broken（ドライブのデータが読めない）。theirsRev は、ドライブ側の版（分かれば。なければ null）
+export const CONFLICT_KINDS = ['both', 'first', 'slipped', 'unverified', 'broken']
+export const emptySync = () => ({ connected: false, account: null, lastSyncedAt: null, baseRev: null, dirty: false, pending: null, conflict: null })
 
+const str = (v) => (typeof v === 'string' && v !== '' ? v : null)
 export function readSync(storage) {
   const v = readJson(storage, SYNC_KEY)
   if (!isObj(v)) return emptySync()
+  const p = v.pending
+  const c = v.conflict
   return {
     connected: v.connected === true,
-    account: typeof v.account === 'string' && v.account !== '' ? v.account : null,
+    account: str(v.account),
     lastSyncedAt: typeof v.lastSyncedAt === 'string' ? v.lastSyncedAt : null,
+    baseRev: str(v.baseRev),
+    dirty: v.dirty === true,
+    pending: isObj(p) && str(p.fileId) && str(p.mine) ? { fileId: p.fileId, mine: p.mine, expectedPrev: str(p.expectedPrev) } : null,
+    conflict: isObj(c) && CONFLICT_KINDS.includes(c.kind) ? { kind: c.kind, theirsRev: str(c.theirsRev) } : null,
   }
 }
 export const writeSync = (storage, sync) => writeJson(storage, SYNC_KEY, sync)
@@ -103,4 +116,59 @@ export const LOGIN_ERROR_KEYS = {
   denied: 'drive.error.denied',
   scope: 'drive.error.scope',
   other: 'drive.error.other',
+}
+
+// ---- 同期の判定（4.2・4.3・4.6）。ドライブのファイルの版（remoteRev。ファイルがなければ null）と、端末が覚えている版を比べる
+// 結果：none（何もしない）／upload（上げる。ファイルがなければ作る）／download（ドライブのデータで置き換える）／conflict（食い違い）
+// baseRev が null は、初めてつなぐとき（4.6）：ドライブにデータがない→上げる、手元が初めの状態→下ろす、どちらにもある→食い違い
+// ドライブのファイルがなくなっている（baseRev があるのに remoteRev が null）→ 手元のデータを上げて作り直す（手元は消さない）
+export function plan({ dirty, baseRev, remoteRev, localInitial }) {
+  if (remoteRev === null) return 'upload'
+  if (baseRev === null) return localInitial ? 'download' : 'conflict'
+  if (remoteRev === baseRev) return dirty ? 'upload' : 'none'
+  return dirty ? 'conflict' : 'download'
+}
+
+// 上げたあとの確かめ（版の履歴で、自分の版のすぐ前が、上げる前に見た版か）。revisions は古い順の [{ id }]。
+// ok：すぐ前が expectedPrev（作ったときは、前の版がない）。slipped：間にほかの端末の版がある（theirs はその版）。
+// unknown：確かめられない（自分の版が履歴にない、または、自分の版が一番古くて、前の版が消えている）
+export function checkAfterUpload(revisions, mine, expectedPrev) {
+  const i = revisions.findIndex((r) => r.id === mine)
+  if (i < 0) return { ok: false, reason: 'unknown' }
+  const prev = i > 0 ? revisions[i - 1].id : null
+  if (prev === expectedPrev) return { ok: true }
+  if (prev === null) return { ok: false, reason: 'unknown' }
+  return { ok: false, reason: 'slipped', theirs: prev }
+}
+
+// 手元が初めの状態か（4.6）：仕訳・定期支払い・予算・スキル・お気に入りがなく、科目が初期科目（preset か key を持つもの）だけ
+export function isInitialData(data) {
+  const fav = data?.settings?.favorites
+  return Array.isArray(data?.entries) && data.entries.length === 0 &&
+    Array.isArray(data.subscriptions) && data.subscriptions.length === 0 &&
+    Array.isArray(data.budgets) && data.budgets.length === 0 &&
+    Array.isArray(data.skills) && data.skills.length === 0 &&
+    Array.isArray(data.accounts) && data.accounts.every((a) => a.preset !== undefined || a.key !== undefined) &&
+    (fav?.debit?.length ?? 0) === 0 && (fav?.credit?.length ?? 0) === 0
+}
+
+// アカウントが分かったとき（つないだ直後に、ドライブに聞いて分かる）。前と違うアカウントなら、前のアカウントのドライブの版は使えないので、覚えた版・確かめ待ち・食い違いを捨てる
+export function withAccount(sync, account) {
+  if (sync.account !== null && sync.account !== account) return { ...sync, account, baseRev: null, pending: null, conflict: null }
+  return { ...sync, account }
+}
+
+// 上の帯に出すこと（4.5）。null なら出さない。problem：メモリの中の、最後の失敗の理由（login・offline・failed）。newer：ドライブのデータが、このアプリより新しい版
+// 優先：新しい版 → 食い違い → 失敗
+export function bannerKind({ connected, conflict }, { problem, newer }) {
+  if (!connected) return null
+  if (newer) return 'newer'
+  if (conflict) return 'conflict'
+  return problem ?? null
+}
+
+// 上げるデータの文字（書き出しと同じ形：schemaVersion を一番上に、書き出した日時を付ける）
+export function serializeData(data, exportedAt) {
+  const { schemaVersion, ...rest } = data
+  return JSON.stringify({ schemaVersion, exportedAt, ...rest }, null, 2)
 }

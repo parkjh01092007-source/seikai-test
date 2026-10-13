@@ -5,7 +5,8 @@ import { t, getLanguage, setLanguage } from './text.js'
 import { parseHash, toHash } from './route.js'
 import { cardAccounts } from './ledgerLogic.js'
 import { DEFAULT_TAB, SETTINGS_GROUPS } from './settingsSections.js'
-import { getReturnTab } from './driveStore.js'
+import { getReturnTab, startLogin } from './driveStore.js'
+import { useDriveSync } from './useDriveSync.js'
 import Home from './sections/Home.jsx'
 import SideTabs from './sections/SideTabs.jsx'
 import { ConfirmContext, ConfirmDialog } from './sections/ConfirmDialog.jsx'
@@ -246,11 +247,31 @@ export default function App() {
     setGeneration((g) => g + 1)
   }
 
+  // Google ドライブの同期（spec-drive.md 4章）。ドライブから下ろしたデータで置き換える（読み込みと同じ検証と移行を通ったもの r）。手元の変更には数えない（driveSkip）。
+  // 置き換える前に、今のデータをオートセーブへ書く。定期支払いの自動記入は、読み込みと同じく置き換えのあとに1回行う（変更には数えない）
+  const driveSkip = useRef(data)
+  const applyRemote = async (r) => {
+    await autosaveBeforeReplace()
+    const next = autoRecord(r.data, today()).data
+    driveSkip.current = next
+    setError('')
+    setWarning((r.warnings ?? []).join('\n'))
+    update(next, { quiet: true })
+    setGeneration((g) => g + 1)
+  }
+  const driveSync = useDriveSync({ data, skip: driveSkip, apply: applyRemote })
+
   const entry = route && NAV.find((e) => e.id === route.entry)
   const Screen = route && route.tab ? screens[route.tab] : null
 
   // 「オートセーブできません」（書けないときだけ）。出し場所は、PC は右上の帯、スマホはメニューのある画面では上の帯の右端、ホーム・移行画面では中身の一番上（spec-mobile.md 第4章）
-  const notice = problem !== null && <button type="button" className="autosave-problem" title={problem} onClick={retryAutosave}>{t('save.autosaveFailed')}</button>
+  const autosaveNotice = problem !== null && <button type="button" className="autosave-problem" title={problem} onClick={retryAutosave}>{t('save.autosaveFailed')}</button>
+  // 「ドライブに保存できません」など（4.5）。ログインが切れたときは、押すとログイン（移る前にいた設定のタブを覚える）、つながらないときは、押すとやり直し。食い違いは、確認の画面（作業30(c)）ができるまで、知らせるだけ
+  const driveTitle = driveSync.kind && { login: t('drive.bannerTitle.login'), offline: t('drive.bannerTitle.offline'), failed: t('drive.bannerTitle.failed'), newer: t('drive.bannerTitle.newer') }
+  const driveNotice = driveSync.kind && (driveSync.kind === 'conflict'
+    ? <span className="autosave-problem" role="status" title={t('drive.bannerTitle.conflict')}>{t('drive.banner.conflict')}</span>
+    : <button type="button" className="autosave-problem" title={driveTitle[driveSync.kind]} onClick={() => (driveSync.kind === 'login' ? startLogin(onSettingsScreen ? settingsTab : null) : driveSync.kind === 'newer' ? reloadApp() : driveSync.retry())}>{t(driveSync.kind === 'newer' ? 'drive.banner.newer' : 'drive.banner.failed')}</button>)
+  const notice = (autosaveNotice || driveNotice) && <>{autosaveNotice}{driveNotice}</>
   // 新しい版のお知らせ。PC は右上の帯、スマホは中身の一番上（上の帯のすぐ下。重ねずに流れの中に置くので、入力の欄を隠さない）
   const updateNotice = newBuild && !newer && (
     <div className="update-notice" role="status">
