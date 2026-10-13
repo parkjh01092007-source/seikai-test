@@ -98,7 +98,7 @@ export function Keypad({ initial, onInsert, onClose }) {
         <div className="keypad-display" aria-live="polite">
           <FitExpr className="keypad-expr" text={formatExpr(expr)} />
           {/* 入れられない理由は、答えの代わりに、答えの行に出す（行の高さは変えない。下のキーが動かない） */}
-          <div className="keypad-answer">{answer?.error ? <span className="keypad-reason">{ERROR_TEXT[answer.error]()}</span> : answerText(expr, answer)}</div>
+          <div className="keypad-answer">{answer?.error ? <span className="keypad-reason">{ERROR_TEXT[answer.error]()}</span> : answerLine(expr, answer)}</div>
         </div>
         <div className="keypad-keys">
           {ROWS.map((row) => row.map(([label, k, kind]) => (
@@ -126,8 +126,11 @@ const answerText = (expr, answer) =>
     ? `= ${answer.decimal ? `${formatNumber(answer.value)} → ` : ''}${formatNumber(answer.rounded)}`
     : ''
 
+// キーパッドの答えの行：式に記号があるか小数なら「= 1,538」「= 666.67 → 667」、数字だけなら、その数をそのまま（金額の欄の 835 を持って開いたときも、答えの行に大きく出す）
+const answerLine = (expr, answer) => (answer && !answer.error && !answer.decimal && !hasOperator(expr) ? formatNumber(answer.rounded) : answerText(expr, answer))
+
 // 金額の欄。value・onChange(文字)・label（読み上げの名前と、薄い文字）
-// スマホの形：欄の右に絵のボタン → キーパッド。PC の形：欄に入ると、欄の下に帯（電卓の絵のボタン・式と答え・＋ − × ÷・×1.1・×1.08）。絵のボタンか Alt+↓ で、大きなキーパッド。
+// スマホの形：欄の右に絵のボタン → キーパッド。PC の形：欄に入ると、欄の下に帯（上の行に式と答え、下の行に電卓の絵のボタン・＋ − × ÷・×1.1・×1.08）。絵のボタンか Alt+↓ で、大きなキーパッド。
 // PC の Enter：欄に記号があるときだけ、答えを欄に入れる（送信しない）。記号がなければ、今までどおり（送信）
 export function AmountInput({ value, onChange, label }) {
   const phone = usePhone()
@@ -189,12 +192,18 @@ export function AmountInput({ value, onChange, label }) {
       <input ref={inputRef} inputMode="numeric" placeholder={label} aria-label={label} value={value} onChange={(e) => { setDismissed(false); onChange(e.target.value) }} onKeyDown={keyDown} />
       {showBand && (
         <span className="calc-band" role="group" aria-label={t('calc.name')} ref={bandRef}>
-          <button type="button" tabIndex={-1} className="calc-open" aria-label={t('calc.name')} title={t('calc.name')} onMouseDown={hold} onClick={() => setOpen(true)}><CalcIcon /></button>
-          <FitExpr className="calc-band-expr" text={expression ? formatExpr(value) : ''} />
-          <span className={`calc-band-answer${answer?.error ? ' error' : ''}`} aria-live="polite" title={answer?.error ? ERROR_TEXT[answer.error]() : undefined}>{answer?.error ? ERROR_TEXT[answer.error]() : text}</span>
-          {OPS.map(([label, k]) => <button key={k} type="button" tabIndex={-1} className="op" onMouseDown={hold} onClick={() => apply(k)}>{label}</button>)}
-          <button type="button" tabIndex={-1} onMouseDown={hold} onClick={() => apply('*1.1')}>×1.1</button>
-          <button type="button" tabIndex={-1} onMouseDown={hold} onClick={() => apply('*1.08')}>×1.08</button>
+          {/* 上の行：式と答え。式に記号がないときは出さない（欄に打った数字と同じなので）。理由は、答えの代わりにここへ（行の高さは同じ） */}
+          <span className="calc-band-line" hidden={!expression}>
+            <FitExpr className="calc-band-expr" text={expression ? formatExpr(value) : ''} />
+            <span className={`calc-band-answer${answer?.error ? ' error' : ''}`} aria-live="polite" title={answer?.error ? ERROR_TEXT[answer.error]() : undefined}>{answer?.error ? ERROR_TEXT[answer.error]() : text}</span>
+          </span>
+          {/* 下の行：電卓の絵（大きなキーパッドを開く）と、ボタン */}
+          <span className="calc-band-tools">
+            <button type="button" tabIndex={-1} className="calc-open" aria-label={t('calc.name')} title={t('calc.name')} onMouseDown={hold} onClick={() => setOpen(true)}><CalcIcon /></button>
+            {OPS.map(([label, k]) => <button key={k} type="button" tabIndex={-1} className="op" onMouseDown={hold} onClick={() => apply(k)}>{label}</button>)}
+            <button type="button" tabIndex={-1} onMouseDown={hold} onClick={() => apply('*1.1')}>×1.1</button>
+            <button type="button" tabIndex={-1} onMouseDown={hold} onClick={() => apply('*1.08')}>×1.08</button>
+          </span>
         </span>
       )}
       {keypad}

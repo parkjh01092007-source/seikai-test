@@ -7,16 +7,20 @@
 .amount-wrap.phone > input { flex: 1; min-width: 0; }
 .entries .amount-wrap > .calc-btn { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 44px; min-width: 44px; min-height: 44px; padding: 0; }
 
-/* PC の帯：欄に入ると、欄のすぐ下に出る。左から、電卓の絵（大きなキーパッドを開く）、式、= 答え（入れられないときは、答えの代わりに赤い理由）、＋ − × ÷、×1.1・×1.08。
-   一行のまま。式は、入りきらないとき前を省く（FitExpr）。幅は決めておく（打つたびに帯の幅が変わらない）。右端を越えるときの幅は Calculator.jsx が決める */
-.calc-band { position: absolute; top: 100%; left: 0; z-index: 10; box-sizing: border-box; display: flex; align-items: center; gap: var(--space); width: 46em; margin-top: 2px; padding: 4px var(--space); border: 1px solid var(--color-border); background: var(--color-bg); color: var(--color-text); font-size: 20px; }
+/* PC の帯：欄に入ると、欄のすぐ下に出る。2 行：上の行に式と答え（式に記号があるときだけ）、下の行に、電卓の絵（大きなキーパッドを開く）と ＋ − × ÷・×1.1・×1.08 を左から。
+   幅は中身の分だけ（欄の左端にそろえ、右へ伸ばさない）。上の行は幅に数えず、入りきらない式は前を省く（FitExpr）。理由は、答えの代わりに上の行へ（行の高さは同じ）。
+   右端を越えるときの幅は Calculator.jsx が決める */
+.calc-band { position: absolute; top: 100%; left: 0; z-index: 10; box-sizing: border-box; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; width: max-content; min-width: 24em; margin-top: 2px; padding: 4px var(--space); border: 1px solid var(--color-border); background: var(--color-bg); color: var(--color-text); font-size: var(--font-size); }
+.calc-band-line { display: flex; align-items: center; gap: var(--space); width: 0; min-width: 100%; height: 36px; }
+.calc-band-line[hidden] { display: none; }
+.calc-band-expr { flex: 0 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; font-size: 20px; font-variant-numeric: tabular-nums; }
+.calc-band-answer { flex: none; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 28px; font-weight: bold; line-height: 36px; font-variant-numeric: tabular-nums; }
+.calc-band-answer.error { flex: 0 1 auto; min-width: 0; color: var(--color-error); font-size: 16px; font-weight: normal; }
+.calc-band-tools { display: flex; align-items: center; gap: var(--space); }
 .calc-band button { flex: none; min-width: 28px; height: 32px; padding: 0 6px; font-size: 16px; }
 .calc-band .calc-open { display: inline-flex; align-items: center; justify-content: center; width: 32px; padding: 0; }
 .calc-band .calc-open svg { width: 22px; height: 22px; }
 .calc-band .op { width: 28px; padding: 0; }
-.calc-band-expr { flex: 1 1 0; min-width: 0; overflow: hidden; white-space: nowrap; text-align: right; color: var(--color-muted); font-variant-numeric: tabular-nums; }
-.calc-band-answer { flex: none; max-width: 18em; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: bold; font-variant-numeric: tabular-nums; }
-.calc-band-answer.error { color: var(--color-error); font-size: 16px; font-weight: normal; }
 
 /* キーパッド（<dialog>。スマホは画面の下、PC は真ん中）。数字は大きく：答え 36px・式 20px・キーの数字 24px。
    式と答えの行は高さを決めておく（理由が出る・消えるときも、下のキーが動かない） */
@@ -24,7 +28,7 @@
 .keypad::backdrop { background: var(--color-backdrop); }
 .keypad-body { padding: 8px 12px calc(12px + env(safe-area-inset-bottom)); }
 .keypad-display { margin-bottom: 4px; text-align: right; }
-.keypad-expr { display: block; height: 28px; overflow: hidden; white-space: nowrap; color: var(--color-muted); font-size: 20px; line-height: 28px; font-variant-numeric: tabular-nums; }
+.keypad-expr { display: block; height: 28px; overflow: hidden; white-space: nowrap; color: var(--color-text); font-size: 20px; line-height: 28px; font-variant-numeric: tabular-nums; }
 .keypad-answer { display: flex; align-items: flex-end; justify-content: flex-end; height: 48px; overflow: hidden; font-size: 36px; font-weight: bold; line-height: 48px; font-variant-numeric: tabular-nums; }
 .keypad-reason { color: var(--color-error); font-size: 16px; font-weight: normal; line-height: 1.25; padding-bottom: 4px; }
 .keypad-keys { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
