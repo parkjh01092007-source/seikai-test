@@ -4,7 +4,8 @@ import { NAV } from './nav.js'
 import { t, getLanguage, setLanguage } from './text.js'
 import { parseHash, toHash } from './route.js'
 import { cardAccounts } from './ledgerLogic.js'
-import { DEFAULT_TAB } from './settingsSections.js'
+import { DEFAULT_TAB, SETTINGS_GROUPS } from './settingsSections.js'
+import { getReturnTab } from './driveStore.js'
 import Home from './sections/Home.jsx'
 import SideTabs from './sections/SideTabs.jsx'
 import { ConfirmContext, ConfirmDialog } from './sections/ConfirmDialog.jsx'
@@ -35,7 +36,7 @@ export default function App() {
   const [error, setError] = useState('')
   const [warning, setWarning] = useState('') // 読み込みで、その項目だけ無視したときの警告（エラーではない）
   const [generation, setGeneration] = useState(0) // 読み込みのたびに増やし、画面の入力状態を作り直す
-  const [settingsTab, setSettingsTab] = useState(DEFAULT_TAB) // 設定の画面で開いているタブ（spec-ui.md 4.1）。覚えない（再読み込みで記帳に戻る）。画面の作り直し（言語の変更・読み込みなど）では変わらない。URL（#）にも入れない
+  const [settingsTab, setSettingsTab] = useState(() => (SETTINGS_GROUPS.some((g) => g.id === getReturnTab()) ? getReturnTab() : DEFAULT_TAB)) // 設定の画面で開いているタブ（Google のログインから戻ったときは、移る前に開いていたタブ。spec-drive.md 12章）（spec-ui.md 4.1）。覚えない（再読み込みで記帳に戻る）。画面の作り直し（言語の変更・読み込みなど）では変わらない。URL（#）にも入れない
 
   // 言語。変えたら、一番外側の key に言語を入れて、全体を描き直す（前の言語の文字が、計算の結果を覚えている部品に残らないように。入力途中の内容は消える）。
   // setLanguage が、覚える（localStorage の別のキー）のと、html の lang・タブの題を合わせるのも行う。保存データには入れない

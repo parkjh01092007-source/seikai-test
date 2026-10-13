@@ -3,6 +3,7 @@ import './settings.css'
 import CardSettings from './CardSettings.jsx'
 import { BackupSettings, PurgeSettings, ResetSettings } from './DataSettings.jsx'
 import SaveSettings from './SaveSettings.jsx'
+import DriveSettings from './DriveSettings.jsx'
 import DisplaySettings from './DisplaySettings.jsx'
 import { t, LANGUAGES } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
@@ -245,6 +246,7 @@ export default function Settings({ data, update, openPanel, replaceData, autosav
     ),
     card: () => <CardSettings data={data} update={update} />,
     save: () => <SaveSettings autosave={autosave} />,
+    drive: () => <DriveSettings tab={tab} />,
     backup: () => <BackupSettings onExport={onExport} onImport={onImport} />,
     purge: () => <PurgeSettings data={data} update={update} openPanel={openPanel} autosaveBeforeReplace={autosaveBeforeReplace} />,
     reset: () => <ResetSettings openPanel={openPanel} replaceData={replaceData} />,
