@@ -41,10 +41,18 @@ header { display: flex; justify-content: flex-end; border-bottom: 1px solid var(
 /* スマホだけに出す塊（設定 → データの書き出し・読み込み、ホームの「オートセーブできません」）。PC では出さない */
 .phone-only { display: none; }
 
+/* ページの地の色を決める（画面だけ）。基本の見た目は、html にも body にも背景がなく、地がブラウザ任せ（端末によって白か黒）だった。
+   引っぱったときに見える地が、ページの色と同じになる。基本は color-scheme: light（暗い見た目は themes.css で dark）。印刷にはかからない */
+@media screen {
+  html { background: var(--color-bg); }
+  :root:not([data-theme]), :root[data-theme='basic'] { color-scheme: light; }
+}
+
 /* ---- スマホの形（spec-mobile.md 第2〜4章）：幅 960px 未満、または指だけで操作する機械。layout.js の PHONE_QUERY・nav.css と同じ条件（変えるときは3か所とも）。
    印刷には当たらない（screen だけ） ---- */
 @media screen and (max-width: 959.98px), screen and (pointer: coarse) and (hover: none) {
   .main-col > header { display: none; } /* 右上の書き出し・読み込みの帯は出さない（設定 → データにある） */
+  html, body { overscroll-behavior-y: none; } /* 引っぱって読み直す（と、その動きの間の下の帯の点滅）を止める。うっかり引っぱって、入力の途中が消えるのも防ぐ。PC の読み直しは、F5 のまま */
   .phone-only { display: block; }
   /* 画面より横に広い中身があっても、ブラウザの「枠」（レイアウトの画面）を広げさせない。広がると、帯（sticky）・パネル（fixed）・100vh の基準が、画面ではなく広がった枠になり、
      帯が流れ、パネルが縦に伸びる。hidden ではなく clip（hidden だとスクロールの箱になり、sticky が効かなくなる） */
