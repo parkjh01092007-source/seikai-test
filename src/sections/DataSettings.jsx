@@ -6,6 +6,7 @@ import { t } from '../text.js'
 import { lastSaveLine } from './lastSave.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import { slotsAvailable } from '../slotStore.js'
+import { Icon } from './Icon.jsx'
 
 // 設定 → データの3つの項目（spec-ui.md 4.1。作業21 で、1つの「データ」の項目から分けた。中身と動きは今までどおり）。
 // 書き出し・読み込み（スマホの形だけ。右上の帯の代わり。spec-mobile.md 第4章）、仕訳の一括削除（月か全期間）、全体の初期化。
@@ -65,7 +66,7 @@ export function PurgeSettings({ data, update, openPanel, autosaveBeforeReplace }
       <div>
         <input type="month" aria-label={t('dataSettings.monthAria')} value={month} disabled={all} onChange={(e) => setMonth(e.target.value)} />{' '}
         <label><input type="checkbox" checked={all} onChange={(e) => setAll(e.target.checked)} /> {t('common.allPeriod')}</label>{' '}
-        <button type="button" onClick={purge}>{t('dataSettings.purgeButton')}</button>
+        <button type="button" onClick={purge}><Icon name="trash" />{t('dataSettings.purgeButton')}</button>
         {error && <span className="error"> {error}</span>}
         {message && <span className="note"> {message}</span>}
       </div>
@@ -93,7 +94,7 @@ export function ResetSettings({ openPanel, replaceData }) {
   return (
     <section>
       <p className="note">{t('dataSettings.resetDesc')}</p>
-      <button type="button" onClick={reset}>{t('dataSettings.resetButton')}</button>
+      <button type="button" onClick={reset}><Icon name="reset" />{t('dataSettings.resetButton')}</button>
     </section>
   )
 }

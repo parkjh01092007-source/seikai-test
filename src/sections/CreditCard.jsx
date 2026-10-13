@@ -6,6 +6,7 @@ import { cardReports, cardMonthTotal, addCard, previousMonth, formatYen, currenc
 import { toHash } from '../route.js'
 import { today } from '../today.js'
 import { t } from '../text.js'
+import { Icon } from './Icon.jsx'
 
 const cardHash = (detailId) => toHash({ entry: 'ledger', tab: 'card', detailId }) // 一覧（null）／個別（カードの id）の # 。組み立ては route.js
 
@@ -35,7 +36,7 @@ function AddCardForm({ data, update }) {
       <input placeholder={t('card.name')} aria-label={t('card.name')} value={name} onChange={(e) => setName(e.target.value)} />
       <label>{t('card.closingDay')}{' '}<input className="day" inputMode="numeric" aria-label={t('card.closingDay')} value={closing} onChange={(e) => setClosing(e.target.value)} />{' '}{t('card.dayUnit')}</label>
       <label>{t('card.payDay')}{' '}<input className="day" inputMode="numeric" aria-label={t('card.payDay')} value={pay} onChange={(e) => setPay(e.target.value)} />{' '}{t('card.dayUnit')}</label>
-      <button>{t('card.add')}</button>
+      <button><Icon name="plus" />{t('card.add')}</button>
       {error && <span className="error">{error}</span>}
     </form>
     <p className="note">{t('card.closingDayHint')}</p>

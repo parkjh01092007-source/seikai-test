@@ -19,6 +19,7 @@ import { SETTINGS_GROUPS, SETTINGS_SECTIONS, tabDomId, panelDomId } from '../set
 import Tabs from './Tabs.jsx'
 import { versionLabel, BUILT_AT, CURRENT_BUILD } from '../pwa.js'
 import { usePhone } from '../layout.js'
+import { Icon, IconButton } from './Icon.jsx'
 
 const SIDE_KEYS = { debit: 'common.debit', credit: 'common.credit' } // 借方・貸方の名前（辞書のキー）
 const LANGUAGE_KEYS = { ja: 'language.ja', ko: 'language.ko' } // 言語の名前（辞書のキー。どちらの言語でも、自分の言語の字で出す）
@@ -124,8 +125,8 @@ function FavoriteSide({ side, data, update }) {
             return (
               <li key={id} className={account.active ? 'fav-item' : 'fav-item inactive'}>
                 <span className="name">{account.name}{!account.active && <span className="note"> {t('common.inactive')}</span>}</span>
-                <button type="button" disabled={i === 0} onClick={() => save(moveFavorite(settings, side, id, -1))}>{t('settings.up')}</button>
-                <button type="button" disabled={i === registered.length - 1} onClick={() => save(moveFavorite(settings, side, id, 1))}>{t('settings.down')}</button>
+                <IconButton icon="up" label={t('settings.up')} disabled={i === 0} onClick={() => save(moveFavorite(settings, side, id, -1))} />
+                <IconButton icon="down" label={t('settings.down')} disabled={i === registered.length - 1} onClick={() => save(moveFavorite(settings, side, id, 1))} />
                 <button type="button" onClick={() => save(removeFavorite(settings, side, id))}>{t('settings.release')}</button>
               </li>
             )
@@ -141,14 +142,14 @@ function FavoriteSide({ side, data, update }) {
             </optgroup>
           ))}
         </select>
-        <button>{t('common.add')}</button>
+        <button><Icon name="plus" />{t('common.add')}</button>
         {addError && <span className="error">{addError}</span>}
       </form>
       <form onSubmit={saveLimit}>
         <label>
           {t('settings.limit')}{' '}<input className="limit" inputMode="numeric" aria-label={t('settings.limitAria', { side: sideName })} value={limitText} onChange={(e) => setLimitText(e.target.value)} placeholder={t('settings.none')} />{' '}{t('settings.countUnit')}
         </label>
-        <button>{t('common.save')}</button>
+        <button><Icon name="check" />{t('common.save')}</button>
         {limitError && <span className="error">{limitError}</span>}
         {limitMessage && <span className="note">{limitMessage}</span>}
       </form>

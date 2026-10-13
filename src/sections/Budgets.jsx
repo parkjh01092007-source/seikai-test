@@ -11,6 +11,7 @@ import { useConfirm } from './ConfirmDialog.jsx'
 import { usePhone } from '../layout.js'
 import Tabs from './Tabs.jsx'
 import { tabDomId, panelDomId } from '../tabs.js'
+import { Icon, IconButton } from './Icon.jsx'
 
 const Yen = ({ n, currency }) => <>{formatMoney(n, currency)}</>
 const Rate = ({ n }) => <>{n}%</>
@@ -125,7 +126,7 @@ function HistoryRow({ budget, data, update }) {
       <span className="amount"><Yen n={budget.amount} currency={data.settings.currency} /></span>
       <input inputMode="numeric" aria-label={t('common.amount')} value={amountText} onChange={(e) => setAmountText(e.target.value)} />
       <button type="button" onClick={change}>{t('budgets.changeAmount')}</button>
-      <button type="button" onClick={remove}>{t('common.delete')}</button>
+      <IconButton icon="trash" label={t('common.delete')} onClick={remove} />
       {error && <span className="error">{error}</span>}
     </li>
   )
@@ -172,7 +173,7 @@ export default function Budgets({ data, update }) {
         </select>
         <input inputMode="numeric" placeholder={t('common.amount')} aria-label={t('common.amount')} value={amount} onChange={(e) => setAmount(e.target.value)} />
         <label>{t('budgets.startMonth')}{' '}<input type="month" aria-label={t('budgets.startMonth')} value={startMonth} onChange={(e) => setStartMonth(e.target.value)} /></label>
-        <button>{t('common.add')}</button>
+        <button><Icon name="plus" />{t('common.add')}</button>
         {error && <span className="error">{error}</span>}
       </form>
       <p className="note">{t('budgets.note')}</p>
@@ -237,6 +238,7 @@ export default function Budgets({ data, update }) {
               return (
                 <details key={account.id} className={account.active ? '' : 'inactive'}>
                   <summary>
+                    <span className="chev"><Icon name="chevRight" /></span>
                     {account.name}{t('budgets.kindWrap', { kind: BUDGET_RULES[history[0].kind]?.label })}
                     {!account.active && <span className="note"> {t('common.inactive')}</span>}
                     <span className="note"> {now ? t('budgets.thisMonthNow', { amount: formatMoney(now.amount, currency) }) : t('budgets.noBudgetThisMonth')}</span>

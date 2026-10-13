@@ -4,6 +4,7 @@ import { parseLevel, formatLevel, effectiveDescription, validateName, newSkill, 
 import { t } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import './skills.css'
+import { Icon, IconButton } from './Icon.jsx'
 
 function SkillRow({ skill, skills, onChange, onDelete }) {
   const [name, setName] = useState(skill.name)
@@ -38,7 +39,7 @@ function SkillRow({ skill, skills, onChange, onDelete }) {
       <button onClick={saveName}>{t('common.rename')}</button>
       {' '}{t('skills.level')}{' '}<input size="5" inputMode="decimal" value={level} onChange={(e) => setLevel(e.target.value)} />
       <button onClick={saveLevel}>{t('skills.changeLevel')}</button>
-      <button onClick={remove}>{t('common.delete')}</button>
+      <IconButton icon="trash" label={t('common.delete')} onClick={remove} />
       <div>{t('skills.currentLevel', { level: formatLevel(skill.level) })}</div>
       <div>{t('skills.descriptionLine', { text: effectiveDescription(skill) })}</div>
       <button onClick={() => setEditing(!editing)}>{editing ? t('skills.closeDescription') : t('skills.editDescription')}</button>
@@ -66,7 +67,7 @@ export default function Skills({ data, update }) {
     <>
       <form onSubmit={add}>
         <input placeholder={t('skills.namePlaceholder')} value={name} onChange={(e) => setName(e.target.value)} />
-        <button>{t('common.add')}</button>
+        <button><Icon name="plus" />{t('common.add')}</button>
         {error && <span style={{ color: 'var(--color-error)' }}> {error}</span>}
       </form>
       <ul>

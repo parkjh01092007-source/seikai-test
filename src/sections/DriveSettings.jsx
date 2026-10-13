@@ -5,6 +5,7 @@ import { versionLabel } from '../pwa.js'
 import { LOGIN_ERROR_KEYS } from '../driveLogic.js'
 import DriveCopy from './DriveCopy.jsx'
 import { CHANGE_EVENT, isConfigured, getSync, getToken, getLoginError, startLogin, disconnect } from '../driveStore.js'
+import { Icon } from './Icon.jsx'
 
 // 設定 → データ → Google ドライブ（spec-drive.md 5章）：つなぐ・切る、つないでいるアカウント、ログインの状態、最後に同期した日時。
 // 覚えていること（つないでいるか・アカウント・鍵）は driveStore が持つ。変わったら CHANGE_EVENT で知らされる。保存データには触らない
@@ -33,7 +34,7 @@ export default function DriveSettings({ tab }) {
           <p>{t('drive.lastSync', { time: lastSync ?? t('drive.never') })}</p>
           <div className="row">
             {!loggedIn && <button type="button" onClick={login}>{t('drive.reconnect')}</button>}
-            <button type="button" onClick={disconnect}>{t('drive.disconnect')}</button>
+            <button type="button" onClick={disconnect}><Icon name="cloudOff" />{t('drive.disconnect')}</button>
           </div>
           <p className="note">{t('drive.keptNote')}</p>
           <DriveCopy />

@@ -5,6 +5,7 @@ import { HOME, toHash } from '../route.js'
 import { usePhone } from '../layout.js'
 import { useModalLayer } from '../modalLayer.js'
 import { lastSaveLine } from './lastSave.js'
+import { Icon } from './Icon.jsx'
 
 // 縦タブ（spec-design.md 第4章、spec-ui.md 第2章、spec-mobile.md 第4章）。上に「正解」と「最後のセーブ」、下に「セーブ」「ロード」「ホームへ」を横に並べる。
 // スマホの形かどうかは layout.js（幅 960px 未満、または指だけで操作する機械）。
@@ -100,15 +101,16 @@ export default function SideTabs({ entry, currentTab, onOpenPanel, notices = [] 
         type="button"
         className="toggle"
         aria-label={t('nav.menu')}
+        title={t('nav.menu')}
         aria-expanded={open}
         aria-pressed={phone ? undefined : pinned}
         onMouseEnter={phone ? undefined : () => setHover(true)}
         onClick={pressToggle}
-      >☰</button>
+      ><Icon name="menu" /></button>
       {phone && <span className="bar-title">{t(currentTabLabel)}</span>}
       {phone && notices.length > 0 && (
         <span className="bar-notice notices-wrap">
-          <button type="button" className="notices-toggle" aria-expanded={noticesOpen} aria-label={t('notices.label', { count: notices.length })} onClick={() => setNoticesOpen((o) => !o)}>⚠ {notices.length}</button>
+          <button type="button" className="notices-toggle" aria-expanded={noticesOpen} aria-label={t('notices.label', { count: notices.length })} onClick={() => setNoticesOpen((o) => !o)}><Icon name="warning" />{notices.length}</button>
           {noticesOpen && (
             <ul className="notices-list" aria-label={t('notices.title')}>
               {notices.map((n) => <li key={n.key}><button type="button" className="notice-row" title={n.title} onClick={() => { setNoticesOpen(false); n.onPress() }}>{n.text}</button></li>)}
@@ -137,8 +139,8 @@ export default function SideTabs({ entry, currentTab, onOpenPanel, notices = [] 
             ))}
           </nav>
           <div className="bottom">
-            <button type="button" onClick={() => openPanel('save')}>{t('save.title')}</button>
-            <button type="button" onClick={() => openPanel('load')}>{t('save.load')}</button>
+            <button type="button" onClick={() => openPanel('save')}><Icon name="save" />{t('save.title')}</button>
+            <button type="button" onClick={() => openPanel('load')}><Icon name="load" />{t('save.load')}</button>
             <a href={toHash(HOME)} onClick={closePhone}>{t('nav.toHome')}</a>
           </div>
         </div>

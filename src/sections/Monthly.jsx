@@ -5,6 +5,7 @@ import { monthReport, livingBalance, balanceSheet, balanceSheetColumns, profitLo
 import { today } from '../today.js'
 import { t } from '../text.js'
 import { usePhone } from '../layout.js'
+import { Icon } from './Icon.jsx'
 
 const cls = (n) => (n < 0 ? 'neg' : '')
 
@@ -19,7 +20,7 @@ const Line = ({ name, amount, currency }) => (
 // 通常の表示：見出しを押すと開く（初期は閉じる）。印刷用表示：すべて開いた表示（開閉の三角を出さない）
 function Section({ printView, title, extra, children }) {
   if (printView) return <section className="print-section"><h2>{title}</h2>{extra}{children}</section>
-  return <details><summary><h2>{title}</h2>{extra}</summary>{children}</details>
+  return <details><summary><span className="chev"><Icon name="chevRight" /></span><h2>{title}</h2>{extra}</summary>{children}</details>
 }
 
 // P/L：報告書の形（収益の部、費用の部、当期収支、残高調整）。並びは profitLossRows のまま。金額は数字だけ（単位は見出しの横）
@@ -151,8 +152,8 @@ export default function Monthly({ data }) {
       </div>
       {printView && (
         <div className="month-bar no-print">
-          <button type="button" onClick={() => window.print()}>{t('monthly.print')}</button>
-          <button type="button" onClick={() => setPrintView(false)}>{t('monthly.back')}</button>
+          <button type="button" onClick={() => window.print()}><Icon name="print" />{t('monthly.print')}</button>
+          <button type="button" onClick={() => setPrintView(false)}><Icon name="back" />{t('monthly.back')}</button>
           <span className="note">{t('monthly.printNote')}</span>
         </div>
       )}

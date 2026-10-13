@@ -11,6 +11,7 @@ import { usePhone } from '../layout.js'
 import { loadOpenMode, initialOpenDates, isOpenDate, formatDayHead, formatDayLabel, entryChanged } from '../entryView.js'
 import EntrySheet from './EntrySheet.jsx'
 import { AmountInput } from './Calculator.jsx'
+import { Icon, IconButton } from './Icon.jsx'
 
 // favoriteIds：その側（借方か貸方）のお気に入り。一番上に「お気に入り」を出し、そこだけ科目名の後ろに区分を付ける（表示だけ。値は科目の id）
 export function AccountSelect({ value, onChange, options, label, favoriteIds = [] }) {
@@ -35,7 +36,7 @@ function Field({ label, className = '', children }) {
 // 入力・編集で共用。エラーのときは入力途中の内容を消さない。
 // currentIds は編集フォームだけが渡す（その仕訳が今使っている科目を選択肢に残す）。新規入力では渡さない。
 // variant='sheet'：下から出る編集画面の形（縦に並べ、メモは複数行、下に「やめる」「保存」）。onValues(f)：入力が変わるたびに呼ぶ（編集画面が、変えたかを知るため）
-export function EntryForm({ accounts, initial, submitLabel, onSubmit, onCancel, currentIds, favorites = { debit: [], credit: [] }, variant, onValues }) {
+export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus', onSubmit, onCancel, currentIds, favorites = { debit: [], credit: [] }, variant, onValues }) {
   const options = entryAccountOptions(accounts, currentIds)
   const [f, setF] = useState(initial)
   const [error, setError] = useState('')
@@ -78,8 +79,8 @@ export function EntryForm({ accounts, initial, submitLabel, onSubmit, onCancel, 
         <Field label={t('common.memo')}><textarea className="memo-input" rows={3} aria-label={t('common.memo')} value={f.memo} onChange={(e) => set('memo')(e.target.value)} /></Field>
         {error && <span className="error">{error}</span>}
         <div className="sheet-actions">
-          <button type="button" onClick={onCancel}>{t('entries.sheetClose')}</button>
-          <button className="primary">{submitLabel}</button>
+          <button type="button" onClick={onCancel}><Icon name="close" />{t('entries.sheetClose')}</button>
+          <button className="primary"><Icon name={submitIcon} />{submitLabel}</button>
         </div>
       </form>
     )
@@ -93,8 +94,8 @@ export function EntryForm({ accounts, initial, submitLabel, onSubmit, onCancel, 
       {fields.credit}
       {fields.living}
       <input className="memo-input" placeholder={t('common.memo')} aria-label={t('common.memo')} value={f.memo} onChange={(e) => set('memo')(e.target.value)} />
-      <button>{submitLabel}</button>
-      {onCancel && <button type="button" onClick={onCancel}>{t('entries.sheetClose')}</button>}
+      <button><Icon name={submitIcon} />{submitLabel}</button>
+      {onCancel && <button type="button" onClick={onCancel}><Icon name="close" />{t('entries.sheetClose')}</button>}
       {error && <span className="error">{error}</span>}
     </form>
   )
@@ -118,6 +119,7 @@ function EntryRow({ entry, number, accounts, favorites, currency, editing, onEdi
           currentIds={[entry.debitId, entry.creditId]}
           favorites={favorites}
           submitLabel={t('common.save')}
+          submitIcon="check"
           onSubmit={onSave}
           onCancel={onCancel}
         />
@@ -137,8 +139,8 @@ function EntryRow({ entry, number, accounts, favorites, currency, editing, onEdi
       <span>
         {canEditEntry(entry) && (
           <>
-            <button onClick={onEdit}>{t('common.edit')}</button>
-            <button onClick={onDelete}>{t('common.delete')}</button>
+            <IconButton icon="edit" label={t('common.edit')} onClick={onEdit} />
+            <IconButton icon="trash" label={t('common.delete')} onClick={onDelete} />
           </>
         )}
       </span>
@@ -161,8 +163,8 @@ function EntryCard({ entry, number, accounts, currency, open, onToggle, onEdit, 
       <div id={detailId} className="card-actions" hidden={!open}>
         {canEditEntry(entry) ? (
           <>
-            <button type="button" onClick={onEdit}>{t('common.edit')}</button>
-            <button type="button" className="danger" onClick={onDelete}>{t('common.delete')}</button>
+            <IconButton icon="edit" label={t('common.edit')} withText onClick={onEdit} />
+            <IconButton icon="trash" label={t('common.delete')} withText className="danger" onClick={onDelete} />
           </>
         ) : <span className="note">{t('entries.kindNote', { kind: KIND_LABELS[entry.kind] })}</span>}
       </div>
@@ -238,7 +240,7 @@ export default function Entries({ data, update }) {
       <h2>{t('entries.listTitle')}</h2>
       <input type="month" aria-label={t('common.month')} value={month} onChange={(e) => { setMonth(e.target.value); setEditingId(null); setOpenRowId(null); setToggled({}) }} />{' '}
       {/* 押すたびに切り替える。表示は、押したら切り替わる先 */}
-      <button type="button" aria-pressed={order === 'desc'} onClick={() => setOrder(order === 'asc' ? 'desc' : 'asc')}>{t(order === 'asc' ? ORDER_LABELS.desc : ORDER_LABELS.asc)}</button>
+      <IconButton icon="sort" label={t('entries.sortLabel', { now: t(ORDER_LABELS[order]), next: t(ORDER_LABELS[order === 'asc' ? 'desc' : 'asc']) })} onClick={() => setOrder(order === 'asc' ? 'desc' : 'asc')} />
       {!month ? <p className="note">{t('common.chooseMonth')}</p> : groups.length === 0 ? <p className="note">{t('common.noEntriesInMonth')}</p> : (
         groups.map((g) => {
           const open = isOpenDate(g.date, initialOpen, toggled)
@@ -248,7 +250,7 @@ export default function Entries({ data, update }) {
               <h3>
                 <button type="button" className="day-toggle" aria-expanded={open} aria-controls={listId} onClick={() => { if (open && g.entries.some((e) => e.id === openRowId)) setOpenRowId(null); setToggled((s) => ({ ...s, [g.date]: !open })) }}>
                   <span>{formatDayHead(g.date, g.entries.length)}</span>
-                  <span className="mark" aria-hidden="true">{open ? '▼' : '▶'}</span>
+                  <span className="mark"><Icon name={open ? 'chevDown' : 'chevRight'} /></span>
                 </button>
               </h3>
               <div id={listId} hidden={!open}>
@@ -293,6 +295,7 @@ export default function Entries({ data, update }) {
             currentIds={[editing.debitId, editing.creditId]}
             favorites={settings.favorites}
             submitLabel={t('common.save')}
+          submitIcon="check"
             onSubmit={save(editing)}
             onCancel={() => setEditingId(null)}
             onValues={(f) => { valuesRef.current = f }}

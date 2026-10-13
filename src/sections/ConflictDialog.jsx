@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import './confirm.css'
 import { t } from '../text.js'
 import { versionLabel } from '../pwa.js'
+import { Icon } from './Icon.jsx'
 
 // 食い違いの確認画面（spec-drive.md 4.4）。この端末のデータと、ドライブのデータについて、最後に変えた日時と仕訳の件数を並べて出し、どちらを残すか選ばせる。
 // 残さなかった方は消さず、ドライブの控え（別のファイル）に残る。選ぶまで、データは変わらない。「あとで決める」・Esc は、何も変えずに閉じる（帯から開き直せる）。
@@ -76,8 +77,8 @@ export default function ConflictDialog({ kind, describe, resolve, onClose, onLog
       {busy && <p role="status">{t('conflict.working')}</p>}
       {error && <p className="error" role="alert">{error}</p>}
       <div className="actions">
-        <button type="button" disabled={!canDevice || busy} onClick={() => choose('device')}>{t('conflict.keepDevice')}</button>
-        <button type="button" disabled={!canDrive || busy} onClick={() => choose('drive')}>{t('conflict.keepDrive')}</button>
+        <button type="button" disabled={!canDevice || busy} onClick={() => choose('device')}><Icon name="device" />{t('conflict.keepDevice')}</button>
+        <button type="button" disabled={!canDrive || busy} onClick={() => choose('drive')}><Icon name="cloud" />{t('conflict.keepDrive')}</button>
         {info?.error && (info.error === 'login' ? <button type="button" onClick={onLogin}>{t('conflict.login')}</button> : <button type="button" onClick={load}>{t('conflict.retry')}</button>)}
         <button type="button" ref={laterRef} disabled={busy} onClick={onClose}>{t('conflict.later')}</button>
       </div>

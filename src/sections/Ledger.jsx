@@ -7,6 +7,7 @@ import {
 import { t } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import { usePhone } from '../layout.js'
+import { Icon, IconButton } from './Icon.jsx'
 
 function RoleSelect({ value, onChange, disabled }) {
   return (
@@ -65,7 +66,7 @@ function AccountEditor({ account, accounts, entries, subscriptions, budgets, onC
       <button onClick={() => touch({ active: !account.active })} disabled={locked}>
         {account.active ? t('common.disable') : t('common.enable')}
       </button>
-      <button onClick={remove} disabled={!deletable}>{t('common.delete')}</button>
+      <IconButton icon="trash" label={t('common.delete')} onClick={remove} disabled={!deletable} />
       {!account.active && <span className="note"> {t('common.inactive')}</span>}
       {locked && <div className="note">{t('ledger.noteLocked')}</div>}
       {!locked && !deletable && <div className="note">{t('ledger.noteInUse')}</div>}
@@ -90,6 +91,7 @@ function AccountCard({ open, onToggle, ...props }) {
         <span className="nm">{account.name}</span>
         {(account.type === 'asset' || account.type === 'liability') && <span className="role">{ROLE_LABELS[account.role]}</span>}
         {!account.active && <span className="role">{t('common.inactive')}</span>}
+        <span className="mark"><Icon name={open ? 'chevDown' : 'chevRight'} /></span>
       </button>
       <div id={detailId} className="acct-detail" hidden={!open}>{open && <AccountEditor {...props} />}</div>
     </li>
@@ -116,7 +118,7 @@ function AddForm({ accounts, onAdd }) {
       <TypeSelect value={type} onChange={setType} />
       {type === 'asset' && <RoleSelect value={role} onChange={setRole} />}
       <input placeholder={t('ledger.namePlaceholder')} value={name} onChange={(e) => setName(e.target.value)} />
-      <button>{t('common.add')}</button>
+      <button><Icon name="plus" />{t('common.add')}</button>
       {error && <span className="error">{error}</span>}
     </form>
   )

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { cardAccounts, changeCardDays } from '../ledgerLogic.js'
 import { t } from '../text.js'
+import { Icon } from './Icon.jsx'
 
 // カード1枚分：締め日・引き落とし日の入力と保存。エラーのとき入力は消さない。日は前後の空白を取って渡す（検証は changeCardDays）
 function CardRow({ account, data, update }) {
@@ -25,7 +26,7 @@ function CardRow({ account, data, update }) {
         <strong>{account.name}</strong>{!account.active && <span className="note"> {t('common.inactive')}</span>}{' '}
         <label><span className="lbl">{t('card.closingDay')}</span>{' '}<input inputMode="numeric" className="day" aria-label={t('cardSettings.closingAria', { name: account.name })} size={3} value={closing} onChange={(e) => setClosing(e.target.value)} />{' '}{t('card.dayUnit')}</label>{' '}
         <label><span className="lbl">{t('card.payDay')}</span>{' '}<input inputMode="numeric" className="day" aria-label={t('cardSettings.payAria', { name: account.name })} size={3} value={pay} onChange={(e) => setPay(e.target.value)} />{' '}{t('card.dayUnit')}</label>{' '}
-        <button>{t('common.save')}</button>
+        <button><Icon name="check" />{t('common.save')}</button>
         {error && <span className="error"> {error}</span>}
         {message && <span className="note"> {message}</span>}
       </form>

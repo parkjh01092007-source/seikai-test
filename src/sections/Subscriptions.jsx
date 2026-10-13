@@ -8,12 +8,13 @@ import { today } from '../today.js'
 import { t } from '../text.js'
 import { usePhone } from '../layout.js'
 import { useConfirm } from './ConfirmDialog.jsx'
+import { Icon, IconButton } from './Icon.jsx'
 
 const EMPTY = { name: '', memo: '', amount: '', day: '', debitId: '', creditId: '' }
 
 // 登録・編集で共用。エラーのときは入力途中の内容を消さない。
 // currentIds は編集フォームだけが渡す（その定期支払いが今使っている科目を選択肢に残す）
-function SubscriptionForm({ accounts, initial, submitLabel, onSubmit, onCancel, currentIds, clearOnSuccess }) {
+function SubscriptionForm({ accounts, initial, submitLabel, submitIcon = 'plus', onSubmit, onCancel, currentIds, clearOnSuccess }) {
   const options = entryAccountOptions(accounts, currentIds)
   const phone = usePhone()
   const [f, setF] = useState(initial)
@@ -38,15 +39,16 @@ function SubscriptionForm({ accounts, initial, submitLabel, onSubmit, onCancel, 
       <AccountSelect label={t('common.debit')} value={f.debitId} onChange={set('debitId')} options={options} />
       <AccountSelect label={t('common.credit')} value={f.creditId} onChange={set('creditId')} options={options} />
       {/* スマホの形の編集は、仕訳の編集画面（下から出る画面）と同じ左右の順番：左「やめる」、右「保存」（spec-mobile.md 11.3）。PC は今のまま（保存 → やめる） */}
-      {phone && onCancel && <button type="button" className="sub-cancel" onClick={onCancel}>{t('entries.sheetClose')}</button>}
-      <button className="sub-submit">{submitLabel}</button>
-      {!phone && onCancel && <button type="button" onClick={onCancel}>{t('entries.sheetClose')}</button>}
+      {phone && onCancel && <button type="button" className="sub-cancel" onClick={onCancel}><Icon name="close" />{t('entries.sheetClose')}</button>}
+      <button className="sub-submit"><Icon name={submitIcon} />{submitLabel}</button>
+      {!phone && onCancel && <button type="button" onClick={onCancel}><Icon name="close" />{t('entries.sheetClose')}</button>}
       {error && <span className="error">{error}</span>}
     </form>
   )
 }
 
 function SubscriptionRow({ sub, accounts, currency, editing, onEdit, onCancel, onSave, onToggle, onDelete }) {
+  const phone = usePhone()
   const name = (id) => accounts.find((a) => a.id === id)?.name ?? ''
   if (editing) {
     return (
@@ -56,6 +58,7 @@ function SubscriptionRow({ sub, accounts, currency, editing, onEdit, onCancel, o
           initial={{ name: sub.name, memo: sub.memo, amount: String(sub.amount), day: String(sub.day), debitId: sub.debitId, creditId: sub.creditId }}
           currentIds={[sub.debitId, sub.creditId]}
           submitLabel={t('common.save')}
+          submitIcon="check"
           onSubmit={onSave}
           onCancel={onCancel}
         />
@@ -71,9 +74,9 @@ function SubscriptionRow({ sub, accounts, currency, editing, onEdit, onCancel, o
       {sub.memo && <div className="note">{sub.memo}</div>}
       <div className="note">{t('subscriptions.lastMonth', { month: sub.lastMonth })}</div>
       <div className="sub-actions">
-        <button onClick={onEdit}>{t('common.edit')}</button>
+        <IconButton icon="edit" label={t('common.edit')} withText={phone} onClick={onEdit} />
         <button onClick={onToggle}>{sub.active ? t('common.disable') : t('common.enable')}</button>
-        <button className="danger" onClick={onDelete}>{t('common.delete')}</button>
+        <IconButton icon="trash" label={t('common.delete')} withText={phone} className="danger" onClick={onDelete} />
       </div>
     </li>
   )

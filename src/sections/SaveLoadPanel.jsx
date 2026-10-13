@@ -8,6 +8,7 @@ import { startLogin } from '../driveStore.js'
 import { slotStore } from '../slotStore.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import { usePhone } from '../layout.js'
+import { Icon } from './Icon.jsx'
 
 const SETTINGS_HASH = toHash({ entry: 'ledger', tab: 'settings', detailId: null })
 
@@ -168,14 +169,14 @@ export default function SaveLoadPanel({ mode, data, loadBlocked = false, onClose
               <div className="actions">
                 {mode === 'save' && <button type="button" disabled={busy} onClick={() => select(slot)}>{t('save.pick')}</button>}
                 {mode === 'load' && <button type="button" disabled={busy || view.status !== 'ok' || loadBlocked} onClick={() => load(slot)}>{t('save.doLoad')}</button>}
-                {view.status !== 'empty' && <button type="button" disabled={busy} onClick={() => remove(slot)}>{t('save.remove')}</button>}
+                {view.status !== 'empty' && <button type="button" disabled={busy} onClick={() => remove(slot)}><Icon name="trash" />{t('save.remove')}</button>}
               </div>
               {mode === 'save' && selected === slot.file && (
                 <form onSubmit={(e) => { e.preventDefault(); save(slot) }}>
                   {view.status !== 'empty' && <p>{t('save.willOverwrite', { label: slot.label })}</p>}
                   <label>{t('save.memo')} <input value={memo} onChange={(e) => setMemo(e.target.value)} autoFocus autoComplete="off" /></label>
                   <button type="submit" disabled={busy}>{t('save.doSave')}</button>
-                  <button type="button" onClick={() => setSelected(null)}>{t('save.cancel')}</button>
+                  <button type="button" onClick={() => setSelected(null)}><Icon name="close" />{t('save.cancel')}</button>
                   {memoError && <span className="error"> {memoError}</span>}
                 </form>
               )}
@@ -190,7 +191,7 @@ export default function SaveLoadPanel({ mode, data, loadBlocked = false, onClose
     <dialog ref={dialogRef} className="saveload" onCancel={(e) => { e.preventDefault(); onClose() }}>
       <div className="head">
         <h2>{mode === 'save' ? t('save.saveHeading') : t('save.loadHeading')}</h2>
-        <button type="button" onClick={onClose}>{t('save.close')}</button>
+        <button type="button" onClick={onClose}><Icon name="close" />{t('save.close')}</button>
       </div>
       {lastSave !== null && <p className="note">{t('save.lastSaveLine', { value: lastSave })}</p>}
       {mode === 'load' && loadBlocked && <p className="note">{t('save.loadBlocked')}</p>}
@@ -198,7 +199,7 @@ export default function SaveLoadPanel({ mode, data, loadBlocked = false, onClose
       {error && <p className="error">{error}</p>}
       {body}
       {/* スマホの形：長い一覧の一番下にも「閉じる」（spec-mobile.md 第6章） */}
-      {phone && <div className="foot"><button type="button" onClick={onClose}>{t('save.close')}</button></div>}
+      {phone && <div className="foot"><button type="button" onClick={onClose}><Icon name="close" />{t('save.close')}</button></div>}
     </dialog>
   )
 }

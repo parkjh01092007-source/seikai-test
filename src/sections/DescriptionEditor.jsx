@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { effectiveStage, stageOf, setDescription } from '../skillLogic.js'
 import { t } from '../text.js'
+import { Icon } from './Icon.jsx'
 
 function Row({ stage, text, active, current, onSave }) {
   const [draft, setDraft] = useState(text)
@@ -11,8 +12,8 @@ function Row({ stage, text, active, current, onSave }) {
       {current && ` ${t('skills.currentStage')}`}
       <br />
       <textarea rows="2" cols="50" value={draft} onChange={(e) => setDraft(e.target.value)} />
-      <button onClick={() => onSave(draft)}>{t('common.save')}</button>
-      <button onClick={() => { setDraft(''); onSave('') }}>{t('common.delete')}</button>
+      <button onClick={() => onSave(draft)}><Icon name="check" />{t('common.save')}</button>
+      <button onClick={() => { setDraft(''); onSave('') }}><Icon name="trash" />{t('common.delete')}</button>
     </li>
   )
 }

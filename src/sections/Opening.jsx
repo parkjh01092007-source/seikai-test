@@ -5,6 +5,7 @@ import { today } from '../today.js'
 import { t } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import { usePhone } from '../layout.js'
+import { Icon } from './Icon.jsx'
 
 // 保存の知らせとエラー。読み上げで伝わるよう、場所は先に（空のまま）置き、押した方にだけ文を入れる
 function Result({ where, place, error, message }) {
@@ -57,7 +58,7 @@ export default function Opening({ data, update }) {
             <label className="date">
               {t('opening.date')}{' '}<input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
             </label>
-            <button onClick={() => { pressed.current = 'top' }}>{t('common.save')}</button>
+            <button onClick={() => { pressed.current = 'top' }}><Icon name="check" />{t('common.save')}</button>
             <Result where="top" place={place} error={error} message={message} />
           </div>
         ) : (
@@ -84,12 +85,12 @@ export default function Opening({ data, update }) {
         ))}
         {phone ? (
           <div className="save-bar">
-            <button onClick={() => { pressed.current = 'bottom' }}>{t('common.save')}</button>
+            <button onClick={() => { pressed.current = 'bottom' }}><Icon name="check" />{t('common.save')}</button>
             <Result where="bottom" place={place} error={error} message={message} />
           </div>
         ) : (
           <>
-            <button>{t('common.save')}</button>
+            <button><Icon name="check" />{t('common.save')}</button>
             {error && <span className="error" role="alert">{error}</span>}
             {message && <span className="note" role="status">{message}</span>}
           </>

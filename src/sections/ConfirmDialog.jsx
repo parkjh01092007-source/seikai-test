@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import './confirm.css'
 import { t } from '../text.js'
+import { Icon } from './Icon.jsx'
 
 // 確認画面。画面は const confirm = useConfirm() で受け取り、if (!(await confirm({ message }))) return のように使う（true＝はい、false＝いいえ）。
 // options：message（改行はそのまま出す）、yesLabel / noLabel（省略時は辞書の confirm.yes / confirm.no）、requireText（打たせる文字。null ならふつうの確認）、
@@ -43,8 +44,8 @@ export function ConfirmDialog({ request, onAnswer }) {
           </label>
         )}
         <div className="actions">
-          <button type="submit" disabled={!matched}>{yesLabel}</button>
-          <button type="button" ref={noRef} onClick={() => onAnswer(false)}>{noLabel}</button>
+          <button type="submit" disabled={!matched}><Icon name="check" />{yesLabel}</button>
+          <button type="button" ref={noRef} onClick={() => onAnswer(false)}><Icon name="close" />{noLabel}</button>
         </div>
       </form>
     </dialog>

@@ -1,0 +1,32 @@
+/* ボタンの絵（spec-design.md 12.6。Icon.jsx）。色は文字の色。大きさは 20px（絵だけのボタンは 20px、スマホは 24px） */
+/* 文字のボタンの中の絵は、文字の大きさに合わせる（PC：ボタンの高さを変えない）。スマホは、ボタンが 44px 以上なので 20px。絵だけのボタンは 18px（スマホ 24px） */
+.icon { width: 1.1em; height: 1.1em; flex: none; }
+button.icon-only .icon { width: 18px; height: 18px; }
+@media screen and (max-width: 959.98px), screen and (pointer: coarse) and (hover: none) { .icon { width: 20px; height: 20px; } }
+/* 削除の絵は1つで、いつもエラーの色（黒い削除の絵は使わない）。✓（check）には、色を付けない */
+.icon-trash { color: var(--color-error); }
+
+/* 絵と文字のボタン：絵は文字の左 */
+button:has(> .icon) { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+
+/* 絵だけのボタン：PC は、今の PC の文字のボタンと同じ高さの四角（行の高さを変えない）、スマホは 44px 四方（押せる場所）。行の中では真ん中にそろえる */
+button.icon-only { padding: 2px; vertical-align: middle; } /* 大きさは、絵（18px）＋余白＋枠。基本は 26px、群青は 24px になり、今の文字のボタンと高さが同じ */
+@media screen and (max-width: 959.98px), screen and (pointer: coarse) and (hover: none) {
+  :root button.icon-only { width: 44px; height: 44px; min-width: 44px; min-height: 44px; padding: 0; }
+  button.icon-only .icon { width: 24px; height: 24px; }
+}
+
+/* 場所ごとの大きさ：メニュー（☰ の代わり）、電卓のキーの ⌫ */
+.sidetabs .toggle .icon { width: 24px; height: 24px; }
+.keypad .key .icon { width: 24px; height: 24px; }
+
+/* 開閉の矢印：日付の枠・科目は、開いているかで ▼／▶ の絵を替える。<details>（予算の履歴・月次）は、ふつうの三角をやめて、▶ を 90 度回して ▼ にする */
+.mark { display: inline-flex; align-items: center; }
+.budgets summary, .report summary { list-style: none; }
+.budgets summary::-webkit-details-marker, .report summary::-webkit-details-marker { display: none; }
+.chev { display: inline-flex; vertical-align: middle; margin-right: 6px; }
+details[open] > summary > .chev .icon { transform: rotate(90deg); }
+@media (prefers-reduced-motion: no-preference) { .chev .icon { transition: transform 0.12s; } }
+
+/* 電卓のボタンの絵は 24px のまま（作業32 の見た目） */
+.calc-btn .icon { width: 24px; height: 24px; }

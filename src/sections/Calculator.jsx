@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import './calc.css'
+import { Icon } from './Icon.jsx'
 import { t } from '../text.js'
 import { usePhone } from '../layout.js'
 import { answerOf, normalize, press, formatExpr, formatNumber, isExpression } from '../calc.js'
@@ -9,20 +10,6 @@ const hasOperator = isExpression
 
 // 金額の電卓（作業32。spec-ledger.md 5.16）。EntryForm の金額の欄の置きかえ。
 // スマホの形：欄の右に電卓の絵のボタン。押すと、画面の下からキーパッド（<dialog>）が出る。キーパッドの中に入力欄は置かない（置くと、ふつうのキーボードが出る）
-
-// 電卓の絵（基本の見た目。spec-design.md 12.6。線の色は文字の色）
-export function CalcIcon() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-      <rect x="5" y="2.5" width="14" height="19" rx="2.5" />
-      <rect x="8" y="5.5" width="8" height="4" rx="1" />
-      <g fill="currentColor" stroke="none">
-        <circle cx="8.5" cy="13.5" r="1" /><circle cx="12" cy="13.5" r="1" /><circle cx="15.5" cy="13.5" r="1" />
-        <circle cx="8.5" cy="17.5" r="1" /><circle cx="12" cy="17.5" r="1" /><circle cx="15.5" cy="17.5" r="1" />
-      </g>
-    </svg>
-  )
-}
 
 // 理由の文言（キーは文字で書く：辞書の使っているキーの検査に見つけてもらうため）
 const ERROR_TEXT = {
@@ -108,7 +95,7 @@ export function Keypad({ initial, onInsert, onClose }) {
               className={`key${kind ? ` ${kind}` : ''}`}
               aria-label={k === 'back' ? t('calc.backspace') : k === 'clear' ? t('calc.clear') : undefined}
               onClick={() => key(k)}
-            >{label}</button>
+            >{k === 'back' ? <Icon name="backspace" /> : label}</button>
           )))}
           <button type="button" className="key cancel" ref={cancelRef} onClick={onClose}>{t('entries.sheetClose')}</button>
           <button type="button" className="key eq" onClick={() => key('=')}>=</button>
@@ -161,7 +148,7 @@ export function AmountInput({ value, onChange, label }) {
     return (
       <span className="amount-wrap phone">
         <input ref={inputRef} inputMode="numeric" placeholder={label} aria-label={label} value={value} onChange={(e) => onChange(e.target.value)} />
-        <button type="button" className="calc-btn" ref={buttonRef} aria-label={t('calc.name')} title={t('calc.name')} onClick={() => setOpen(true)}><CalcIcon /></button>
+        <button type="button" className="calc-btn" ref={buttonRef} aria-label={t('calc.name')} title={t('calc.name')} onClick={() => setOpen(true)}><Icon name="calc" /></button>
         {keypad}
       </span>
     )
@@ -199,7 +186,7 @@ export function AmountInput({ value, onChange, label }) {
           </span>
           {/* 下の行：電卓の絵（大きなキーパッドを開く）と、ボタン */}
           <span className="calc-band-tools">
-            <button type="button" tabIndex={-1} className="calc-open" aria-label={t('calc.name')} title={t('calc.name')} onMouseDown={hold} onClick={() => setOpen(true)}><CalcIcon /></button>
+            <button type="button" tabIndex={-1} className="calc-open" aria-label={t('calc.name')} title={t('calc.name')} onMouseDown={hold} onClick={() => setOpen(true)}><Icon name="calc" /></button>
             {OPS.map(([label, k]) => <button key={k} type="button" tabIndex={-1} className="op" onMouseDown={hold} onClick={() => apply(k)}>{label}</button>)}
             <button type="button" tabIndex={-1} onMouseDown={hold} onClick={() => apply('*1.1')}>×1.1</button>
             <button type="button" tabIndex={-1} onMouseDown={hold} onClick={() => apply('*1.08')}>×1.08</button>
