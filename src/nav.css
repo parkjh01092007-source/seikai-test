@@ -33,6 +33,9 @@
 /* 下：「セーブ」「ロード」「ホームへ」を横に並べる */
 .sidetabs .bottom { display: flex; gap: var(--space); margin-top: calc(var(--space) * 2); padding-top: var(--space); border-top: 1px solid var(--color-border); }
 .sidetabs .bottom > * { flex: 1; min-width: 0; min-height: var(--tap); box-sizing: border-box; display: flex; align-items: center; justify-content: center; padding: 0 calc(var(--space) / 2); border: none; background: transparent; color: var(--color-text); font: inherit; font-size: 0.9em; text-align: center; cursor: pointer; }
+/* 基本・群青は、下のボタンが幅に入りきらないとき、次の行へ回す（作業33：絵が入って、文字が縦に折り返した直し）。入るときは今までどおり1行。ほかの見た目は、今のまま */
+:root:is(:not([data-theme]), [data-theme='basic'], [data-theme='gunjo']) .sidetabs .bottom { flex-wrap: wrap; }
+:root:is(:not([data-theme]), [data-theme='basic'], [data-theme='gunjo']) .sidetabs .bottom > * { flex: 1 1 auto; white-space: nowrap; }
 
 /* スマホの形（幅 960px 未満、または指だけで操作する機械。layout.js の PHONE_QUERY・index.css と同じ条件。変えるときは3か所とも）：
    縦タブは、画面の上の細い帯（☰、今の画面の名前、知らせ）になり、中身は横幅を全部使う。☰ を押すと、パネルが画面の上に重なって開く。
