@@ -1,7 +1,7 @@
 // Google のログインとドライブとのやりとりは、このファイルだけで行う（fetch と location。判定・整形は driveLogic.js、同期の流れは driveSync.js）。
 // 作業30(a)：ログイン（ログインの画面へ移って戻る）、つなぐ・切る、アカウントの表示。作業30(b)：ドライブのファイルの読み書き（drive）、同期の状態（syncState・getStatus）。
 // Google の部品（Identity Services）は読み込まない（spec-drive.md 11章）。保存データ（localStorage の orenoyome）には触らない。
-import { authUrl, redirectUri, parseAuthReturn, readSync, writeSync, emptySync, withAccount, readToken, writeToken, clearToken, readLogin, writeLogin, clearLogin } from './driveLogic.js'
+import { BACKUP_PREFIX, authUrl, redirectUri, parseAuthReturn, readSync, writeSync, emptySync, withAccount, readToken, writeToken, clearToken, readLogin, writeLogin, clearLogin } from './driveLogic.js'
 import { DriveError } from './driveSync.js'
 
 // アプリの登録の番号（クライアント ID。秘密ではない。spec-drive.md 3章）。Google Cloud で作ったもの（7章）。空のあいだは、つなげない
@@ -137,6 +137,14 @@ async function call(url, init = {}) {
   return res
 }
 const CRLF = String.fromCharCode(13, 10) // multipart の改行
+// appDataFolder に、名前つきで新しいファイルを作る（データのファイルも、控えも）
+async function createFile(name, text) {
+  const boundary = `b${[...crypto.getRandomValues(new Uint8Array(8))].map((b) => b.toString(16).padStart(2, '0')).join('')}`
+  const meta = JSON.stringify({ name, parents: ['appDataFolder'] })
+  const body = [`--${boundary}`, 'Content-Type: application/json; charset=UTF-8', '', meta, `--${boundary}`, 'Content-Type: application/json', '', text, `--${boundary}--`].join(CRLF)
+  const res = await call(`${UPLOAD}/files?uploadType=multipart&fields=${FILE_FIELDS}`, { method: 'POST', headers: { 'Content-Type': `multipart/related; boundary=${boundary}` }, body })
+  return res.json()
+}
 export const drive = {
   // 同じ名前のファイルが2つあるとき（2台が同時に初めてつないだ）は、先にできた方
   async find() {
@@ -148,12 +156,30 @@ export const drive = {
   async read(id) {
     return (await call(`${API}/files/${id}?alt=media`)).text()
   },
-  async create(text) {
-    const boundary = `b${[...crypto.getRandomValues(new Uint8Array(8))].map((b) => b.toString(16).padStart(2, '0')).join('')}`
-    const meta = JSON.stringify({ name: DATA_FILE, parents: ['appDataFolder'] })
-    const body = [`--${boundary}`, 'Content-Type: application/json; charset=UTF-8', '', meta, `--${boundary}`, 'Content-Type: application/json', '', text, `--${boundary}--`].join(CRLF)
-    const res = await call(`${UPLOAD}/files?uploadType=multipart&fields=${FILE_FIELDS}`, { method: 'POST', headers: { 'Content-Type': `multipart/related; boundary=${boundary}` }, body })
-    return res.json()
+  create(text) {
+    return createFile(DATA_FILE, text)
+  },
+  // 食い違いの確認（作業30(c)）：ある版の中身。控え（別のファイル）の作成・一覧・削除
+  async readRevision(fileId, revId) {
+    return (await call(`${API}/files/${fileId}/revisions/${encodeURIComponent(revId)}?alt=media`)).text()
+  },
+  async createBackup(name, text) {
+    return createFile(name, text)
+  },
+  // appDataFolder の中のファイルを全部読んで、名前で選ぶ（ドライブの「name contains」は、ハイフンつきの名前の前の部分では、思ったとおりに当たらないことがあるため）
+  async listBackups() {
+    const out = []
+    let page = ''
+    do {
+      const res = await call(`${API}/files?spaces=appDataFolder&q=${encodeURIComponent('trashed=false')}&pageSize=100&fields=nextPageToken,files(id,name)${page}`)
+      const json = await res.json()
+      out.push(...(json.files ?? []).filter((f) => typeof f.name === 'string' && f.name.startsWith(BACKUP_PREFIX)))
+      page = json.nextPageToken ? `&pageToken=${encodeURIComponent(json.nextPageToken)}` : ''
+    } while (page)
+    return out
+  },
+  async remove(id) {
+    await call(`${API}/files/${id}`, { method: 'DELETE' })
   },
   async update(id, text) {
     const res = await call(`${UPLOAD}/files/${id}?uploadType=media&fields=${FILE_FIELDS}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: text })

@@ -172,3 +172,22 @@ export function serializeData(data, exportedAt) {
   const { schemaVersion, ...rest } = data
   return JSON.stringify({ schemaVersion, exportedAt, ...rest }, null, 2)
 }
+
+// ---- 食い違いの確認画面と、ドライブの控え（4.4。作業30(c)）
+// 確認画面に並べる、データの「最後に変えた日時」と「仕訳の件数」。最後に変えた日時は、科目・仕訳・定期支払い・予算・スキルの updatedAt のうち一番新しいもの（なければ null）。
+// データの形が違うとき（読めないファイル）は null
+export function dataSummary(data) {
+  if (typeof data !== 'object' || data === null || !Array.isArray(data.entries)) return null
+  const stamps = ['accounts', 'entries', 'subscriptions', 'budgets', 'skills'].flatMap((k) => (Array.isArray(data[k]) ? data[k] : []).map((r) => r?.updatedAt).filter((v) => typeof v === 'string'))
+  return { changedAt: stamps.length ? stamps.reduce((a, b) => (a > b ? a : b)) : null, entries: data.entries.length }
+}
+
+// 控えのファイル：appDataFolder に、データのファイル（orenoyome-data.json）とは別に置く。名前の日時は、並べ替えで新しい順に分かる形（UTC）。side：device（この端末のデータ）・drive（ドライブのデータ）
+export const BACKUP_PREFIX = 'orenoyome-backup-'
+export const BACKUP_KEEP = 5 // 新しいものから5個まで（11章）
+export const backupName = (nowIso, side) => `${BACKUP_PREFIX}${nowIso.replace(/\.\d+/, '').replace(/[-:]/g, '')}-${side}.json`
+// 消す控え：控えの名前のものだけを、新しい順に並べて、keep 個より古いもの。ほかのファイルは、消す一覧に入れない
+export function backupsToDelete(files, keep = BACKUP_KEEP) {
+  const backups = files.filter((f) => typeof f?.name === 'string' && /^orenoyome-backup-\d{8}T\d{6}Z-(device|drive)\.json$/.test(f.name))
+  return backups.sort((a, b) => (a.name < b.name ? 1 : a.name > b.name ? -1 : 0)).slice(keep)
+}

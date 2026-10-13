@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { syncOnce } from './driveSync.js'
+import { syncOnce, describeConflict, resolveConflict } from './driveSync.js'
 import { serializeData, isInitialData, bannerKind } from './driveLogic.js'
 import { drive, syncState, getSync, getStatus, setStatus, getToken, modalOpen, CHANGE_EVENT } from './driveStore.js'
 import { needsMigration, isNewerData, parseImport } from './storage.js'
@@ -41,6 +41,7 @@ export function useDriveSync({ data, skip, apply }) {
       initial: () => isInitialData(latest.current),
       version: () => version.current,
       text: () => serializeData(latest.current, new Date().toISOString()),
+      data: () => latest.current,
       read,
     },
     canReplace: () => !modalOpen(),
@@ -101,5 +102,21 @@ export function useDriveSync({ data, skip, apply }) {
     }
   }, [run])
 
-  return { kind: bannerKind(getSync(), getStatus()), retry: run }
+  // 食い違いの確認画面（4.4）。describe：画面に出す材料（この端末とドライブの、最後に変えた日時と仕訳の件数）。resolve(choice)：'drive'・'device'。どちらも、同期と同じつなぎに並べる
+  const enqueue = (job) => {
+    const done = chain.current.then(job)
+    chain.current = done.catch(() => {})
+    return done
+  }
+  const describe = () => enqueue(() => describeConflict(env()))
+  const resolve = (choice) => enqueue(async () => {
+    const result = await resolveConflict(env(), choice)
+    if (result.kind === 'resolved') {
+      setStatus({ problem: null, newer: false })
+      schedule(0) // そのあと、いつもの同期（置き換えた分・上げ直した分を確かめる）
+    } else if (result.kind === 'error') setStatus({ problem: result.reason, newer: false })
+    return result
+  })
+
+  return { kind: bannerKind(getSync(), getStatus()), retry: run, conflict: getSync().conflict, describe, resolve }
 }

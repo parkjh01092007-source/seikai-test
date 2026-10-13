@@ -5,12 +5,13 @@ import { t, getLanguage, setLanguage } from './text.js'
 import { parseHash, toHash } from './route.js'
 import { cardAccounts } from './ledgerLogic.js'
 import { DEFAULT_TAB, SETTINGS_GROUPS } from './settingsSections.js'
-import { getReturnTab, startLogin } from './driveStore.js'
+import { getReturnTab, startLogin, modalOpen } from './driveStore.js'
 import { useDriveSync } from './useDriveSync.js'
 import Home from './sections/Home.jsx'
 import SideTabs from './sections/SideTabs.jsx'
 import { ConfirmContext, ConfirmDialog } from './sections/ConfirmDialog.jsx'
 import SaveLoadPanel from './sections/SaveLoadPanel.jsx'
+import ConflictDialog from './sections/ConflictDialog.jsx'
 import './nav.css'
 import { loadData, saveData, exportJson, parseImport, needsMigration, isNewerData, migrate, autoRecord } from './storage.js'
 import { checkForNewBuild } from './pwa.js'
@@ -260,6 +261,17 @@ export default function App() {
     setGeneration((g) => g + 1)
   }
   const driveSync = useDriveSync({ data, skip: driveSkip, apply: applyRemote })
+  // 食い違いの確認画面（4.4）：食い違いが見つかったとき、ほかの画面・入力が開いていなければ、自動で開く（そうでなければ、帯を押すと開く）。「あとで決める」で閉じても、帯は残る。解決すると閉じる
+  const [conflictOpen, setConflictOpen] = useState(false)
+  const conflictShown = useRef(null)
+  const conflictKey = driveSync.conflict ? `${driveSync.conflict.kind}|${driveSync.conflict.theirsRev}` : null
+  useEffect(() => {
+    if (conflictKey === null) { conflictShown.current = null; setConflictOpen(false); return }
+    if (conflictShown.current !== conflictKey) {
+      conflictShown.current = conflictKey
+      if (!modalOpen()) setConflictOpen(true)
+    }
+  }, [conflictKey])
 
   const entry = route && NAV.find((e) => e.id === route.entry)
   const Screen = route && route.tab ? screens[route.tab] : null
@@ -269,7 +281,7 @@ export default function App() {
   // 「ドライブに保存できません」など（4.5）。ログインが切れたときは、押すとログイン（移る前にいた設定のタブを覚える）、つながらないときは、押すとやり直し。食い違いは、確認の画面（作業30(c)）ができるまで、知らせるだけ
   const driveTitle = driveSync.kind && { login: t('drive.bannerTitle.login'), offline: t('drive.bannerTitle.offline'), failed: t('drive.bannerTitle.failed'), newer: t('drive.bannerTitle.newer') }
   const driveNotice = driveSync.kind && (driveSync.kind === 'conflict'
-    ? <span className="autosave-problem" role="status" title={t('drive.bannerTitle.conflict')}>{t('drive.banner.conflict')}</span>
+    ? <button type="button" className="autosave-problem" title={t('drive.bannerTitle.conflict')} onClick={() => setConflictOpen(true)}>{t('drive.banner.conflict')}</button>
     : <button type="button" className="autosave-problem" title={driveTitle[driveSync.kind]} onClick={() => (driveSync.kind === 'login' ? startLogin(onSettingsScreen ? settingsTab : null) : driveSync.kind === 'newer' ? reloadApp() : driveSync.retry())}>{t(driveSync.kind === 'newer' ? 'drive.banner.newer' : 'drive.banner.failed')}</button>)
   const notice = (autosaveNotice || driveNotice) && <>{autosaveNotice}{driveNotice}</>
   // 新しい版のお知らせ。PC は右上の帯、スマホは中身の一番上（上の帯のすぐ下。重ねずに流れの中に置くので、入力の欄を隠さない）
@@ -326,6 +338,7 @@ export default function App() {
       </div>
       {panel && <SaveLoadPanel key={panel} mode={panel} data={data} onClose={() => setPanel(null)} onToSettings={setSettingsTab} onLoad={async (r) => { await applyImported(r); setPanel(null) }} />}
       {request && <ConfirmDialog key={request.id} request={request} onAnswer={answer} />}
+      {conflictOpen && driveSync.conflict && <ConflictDialog key={conflictKey} kind={driveSync.conflict.kind} describe={driveSync.describe} resolve={driveSync.resolve} onClose={() => setConflictOpen(false)} onLogin={() => startLogin(onSettingsScreen ? settingsTab : null)} />}
     </div>
     </ConfirmContext.Provider>
   )

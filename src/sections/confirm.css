@@ -21,3 +21,14 @@
   .confirm .actions { flex-direction: column; justify-content: stretch; gap: calc(var(--space) * 2); }
   .confirm .actions button { width: 100%; min-height: 48px; }
 }
+
+/* 食い違いの確認画面（spec-drive.md 4.4。ConflictDialog.jsx）：この端末とドライブを2つ並べる。スマホの形では縦に */
+.confirm.conflict .sides { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space); margin-bottom: var(--space); }
+.confirm.conflict .side { border: 1px solid var(--color-border); padding: var(--space); min-width: 0; }
+.confirm.conflict .side h3 { margin: 0 0 calc(var(--space) / 2); font-size: 1em; }
+.confirm.conflict .side p { margin: 0; overflow-wrap: anywhere; }
+.confirm.conflict .note-line { margin: 0 0 var(--space); color: var(--color-muted); font-size: 0.9em; }
+.confirm.conflict .actions { flex-wrap: wrap; }
+@media screen and (max-width: 959.98px), screen and (pointer: coarse) and (hover: none) {
+  .confirm.conflict .sides { grid-template-columns: 1fr; }
+}

@@ -2,15 +2,16 @@
 // node の check から、にせのドライブで動かせる）。判定は driveLogic.js の純関数。本物のドライブは driveStore.js、手元との結びつきは useDriveSync.js。
 //
 // env：
-//   drive   { find() → { id, headRevisionId } | null, read(id) → 文字, create(text) → { id, headRevisionId }, update(id, text) → { id, headRevisionId }, revisions(id) → 古い順の [{ id }] }
+//   drive   { find() → { id, headRevisionId } | null, read(id) → 文字, create(text) → { id, headRevisionId }, update(id, text) → { id, headRevisionId }, revisions(id) → 古い順の [{ id }],
+//             readRevision(fileId, revId) → 文字（版がなければ status 404 の DriveError）、createBackup(name, text)、listBackups() → [{ id, name }]、remove(id) }（後ろの4つは作業30(c)）
 //           失敗は DriveError を投げる（login：ログインが切れた、offline：つながらない、failed：ほか）
 //   state   { get(), set(patch) }   端末が覚えること（driveLogic の readSync の形）
-//   local   { syncable()（移行中・新しい版のデータなら false）, initial()（手元が初めの状態か）, version()（手元のデータが変わるたびに増える数）, text()（今のデータの文字）,
+//   local   { syncable()（移行中・新しい版のデータなら false）, initial()（手元が初めの状態か）, version()（手元のデータが変わるたびに増える数）, text()（今のデータの文字）, data()（今のデータ）,
 //             read(text) → { kind: 'ok', apply() } | { kind: 'newer' } | { kind: 'broken' }（ドライブのデータを検証する。apply は手元のデータを置き換える） }
 //   canReplace()  置き換えてよいか（編集の画面・確認画面などが開いていない）／ now() ／ sleep(ms)
 // 結果（kind）：idle（何もしない）、synced（同じだった）、uploaded、downloaded、conflict（食い違い。確認画面は 30(c)）、newer（ドライブのデータが新しい版）、
 //   waiting（置き換えたいが、画面が開いている）、changed（読んでいる間に手元が変わった）、error（reason：login・offline・failed）
-import { plan, checkAfterUpload } from './driveLogic.js'
+import { plan, checkAfterUpload, dataSummary, backupName, backupsToDelete } from './driveLogic.js'
 
 export class DriveError extends Error {
   constructor(kind, message, status = null) {
@@ -64,10 +65,10 @@ function conflict(state, kind, theirsRev) {
 
 // 上げる（4.3）。ドライブの版は、上げる前に見たものと同じ（または、ファイルがない）ことを、plan が確かめている。
 // 「同じときだけ書く」はドライブにない（作業30(b)の確認）ので、上げたあとに、版の履歴で確かめる（verify）
-async function upload(env, file) {
+async function upload(env, file, override = null) {
   const { drive, state, local } = env
   const v0 = local.version()
-  const text = local.text()
+  const text = override ?? local.text() // override：食い違いの確認で、ドライブの古い版を残すとき（置き換えた手元のデータは、画面が描き直されるまで text() に出ないため、ドライブから読んだ文字をそのまま上げる）
   const expectedPrev = file ? file.headRevisionId : null
   const res = file ? await drive.update(file.id, text) : await drive.create(text)
   // 上げている間に手元が変わっていたら、変更ありのまま（次にまた上げる）。確かめが済むまで、確かめ待ちを覚える（アプリが閉じても、次に開いたときに確かめる）
@@ -101,4 +102,89 @@ async function verify(env) {
   }
   state.set({ pending: null, conflict: r.reason === 'slipped' ? { kind: 'slipped', theirsRev: r.theirs } : { kind: 'unverified', theirsRev: null } })
   return { kind: 'conflict' }
+}
+
+// ---- 食い違いの確認画面（4.4。作業30(c)）
+// 画面に出す材料：この端末のデータと、ドライブ側のデータ（食い違いになった版）の、最後に変えた日時と仕訳の件数。
+// ドライブ側が、ok（読める）・broken（読めない）・newer（新しい版）・gone（版が消えた、ファイルがない）のどれかも返す。選ぶまで、何も変えない
+export async function describeConflict(env) {
+  const { drive, state, local } = env
+  const conflict = state.get().conflict
+  if (!conflict) return null
+  try {
+    const theirs = await readTheirs(env, conflict)
+    const remote = theirs.text === null ? null : local.read(theirs.text)
+    let driveSummary = null
+    if (remote && remote.kind !== 'broken') {
+      try { driveSummary = dataSummary(JSON.parse(theirs.text)) } catch { /* 読めないものは、件数を出さない */ }
+    }
+    return { kind: conflict.kind, local: dataSummary(local.data()), drive: driveSummary, driveState: remote === null ? 'gone' : remote.kind === 'ok' ? 'ok' : remote.kind }
+  } catch (e) {
+    return { error: e instanceof DriveError ? e.kind : 'failed' }
+  }
+}
+
+// ドライブ側の、食い違いになった版の中身。theirsRev がなければ、今の版（unverified のとき）。版が消えていれば text は null
+async function readTheirs(env, conflict) {
+  const file = await env.drive.find()
+  const rev = conflict.theirsRev ?? file?.headRevisionId ?? null
+  let text = null
+  if (file && rev) {
+    try {
+      text = await env.drive.readRevision(file.id, rev)
+    } catch (e) {
+      if (!(e instanceof DriveError && e.status === 404)) throw e
+    }
+  }
+  return { file, rev, text }
+}
+
+// 控えを作る（別のファイル）。新しいものから5個より古い控えは消す（消せなくてもよい）。作れなければ例外（そのとき、選んだことは行わない）
+async function backup(env, side, text) {
+  await env.drive.createBackup(backupName(env.now(), side), text)
+  try {
+    for (const f of backupsToDelete(await env.drive.listBackups())) await env.drive.remove(f.id)
+  } catch { /* 古い控えを消せなくても、あとで消える */ }
+}
+
+// どちらを残すか選んだあとの動き。choice：'drive'（ドライブのデータを残す）か 'device'（この端末のデータを残す）。残さなかった方は、先に控えとして、ドライブに残す。
+// 確認画面そのものが開いている間でも動く（本人が選んだので、canReplace は見ない）。失敗したときは、食い違い待ちのまま、データも変えない
+// 結果：resolved、unavailable（ドライブのデータが読めない・新しい版・消えた：ドライブを残せない）、error（reason）
+export async function resolveConflict(env, choice) {
+  const { drive, state, local } = env
+  const before = state.get()
+  const conflict = before.conflict
+  if (!conflict) return { kind: 'idle' }
+  try {
+    const { file, rev, text } = await readTheirs(env, conflict)
+    const head = file ? file.headRevisionId : null
+    const theirs = text === null ? { kind: 'gone' } : local.read(text)
+    if (choice === 'drive') {
+      if (theirs.kind !== 'ok') return { kind: 'unavailable', reason: theirs.kind }
+      await backup(env, 'device', local.text()) // この端末のデータを、先に控えとして残す
+      await theirs.apply() // 手元をドライブのデータで置き換える（変更には数えない）
+      if (rev === head) {
+        state.set({ conflict: null, baseRev: head, dirty: false, lastSyncedAt: env.now() })
+        return { kind: 'resolved' }
+      }
+      // すき間で上げられたデータ（履歴の古い版）を残すとき：ドライブの今の版は、この端末が上げたもの。残す方を、新しい版として上げ直す
+      state.set({ conflict: null, dirty: false })
+      const r = await upload(env, file, text)
+      return r.kind === 'uploaded' ? { kind: 'resolved' } : r
+    }
+    // この端末を残す：ドライブ側の中身（読めなくても、そのまま）を、先に控えとして残す。ドライブのデータが新しい版のときは、古い版のデータで上書きしない
+    if (theirs.kind === 'newer') return { kind: 'unavailable', reason: 'newer' }
+    if (text !== null) await backup(env, 'drive', text)
+    if (file && head === before.baseRev && !before.dirty && rev !== head) {
+      // すき間のとき：ドライブの今の版は、すでにこの端末が上げたもの。上げ直さない
+      state.set({ conflict: null, lastSyncedAt: env.now() })
+      return { kind: 'resolved' }
+    }
+    state.set({ conflict: null })
+    const r = await upload(env, file)
+    return r.kind === 'uploaded' ? { kind: 'resolved' } : r
+  } catch (e) {
+    state.set({ conflict }) // 失敗：食い違い待ちのまま
+    return { kind: 'error', reason: e instanceof DriveError ? e.kind : 'failed' }
+  }
 }
