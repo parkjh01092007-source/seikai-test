@@ -8,10 +8,11 @@
 //   state   { get(), set(patch) }   端末が覚えること（driveLogic の readSync の形）
 //   local   { syncable()（移行中・新しい版のデータなら false）, initial()（手元が初めの状態か）, version()（手元のデータが変わるたびに増える数）, text()（今のデータの文字）, data()（今のデータ）,
 //             read(text) → { kind: 'ok', apply() } | { kind: 'newer' } | { kind: 'broken' }（ドライブのデータを検証する。apply は手元のデータを置き換える） }
+//           read(text) の ok には、apply（ドライブから下ろした置き換え。変更に数えない）のほかに、replace（控えから戻す置き換え。ふつうの変更として、あとで上がる）がある
 //   canReplace()  置き換えてよいか（編集の画面・確認画面などが開いていない）／ now() ／ sleep(ms)
 // 結果（kind）：idle（何もしない）、synced（同じだった）、uploaded、downloaded、conflict（食い違い。確認画面は 30(c)）、newer（ドライブのデータが新しい版）、
 //   waiting（置き換えたいが、画面が開いている）、changed（読んでいる間に手元が変わった）、error（reason：login・offline・failed）
-import { plan, checkAfterUpload, dataSummary, backupName, backupsToDelete } from './driveLogic.js'
+import { plan, checkAfterUpload, dataSummary, backupName, backupsToDelete, parseBackupName } from './driveLogic.js'
 
 export class DriveError extends Error {
   constructor(kind, message, status = null) {
@@ -185,6 +186,54 @@ export async function resolveConflict(env, choice) {
     return r.kind === 'uploaded' ? { kind: 'resolved' } : r
   } catch (e) {
     state.set({ conflict }) // 失敗：食い違い待ちのまま
+    return { kind: 'error', reason: e instanceof DriveError ? e.kind : 'failed' }
+  }
+}
+
+// ---- 控えから戻す（4.8。作業30(e)）
+// 控えの一覧（新しい順）：{ id, at, side, summary（最後に変えた日時と仕訳の件数。読めなければ null）, state（ok・broken・newer）}。読むのは、控えの数だけ（最大5個）
+export async function listBackupDetails(env) {
+  const files = (await env.drive.listBackups()).map((f) => ({ f, info: parseBackupName(f.name) })).filter((x) => x.info !== null)
+  files.sort((a, b) => (a.info.at < b.info.at ? 1 : a.info.at > b.info.at ? -1 : 0))
+  const out = []
+  for (const { f, info } of files) {
+    let text = null
+    try {
+      text = await env.drive.read(f.id)
+    } catch (e) {
+      if (!(e instanceof DriveError && e.status === 404)) throw e
+      continue // 一覧を読む間に消えた
+    }
+    const r = env.local.read(text)
+    let summary = null
+    if (r.kind === 'ok') {
+      try { summary = dataSummary(JSON.parse(text)) } catch { /* 件数は出さない */ }
+    }
+    out.push({ id: f.id, at: info.at, side: info.side, summary, state: r.kind })
+  }
+  return out
+}
+
+// 控えに戻す：読み直す（押したあとに消えていても、今の中身で決める）→ 読み込みと同じ検証と移行 → 今のデータを「戻す前」の控えにする → 置き換える。
+// 置き換えは、ふつうの変更なので、あとで（2秒後に）ドライブへ上がる。控えを作れない・読めないときは、置き換えない
+// 結果：restored、blocked（食い違い待ち・移行中などで、今は戻せない）、gone（控えが消えた）、unavailable（読めない・新しい版。reason）、error（reason）
+export async function restoreBackup(env, id) {
+  const { drive, state, local } = env
+  if (state.get().conflict || !local.syncable()) return { kind: 'blocked' }
+  try {
+    let text
+    try {
+      text = await drive.read(id)
+    } catch (e) {
+      if (e instanceof DriveError && e.status === 404) return { kind: 'gone' }
+      throw e
+    }
+    const r = local.read(text)
+    if (r.kind !== 'ok') return { kind: 'unavailable', reason: r.kind }
+    await backup(env, 'before', local.text()) // 戻す前のデータを、控えに残す（作れなければ、ここで止まる）
+    await r.replace()
+    return { kind: 'restored' }
+  } catch (e) {
     return { kind: 'error', reason: e instanceof DriveError ? e.kind : 'failed' }
   }
 }

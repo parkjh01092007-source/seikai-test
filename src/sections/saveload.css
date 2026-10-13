@@ -35,3 +35,14 @@
   /* 「設定へ」のリンクは 44px */
   .saveload a { display: inline-flex; align-items: center; min-height: 44px; }
 }
+
+/* ホーム・移行画面（上の帯がない画面）の知らせ：中身の一番上に、1つ1行で縦に並べる（スマホの形だけ。.phone-only の中） */
+.notice-rows { display: flex; flex-direction: column; gap: var(--space); margin-bottom: var(--space); }
+.notice-rows .notice-row { display: block; width: 100%; min-height: 44px; padding: var(--space); box-sizing: border-box; margin: 0; border: 1px solid var(--color-border); background: transparent; font-size: 16px; text-align: left; white-space: normal; overflow-wrap: anywhere; }
+
+/* 設定 → データ → ドライブの控え（spec-drive.md 4.8）：1つの控えは、1行目に日時と種類、2行目に件数と「この控えに戻す」。スマホでも同じ2行 */
+.backup-list { list-style: none; margin: 0; padding: 0; }
+.backup-list li { display: flex; flex-direction: column; gap: calc(var(--space) / 2); padding: var(--space) 0; border-top: 1px solid var(--color-border); }
+.backup-list .backup-main { font-weight: bold; overflow-wrap: anywhere; }
+.backup-list .backup-sub { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space); }
+.backup-list .backup-sub .note { margin: 0; }

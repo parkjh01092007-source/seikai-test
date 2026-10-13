@@ -15,12 +15,13 @@ import { lastSaveLine } from './lastSave.js'
 // スマホ：☰ を押すと、中身の上に重なって開く。☰・外側・Esc・タブを選ぶ、で閉じる。開いている間は、後ろの画面をスクロールさせず、
 // Tab はメニューの中（☰ を含む）だけを回る（ほかの部分は inert）。
 // 共通：☰ を押して開いたら、最初のタブにフォーカスを移す。Esc で閉じたら ☰ に戻す。幅が境目をまたいだら、閉じた状態に戻す
-export default function SideTabs({ entry, currentTab, onOpenPanel, notice = null }) {
+export default function SideTabs({ entry, currentTab, onOpenPanel, notices = [] }) {
   const phone = usePhone()
   const [pinned, setPinned] = useState(false)
   const [hover, setHover] = useState(false)
   const [kbFocus, setKbFocus] = useState(false)
   const [phoneOpen, setPhoneOpen] = useState(false)
+  const [noticesOpen, setNoticesOpen] = useState(false) // スマホの帯の「⚠ 件数」を押して開く、知らせの一覧
   const [lastSave, setLastSave] = useState(null) // 「最後のセーブ：…」。対応していないブラウザでは null（出さない）
   const asideRef = useRef(null)
   const toggleRef = useRef(null)
@@ -55,6 +56,18 @@ export default function SideTabs({ entry, currentTab, onOpenPanel, notice = null
     focusables: '.toggle, .panel button, .panel a[href]',
     inertSiblings: true,
   })
+
+  // 知らせの一覧：⚠ をもう一度押す・外を押す・Esc・知らせを押す、で閉じる。知らせがなくなったら閉じる
+  useEffect(() => {
+    if (!noticesOpen) return
+    if (notices.length === 0) { setNoticesOpen(false); return }
+    const onDown = (e) => { if (!e.target.closest?.('.notices-wrap')) setNoticesOpen(false) }
+    const onKey = (e) => { if (e.key === 'Escape') setNoticesOpen(false) }
+    document.addEventListener('pointerdown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('pointerdown', onDown); document.removeEventListener('keydown', onKey) }
+  }, [noticesOpen, notices.length])
+  useEffect(() => { if (!phone) setNoticesOpen(false) }, [phone])
 
   const pressToggle = () => {
     if (phone) {
@@ -93,7 +106,16 @@ export default function SideTabs({ entry, currentTab, onOpenPanel, notice = null
         onClick={pressToggle}
       >☰</button>
       {phone && <span className="bar-title">{t(currentTabLabel)}</span>}
-      {phone && notice && <span className="bar-notice">{notice}</span>}
+      {phone && notices.length > 0 && (
+        <span className="bar-notice notices-wrap">
+          <button type="button" className="notices-toggle" aria-expanded={noticesOpen} aria-label={t('notices.label', { count: notices.length })} onClick={() => setNoticesOpen((o) => !o)}>⚠ {notices.length}</button>
+          {noticesOpen && (
+            <ul className="notices-list" aria-label={t('notices.title')}>
+              {notices.map((n) => <li key={n.key}><button type="button" className="notice-row" title={n.title} onClick={() => { setNoticesOpen(false); n.onPress() }}>{n.text}</button></li>)}
+            </ul>
+          )}
+        </span>
+      )}
       {open && (
         <div className="panel" {...(phone ? { role: 'dialog', 'aria-modal': 'true', 'aria-label': entryName } : {})}>
           <div className="menu-head">

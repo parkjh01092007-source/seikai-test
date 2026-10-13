@@ -260,7 +260,7 @@ export default function App() {
     update(next, { quiet: true })
     setGeneration((g) => g + 1)
   }
-  const driveSync = useDriveSync({ data, skip: driveSkip, apply: applyRemote })
+  const driveSync = useDriveSync({ data, skip: driveSkip, apply: applyRemote, restore: applyImported }) // 控えから戻す置き換えは、読み込みと同じ（ふつうの変更として、あとで上がる）
   // 食い違いの確認画面（4.4）：食い違いが見つかったとき、ほかの画面・入力が開いていなければ、自動で開く（そうでなければ、帯を押すと開く）。「あとで決める」で閉じても、帯は残る。解決すると閉じる
   const [conflictOpen, setConflictOpen] = useState(false)
   const conflictShown = useRef(null)
@@ -276,14 +276,18 @@ export default function App() {
   const entry = route && NAV.find((e) => e.id === route.entry)
   const Screen = route && route.tab ? screens[route.tab] : null
 
-  // 「オートセーブできません」（書けないときだけ）。出し場所は、PC は右上の帯、スマホはメニューのある画面では上の帯の右端、ホーム・移行画面では中身の一番上（spec-mobile.md 第4章）
-  const autosaveNotice = problem !== null && <button type="button" className="autosave-problem" title={problem} onClick={retryAutosave}>{t('save.autosaveFailed')}</button>
-  // 「ドライブに保存できません」など（4.5）。ログインが切れたときは、押すとログイン（移る前にいた設定のタブを覚える）、つながらないときは、押すとやり直し。食い違いは、確認の画面（作業30(c)）ができるまで、知らせるだけ
-  const driveTitle = driveSync.kind && { login: t('drive.bannerTitle.login'), offline: t('drive.bannerTitle.offline'), failed: t('drive.bannerTitle.failed'), newer: t('drive.bannerTitle.newer') }
-  const driveNotice = driveSync.kind && (driveSync.kind === 'conflict'
-    ? <button type="button" className="autosave-problem" title={t('drive.bannerTitle.conflict')} onClick={() => setConflictOpen(true)}>{t('drive.banner.conflict')}</button>
-    : <button type="button" className="autosave-problem" title={driveTitle[driveSync.kind]} onClick={() => (driveSync.kind === 'login' ? startLogin(onSettingsScreen ? settingsTab : null) : driveSync.kind === 'newer' ? reloadApp() : driveSync.retry())}>{t(driveSync.kind === 'newer' ? 'drive.banner.newer' : 'drive.banner.failed')}</button>)
-  const notice = (autosaveNotice || driveNotice) && <>{autosaveNotice}{driveNotice}</>
+  // 知らせ（書けない・つながらない・食い違いなどのとき）。1つの並び（notices）にまとめる：{ key, text, title, onPress }。出し場所（spec-mobile.md 第4章）：
+  //   PC は右上の帯に並べる／スマホはメニューのある画面では上の帯の右端に「⚠ 件数」（押すと一覧）／ホーム・移行画面では中身の一番上に1つ1行
+  // 「ドライブに保存できません」（4.5）：ログインが切れたときは、押すとログイン（移る前にいた設定のタブを覚える）、つながらないときは、押すとやり直し。食い違いは、押すと確認画面
+  const driveText = { login: t('drive.banner.failed'), offline: t('drive.banner.failed'), failed: t('drive.banner.failed'), newer: t('drive.banner.newer'), conflict: t('drive.banner.conflict') }
+  const driveTitle = { login: t('drive.bannerTitle.login'), offline: t('drive.bannerTitle.offline'), failed: t('drive.bannerTitle.failed'), newer: t('drive.bannerTitle.newer'), conflict: t('drive.bannerTitle.conflict') }
+  const drivePress = () => (driveSync.kind === 'login' ? startLogin(onSettingsScreen ? settingsTab : null) : driveSync.kind === 'newer' ? reloadApp() : driveSync.kind === 'conflict' ? setConflictOpen(true) : driveSync.retry())
+  const notices = [
+    problem !== null && { key: 'autosave', text: t('save.autosaveFailed'), title: problem, onPress: retryAutosave },
+    driveSync.kind && { key: 'drive', text: driveText[driveSync.kind], title: driveTitle[driveSync.kind], onPress: drivePress },
+  ].filter(Boolean)
+  const notice = notices.length > 0 && <>{notices.map((n) => <button key={n.key} type="button" className="autosave-problem" title={n.title} onClick={n.onPress}>{n.text}</button>)}</>
+  const noticeRows = notices.length > 0 && <div className="notice-rows">{notices.map((n) => <button key={n.key} type="button" className="autosave-problem notice-row" title={n.title} onClick={n.onPress}>{n.text}</button>)}</div>
   // 新しい版のお知らせ。PC は右上の帯、スマホは中身の一番上（上の帯のすぐ下。重ねずに流れの中に置くので、入力の欄を隠さない）
   const updateNotice = newBuild && !newer && (
     <div className="update-notice" role="status">
@@ -295,7 +299,7 @@ export default function App() {
   return (
     <ConfirmContext.Provider value={confirm}>
     <div className="frame" key={language}>
-      {entry &&<SideTabs entry={entry} currentTab={route.tab} onOpenPanel={openPanel} notice={notice} />}
+      {entry &&<SideTabs entry={entry} currentTab={route.tab} onOpenPanel={openPanel} notices={notices} />}
       <div className="main-col">
         {/* 右上の書き出し・読み込みの帯。スマホの形では出さない（同じ機能は 設定 → データ。index.css） */}
         {!newer && <header>
@@ -311,7 +315,7 @@ export default function App() {
         </header>}
         <div className="content">
           {updateNotice && <div className="phone-only">{updateNotice}</div>}
-          {!entry && notice && <div className="phone-only">{notice}</div>}
+          {!entry && noticeRows && <div className="phone-only">{noticeRows}</div>}
           {error &&<p style={{ color: 'var(--color-error)' }}>{error}</p>}
           {warning && <p className="warning">{warning}</p>}
           {newer ? (
@@ -331,7 +335,7 @@ export default function App() {
             </main>
           ) : (
             <main key={generation}>
-              {Screen ? <Screen data={data} update={update} detailId={route.detailId} openPanel={openPanel} replaceData={replaceData} autosave={autosave} autosaveBeforeReplace={autosaveBeforeReplace} language={language} onChangeLanguage={changeLanguage} onExport={doExport} onImport={doImport} tab={settingsTab} onTab={setSettingsTab} /> : <p className="error">{t('app.notFound')}</p>}
+              {Screen ? <Screen driveSync={driveSync} data={data} update={update} detailId={route.detailId} openPanel={openPanel} replaceData={replaceData} autosave={autosave} autosaveBeforeReplace={autosaveBeforeReplace} language={language} onChangeLanguage={changeLanguage} onExport={doExport} onImport={doImport} tab={settingsTab} onTab={setSettingsTab} /> : <p className="error">{t('app.notFound')}</p>}
             </main>
           )}
         </div>

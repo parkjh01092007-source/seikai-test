@@ -42,7 +42,12 @@
   .sidetabs { display: flex; align-items: center; gap: var(--space); align-self: stretch; box-sizing: border-box; width: 100%; height: var(--sidetabs-band); padding-right: var(--space); background: var(--color-bg); border-bottom: 1px solid var(--color-border); }
   .sidetabs .toggle { position: relative; flex: none; }
   .sidetabs .bar-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: bold; }
-  .sidetabs .bar-notice { flex: none; }
+  .sidetabs .bar-notice { flex: none; position: relative; }
+  /* 知らせ（作業30(e)。spec-mobile.md 第4章）：帯の右端の「⚠ 件数」（エラーの色）。押すと、帯のすぐ下に一覧（1つ1行・幅いっぱい・44px 以上・文字は折り返す） */
+  .sidetabs .notices-toggle { min-width: 44px; min-height: 44px; padding: 0 var(--space); border: none; background: transparent; color: var(--color-error); font-size: 16px; font-weight: bold; cursor: pointer; }
+  .sidetabs .notices-list { position: fixed; top: var(--sidetabs-band); left: 0; right: 0; z-index: 11; margin: 0; padding: 0; list-style: none; box-sizing: border-box; background: var(--color-bg); border-bottom: 1px solid var(--color-border); }
+  .sidetabs .notices-list li + li { border-top: 1px solid var(--color-border); }
+  .sidetabs .notices-list .notice-row { display: block; width: 100%; min-height: 44px; padding: var(--space); box-sizing: border-box; border: none; background: transparent; color: var(--color-error); font-size: 16px; text-align: left; text-decoration: underline; white-space: normal; overflow-wrap: anywhere; cursor: pointer; }
   .sidetabs .scrim { position: fixed; inset: 0; z-index: 10; background: var(--color-backdrop); }
   .sidetabs .bottom > * { font-size: 16px; }
   .sidetabs .panel { position: fixed; width: min(var(--menu-width-phone, 20rem), calc(100vw - 56px)); }

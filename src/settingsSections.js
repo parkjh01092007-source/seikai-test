@@ -18,6 +18,7 @@ export const SETTINGS_SECTIONS = [
   { id: 'card', group: 'inquiry', title: 'card.title' },
   { id: 'save', group: 'data', title: 'save.title' },
   { id: 'drive', group: 'data', title: 'drive.title' },
+  { id: 'driveBackups', group: 'data', title: 'backups.title' },
   { id: 'backup', group: 'data', title: 'dataSettings.backupTitle', phoneOnly: true }, // PC は右上の帯にある
   { id: 'purge', group: 'data', title: 'dataSettings.purgeTitle', danger: true },
   { id: 'reset', group: 'data', title: 'dataSettings.resetTitle', danger: true },

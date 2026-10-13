@@ -4,6 +4,7 @@ import CardSettings from './CardSettings.jsx'
 import { BackupSettings, PurgeSettings, ResetSettings } from './DataSettings.jsx'
 import SaveSettings from './SaveSettings.jsx'
 import DriveSettings from './DriveSettings.jsx'
+import DriveBackups from './DriveBackups.jsx'
 import DisplaySettings from './DisplaySettings.jsx'
 import { t, LANGUAGES } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
@@ -185,7 +186,7 @@ function Frequent({ data }) {
   )
 }
 
-export default function Settings({ data, update, openPanel, replaceData, autosave, autosaveBeforeReplace, language, onChangeLanguage, onExport, onImport, tab, onTab }) {
+export default function Settings({ driveSync, data, update, openPanel, replaceData, autosave, autosaveBeforeReplace, language, onChangeLanguage, onExport, onImport, tab, onTab }) {
   const confirm = useConfirm()
   // 自由に使える額の初めの表示：残高の画面で、自由に使える額を最初にどちらで出すか。ブラウザごとに覚える（保存データには入れない）。変えたらすぐ覚える（確認画面なし）
   const [balanceView, setBalanceView] = useState(loadBalanceView)
@@ -247,6 +248,7 @@ export default function Settings({ data, update, openPanel, replaceData, autosav
     card: () => <CardSettings data={data} update={update} />,
     save: () => <SaveSettings autosave={autosave} />,
     drive: () => <DriveSettings tab={tab} />,
+    driveBackups: () => <DriveBackups driveSync={driveSync} />,
     backup: () => <BackupSettings onExport={onExport} onImport={onImport} />,
     purge: () => <PurgeSettings data={data} update={update} openPanel={openPanel} autosaveBeforeReplace={autosaveBeforeReplace} />,
     reset: () => <ResetSettings openPanel={openPanel} replaceData={replaceData} />,

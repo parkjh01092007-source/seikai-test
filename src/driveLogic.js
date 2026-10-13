@@ -182,12 +182,20 @@ export function dataSummary(data) {
   return { changedAt: stamps.length ? stamps.reduce((a, b) => (a > b ? a : b)) : null, entries: data.entries.length }
 }
 
-// 控えのファイル：appDataFolder に、データのファイル（orenoyome-data.json）とは別に置く。名前の日時は、並べ替えで新しい順に分かる形（UTC）。side：device（この端末のデータ）・drive（ドライブのデータ）
+// 控えのファイル：appDataFolder に、データのファイル（orenoyome-data.json）とは別に置く。名前の日時は、並べ替えで新しい順に分かる形（UTC）。
+// side：device（食い違いで選ばなかった、端末側のデータ）・drive（選ばなかった、ドライブ側のデータ）・before（控えから戻すときの、戻す前のデータ。作業30(e)）
 export const BACKUP_PREFIX = 'orenoyome-backup-'
+const BACKUP_NAME = /^orenoyome-backup-(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z-(device|drive|before)\.json$/
 export const BACKUP_KEEP = 5 // 新しいものから5個まで（11章）
 export const backupName = (nowIso, side) => `${BACKUP_PREFIX}${nowIso.replace(/\.\d+/, '').replace(/[-:]/g, '')}-${side}.json`
 // 消す控え：控えの名前のものだけを、新しい順に並べて、keep 個より古いもの。ほかのファイルは、消す一覧に入れない
 export function backupsToDelete(files, keep = BACKUP_KEEP) {
-  const backups = files.filter((f) => typeof f?.name === 'string' && /^orenoyome-backup-\d{8}T\d{6}Z-(device|drive)\.json$/.test(f.name))
+  const backups = files.filter((f) => typeof f?.name === 'string' && BACKUP_NAME.test(f.name))
   return backups.sort((a, b) => (a.name < b.name ? 1 : a.name > b.name ? -1 : 0)).slice(keep)
+}
+
+// 控えの名前を読む：{ at（作った日時。ISO）, side }。控えの名前の形でなければ null
+export function parseBackupName(name) {
+  const m = typeof name === 'string' ? BACKUP_NAME.exec(name) : null
+  return m ? { at: `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}Z`, side: m[7] } : null
 }
