@@ -10,6 +10,7 @@ import { useConfirm } from './ConfirmDialog.jsx'
 import { usePhone } from '../layout.js'
 import { loadOpenMode, initialOpenDates, isOpenDate, formatDayHead, formatDayLabel, entryChanged } from '../entryView.js'
 import EntrySheet from './EntrySheet.jsx'
+import { AmountInput } from './Calculator.jsx'
 
 // favoriteIds：その側（借方か貸方）のお気に入り。一番上に「お気に入り」を出し、そこだけ科目名の後ろに区分を付ける（表示だけ。値は科目の id）
 export function AccountSelect({ value, onChange, options, label, favoriteIds = [] }) {
@@ -55,7 +56,7 @@ export function EntryForm({ accounts, initial, submitLabel, onSubmit, onCancel, 
 
   const fields = {
     date: <Field label={t('common.date')}><input type="date" aria-label={t('common.date')} value={f.date} onChange={(e) => set('date')(e.target.value)} /></Field>,
-    amount: <Field label={t('common.amount')}><input inputMode="numeric" placeholder={t('common.amount')} aria-label={t('common.amount')} value={f.amount} onChange={(e) => set('amount')(e.target.value)} /></Field>,
+    amount: <Field label={t('common.amount')}><AmountInput label={t('common.amount')} value={f.amount} onChange={set('amount')} /></Field>,
     debit: <Field label={t('common.debit')}><AccountSelect label={t('common.debit')} value={f.debitId} onChange={setAccount('debitId')} options={options} favoriteIds={favorites.debit} /></Field>,
     credit: <Field label={t('common.credit')}><AccountSelect label={t('common.credit')} value={f.creditId} onChange={setAccount('creditId')} options={options} favoriteIds={favorites.credit} /></Field>,
     living: showLiving && (
