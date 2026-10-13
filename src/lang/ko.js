@@ -161,7 +161,6 @@ export default {
   'calc.insert': '입력',
   'calc.clear': '전체 지우기',
   'calc.backspace': '한 글자 지우기',
-  'calc.expand': '큰 키패드',
   'calc.error.incomplete': '식이 끝나지 않았습니다',
   'calc.error.invalid': '식을 읽을 수 없습니다',
   'calc.error.divZero': '0으로 나눌 수 없습니다',

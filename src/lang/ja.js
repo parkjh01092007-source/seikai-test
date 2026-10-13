@@ -128,7 +128,6 @@ export default {
   'calc.insert': '入れる',
   'calc.clear': '全部消す',
   'calc.backspace': '1文字消す',
-  'calc.expand': '大きなキーパッド',
   'calc.error.incomplete': '式が途中です',
   'calc.error.invalid': '式が読めません',
   'calc.error.divZero': '0 で割れません',

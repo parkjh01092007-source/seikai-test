@@ -7,35 +7,46 @@
 .amount-wrap.phone > input { flex: 1; min-width: 0; }
 .entries .amount-wrap > .calc-btn { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 44px; min-width: 44px; min-height: 44px; padding: 0; }
 
-/* PC の帯：欄に入ると、欄のすぐ下に出る */
-.calc-band { position: absolute; top: 100%; left: 0; z-index: 10; display: flex; align-items: center; gap: var(--space); margin-top: 2px; padding: 4px var(--space); border: 1px solid var(--color-border); background: var(--color-bg); color: var(--color-text); font-size: var(--font-size); white-space: nowrap; }
-.calc-band-answer { min-width: 8em; text-align: right; font-variant-numeric: tabular-nums; }
-.calc-band-answer.error { color: var(--color-error); }
+/* PC の帯：欄に入ると、欄のすぐ下に出る。左から、電卓の絵（大きなキーパッドを開く）、式、= 答え（入れられないときは、答えの代わりに赤い理由）、＋ − × ÷、×1.1・×1.08。
+   一行のまま。式は、入りきらないとき前を省く（FitExpr）。幅は決めておく（打つたびに帯の幅が変わらない）。右端を越えるときの幅は Calculator.jsx が決める */
+.calc-band { position: absolute; top: 100%; left: 0; z-index: 10; box-sizing: border-box; display: flex; align-items: center; gap: var(--space); width: 46em; margin-top: 2px; padding: 4px var(--space); border: 1px solid var(--color-border); background: var(--color-bg); color: var(--color-text); font-size: 20px; }
+.calc-band button { flex: none; min-width: 28px; height: 32px; padding: 0 6px; font-size: 16px; }
+.calc-band .calc-open { display: inline-flex; align-items: center; justify-content: center; width: 32px; padding: 0; }
+.calc-band .calc-open svg { width: 22px; height: 22px; }
+.calc-band .op { width: 28px; padding: 0; }
+.calc-band-expr { flex: 1 1 0; min-width: 0; overflow: hidden; white-space: nowrap; text-align: right; color: var(--color-muted); font-variant-numeric: tabular-nums; }
+.calc-band-answer { flex: none; max-width: 18em; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: bold; font-variant-numeric: tabular-nums; }
+.calc-band-answer.error { color: var(--color-error); font-size: 16px; font-weight: normal; }
 
-/* キーパッド（<dialog>。スマホは画面の下、PC は真ん中） */
+/* キーパッド（<dialog>。スマホは画面の下、PC は真ん中）。数字は大きく：答え 36px・式 20px・キーの数字 24px。
+   式と答えの行は高さを決めておく（理由が出る・消えるときも、下のキーが動かない） */
 .keypad { box-sizing: border-box; width: calc(100% - var(--space) * 4); max-width: 420px; padding: 0; border: 1px solid var(--color-border); background: var(--color-bg); color: var(--color-text); font-size: var(--font-size); }
 .keypad::backdrop { background: var(--color-backdrop); }
-.keypad-body { padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); }
-.keypad-display { margin-bottom: 8px; text-align: right; }
-.keypad-expr { min-height: 1.5em; overflow-wrap: anywhere; color: var(--color-muted); font-size: 1.1em; font-variant-numeric: tabular-nums; }
-.keypad-answer { min-height: 1.3em; font-size: 1.6em; font-weight: bold; font-variant-numeric: tabular-nums; }
-.keypad-reason { min-height: 1.4em; color: var(--color-error); font-size: 14px; }
+.keypad-body { padding: 8px 12px calc(12px + env(safe-area-inset-bottom)); }
+.keypad-display { margin-bottom: 4px; text-align: right; }
+.keypad-expr { display: block; height: 28px; overflow: hidden; white-space: nowrap; color: var(--color-muted); font-size: 20px; line-height: 28px; font-variant-numeric: tabular-nums; }
+.keypad-answer { display: flex; align-items: flex-end; justify-content: flex-end; height: 48px; overflow: hidden; font-size: 36px; font-weight: bold; line-height: 48px; font-variant-numeric: tabular-nums; }
+.keypad-reason { color: var(--color-error); font-size: 16px; font-weight: normal; line-height: 1.25; padding-bottom: 4px; }
 .keypad-keys { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-.keypad .key { min-width: 0; min-height: 52px; padding: 0; font-size: 1.15em; font-variant-numeric: tabular-nums; }
-.keypad .key.fn, .keypad .key.op { color: var(--color-text); }
-.keypad .key.insert { grid-column: span 2; border: 0; background: var(--color-accent); color: var(--color-on-accent); }
+.keypad .key { min-width: 0; min-height: 52px; padding: 0; font-size: 24px; font-variant-numeric: tabular-nums; }
+.keypad .key.fn { font-size: 18px; color: var(--color-text); }
+.keypad .key.insert { grid-column: span 2; border: 0; background: var(--color-accent); color: var(--color-on-accent); font-size: 18px; }
 .keypad .key.insert:disabled { opacity: 0.4; }
-.keypad .key.cancel { font-size: 1em; }
+.keypad .key.cancel { font-size: 16px; }
 
 @media screen and (max-width: 959.98px), screen and (pointer: coarse) and (hover: none) {
   /* 画面の下に貼り付く。開いた形でも幅は 420px まで（下の真ん中） */
   .keypad { position: fixed; inset: auto 0 0 0; margin: 0 auto; width: 100%; max-height: 100dvh; overflow-y: auto; border-width: 1px 0 0; border-radius: 18px 18px 0 0; }
-  :root .keypad .key { min-height: 52px; font-size: 1.15em; }
-  :root .keypad .key.cancel { font-size: 1em; }
+  :root .keypad .key { min-height: 52px; font-size: 24px; }
+  :root .keypad .key.fn, :root .keypad .key.insert { font-size: 18px; }
+  :root .keypad .key.cancel { font-size: 16px; }
 }
-/* 横向きなど、高さが足りないとき：キーを 44px に縮める */
+/* 横向きなど、高さが足りないとき：キーを 44px に、数字を少し小さく */
 @media screen and (max-height: 600px) {
-  :root .keypad .key { min-height: 44px; }
-  .keypad-body { padding-top: 8px; }
-  .keypad-answer { font-size: 1.4em; }
+  :root .keypad .key { min-height: 44px; font-size: 20px; }
+  :root .keypad .key.fn, :root .keypad .key.insert { font-size: 16px; }
+  :root .keypad .key.cancel { font-size: 16px; }
+  .keypad-body { padding-top: 6px; }
+  .keypad-expr { height: 22px; font-size: 16px; line-height: 22px; }
+  .keypad-answer { height: 36px; font-size: 28px; line-height: 36px; }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import './calc.css'
 import { t } from '../text.js'
@@ -33,6 +33,9 @@ const ERROR_TEXT = {
   tooLarge: () => t('error.amountTooLarge'),
 }
 
+// PC の帯の、＋ − × ÷ のボタン（押すと、欄の式に足す）
+const OPS = [['+', '+'], ['−', '-'], ['×', '*'], ['÷', '/']]
+
 // 行ごとの、キーの並び（4列）。[見える文字, press に渡すキー, 種類]
 const ROWS = [
   [['C', 'clear', 'fn'], ['⌫', 'back', 'fn'], ['×1.1', '*1.1', 'fn'], ['×1.08', '*1.08', 'fn']],
@@ -41,6 +44,24 @@ const ROWS = [
   [['1', '1'], ['2', '2'], ['3', '3'], ['−', '-', 'op']],
   [['0', '0'], ['00', '00'], ['.', '.'], ['+', '+', 'op']],
 ]
+
+// 式を1行に収める。入りきらないときは、前の方を記号の区切りで省いて「… 」にする（いま打っている式の最後は、必ず見せる）。幅は、置かれた箱の幅
+function FitExpr({ text, className }) {
+  const ref = useRef(null)
+  useLayoutEffect(() => {
+    const el = ref.current
+    const fit = () => {
+      const tokens = text.split(' ') // formatExpr は、記号の前後に空白を入れる
+      el.textContent = text
+      for (let k = 1; el.scrollWidth > el.clientWidth && k < tokens.length; k++) el.textContent = `… ${tokens.slice(k).join(' ')}`
+    }
+    fit()
+    const observer = new ResizeObserver(fit)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [text])
+  return <span ref={ref} className={className} title={text} />
+}
 
 // キーパッド。initial：金額の欄の今の文字（数字なら式の初めに入れる）。onInsert(四捨五入した整数の文字)・onClose()。どちらも、呼んだあとは呼んだ側が閉じる
 export function Keypad({ initial, onInsert, onClose }) {
@@ -75,11 +96,9 @@ export function Keypad({ initial, onInsert, onClose }) {
     >
       <div className="keypad-body">
         <div className="keypad-display" aria-live="polite">
-          <div className="keypad-expr">{formatExpr(expr) || ' '}</div>
-          <div className="keypad-answer">
-            {answerText(expr, answer) || ' '}
-          </div>
-          <div className="keypad-reason">{answer?.error ? ERROR_TEXT[answer.error]() : ' '}</div>
+          <FitExpr className="keypad-expr" text={formatExpr(expr)} />
+          {/* 入れられない理由は、答えの代わりに、答えの行に出す（行の高さは変えない。下のキーが動かない） */}
+          <div className="keypad-answer">{answer?.error ? <span className="keypad-reason">{ERROR_TEXT[answer.error]()}</span> : answerText(expr, answer)}</div>
         </div>
         <div className="keypad-keys">
           {ROWS.map((row) => row.map(([label, k, kind]) => (
@@ -92,7 +111,7 @@ export function Keypad({ initial, onInsert, onClose }) {
             >{label}</button>
           )))}
           <button type="button" className="key cancel" ref={cancelRef} onClick={onClose}>{t('entries.sheetClose')}</button>
-          <button type="button" className="key fn" onClick={() => key('=')}>=</button>
+          <button type="button" className="key eq" onClick={() => key('=')}>=</button>
           <button type="button" className="key insert" ref={insertRef} disabled={!ok} onClick={() => onInsert(String(answer.rounded))}>{t('calc.insert')}</button>
         </div>
       </div>
@@ -108,7 +127,7 @@ const answerText = (expr, answer) =>
     : ''
 
 // 金額の欄。value・onChange(文字)・label（読み上げの名前と、薄い文字）
-// スマホの形：欄の右に絵のボタン → キーパッド。PC の形：欄に入ると、欄の下に帯（式の答えと ×1.1・×1.08・大きなキーパッドのボタン）。
+// スマホの形：欄の右に絵のボタン → キーパッド。PC の形：欄に入ると、欄の下に帯（電卓の絵のボタン・式と答え・＋ − × ÷・×1.1・×1.08）。絵のボタンか Alt+↓ で、大きなキーパッド。
 // PC の Enter：欄に記号があるときだけ、答えを欄に入れる（送信しない）。記号がなければ、今までどおり（送信）
 export function AmountInput({ value, onChange, label }) {
   const phone = usePhone()
@@ -117,12 +136,20 @@ export function AmountInput({ value, onChange, label }) {
   const [dismissed, setDismissed] = useState(false) // PC：Esc で帯を閉じた（打つ・入り直すと戻る）
   const buttonRef = useRef(null)
   const inputRef = useRef(null)
+  const wrapRef = useRef(null)
+  const bandRef = useRef(null)
   const wasOpen = useRef(false)
   // 閉じたあと、フォーカスは、スマホは絵のボタンに（キーボードを出さない）、PC は金額の欄に戻す。キーパッドが消えてから（モーダルの間は、後ろにフォーカスを置けない）
   useEffect(() => {
     if (wasOpen.current && !open) (phone ? buttonRef.current : inputRef.current)?.focus()
     wasOpen.current = open
   }, [open, phone])
+
+  // PC の帯が、画面の右端を越えないようにする（越えるときは、式の前の方を省く）
+  useLayoutEffect(() => {
+    const band = bandRef.current
+    if (band) band.style.maxWidth = `${document.documentElement.clientWidth - wrapRef.current.getBoundingClientRect().left - 8}px`
+  }, [focused, dismissed, phone])
 
   const close = () => setOpen(false)
   const keypad = open && <Keypad initial={value} onInsert={(v) => { onChange(v); close() }} onClose={close} />
@@ -155,16 +182,19 @@ export function AmountInput({ value, onChange, label }) {
   return (
     <span
       className="amount-wrap"
+      ref={wrapRef}
       onFocus={(e) => { if (e.currentTarget.contains(e.target)) setFocused(true) }} // キーパッド（portal）の中の動きは、React では欄の子として届くので、DOM で欄の中のものだけ見る
       onBlur={(e) => { if (e.currentTarget.contains(e.target) && !e.currentTarget.contains(e.relatedTarget)) { setFocused(false); setDismissed(false) } }}
     >
       <input ref={inputRef} inputMode="numeric" placeholder={label} aria-label={label} value={value} onChange={(e) => { setDismissed(false); onChange(e.target.value) }} onKeyDown={keyDown} />
       {showBand && (
-        <span className="calc-band" role="group" aria-label={t('calc.name')}>
-          <span className={`calc-band-answer${answer?.error ? ' error' : ''}`} aria-live="polite">{answer?.error ? ERROR_TEXT[answer.error]() : text}</span>
+        <span className="calc-band" role="group" aria-label={t('calc.name')} ref={bandRef}>
+          <button type="button" tabIndex={-1} className="calc-open" aria-label={t('calc.name')} title={t('calc.name')} onMouseDown={hold} onClick={() => setOpen(true)}><CalcIcon /></button>
+          <FitExpr className="calc-band-expr" text={expression ? formatExpr(value) : ''} />
+          <span className={`calc-band-answer${answer?.error ? ' error' : ''}`} aria-live="polite" title={answer?.error ? ERROR_TEXT[answer.error]() : undefined}>{answer?.error ? ERROR_TEXT[answer.error]() : text}</span>
+          {OPS.map(([label, k]) => <button key={k} type="button" tabIndex={-1} className="op" onMouseDown={hold} onClick={() => apply(k)}>{label}</button>)}
           <button type="button" tabIndex={-1} onMouseDown={hold} onClick={() => apply('*1.1')}>×1.1</button>
           <button type="button" tabIndex={-1} onMouseDown={hold} onClick={() => apply('*1.08')}>×1.08</button>
-          <button type="button" tabIndex={-1} className="expand" aria-label={t('calc.expand')} title={t('calc.expand')} onMouseDown={hold} onClick={() => setOpen(true)}>▼</button>
         </span>
       )}
       {keypad}
