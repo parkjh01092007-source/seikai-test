@@ -13,5 +13,6 @@ const isGunjo = () => document.documentElement.getAttribute('data-theme') === 'g
 
 export const useGunjoPc = () => {
   const gunjo = useSyncExternalStore(subscribe, isGunjo)
-  return gunjo && !usePhone()
+  const phone = usePhone() // フックは、いつも同じ順番で呼ぶ。`gunjo && !usePhone()` と書くと、見た目を群青に切り替えたとき、呼ぶ数が変わって画面が真っ白になる（2026-10-14 の実機で見つかった）
+  return gunjo && !phone
 }

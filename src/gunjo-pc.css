@@ -44,12 +44,17 @@
   }
   :root[data-theme='gunjo'] button:disabled:not(.sidetabs *) { opacity: 0.4; box-shadow: none; cursor: default; }
 
+  /* 同じ行に並ぶボタン・入力欄・選択欄の間は、12px（ボタンの影が 3px あるので、影を含めても 8px 以上あく）。1つ目は除く。flex・grid で並べる所は、自分の gap を決め、ここの余白を 0 にする */
+  :root[data-theme='gunjo'] :is(button:not(.day-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .calc-open, .key, .op, .toggle, [role='tab'], .sidetabs *), input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden']), select) + :is(button:not(.day-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .calc-open, .key, .op, .toggle, [role='tab'], .sidetabs *), input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden']), select) { margin-inline-start: var(--g-gap-controls); }
+  :root[data-theme='gunjo'] { --g-gap-controls: 12px; }
+
   /* ---- 入力欄・選択欄：高さ 34px。自分で入力した文字・選択肢（科目名）は、システムの書体（--font-gothic）。金額（数字だけの欄）は、明朝 500・右そろえ ---- */
   :root[data-theme='gunjo'] :is(input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file']), select) {
     box-sizing: border-box; height: var(--g-h); min-height: 0; padding: 0 8px;
     font-family: var(--font-gothic); font-size: 15px; line-height: 1.2;
     background: #fff; color: var(--color-text); border: 1px solid var(--color-field-border); border-radius: 0;
   }
+  :root[data-theme='gunjo'] select { align-items: center; }
   :root[data-theme='gunjo'] textarea {
     box-sizing: border-box; padding: 6px 8px; font-family: var(--font-gothic); font-size: 15px;
     background: #fff; color: var(--color-text); border: 1px solid var(--color-field-border); border-radius: 0;
@@ -87,20 +92,18 @@
   :root[data-theme='gunjo'] .sidetabs { background: var(--g-menu-face), rgb(var(--menu-rgb) / var(--menu-opacity, 1)); }
   :root[data-theme='gunjo'] .sidetabs.open { background: none; } /* 開いたら、パネルが帯の上を覆う（不透明度が 100％ より低いとき、下の帯が透けない） */
   :root[data-theme='gunjo'] .sidetabs nav { margin-top: 18px; }
-  :root[data-theme='gunjo'] .sidetabs .panel { padding: 24px 0; border-right: 0; background: var(--g-menu-face), rgb(var(--menu-rgb) / var(--menu-opacity, 1)); box-shadow: none; }
+  :root[data-theme='gunjo'] .sidetabs .panel { padding: 14px 0 24px; border-right: 0; background: var(--g-menu-face), rgb(var(--menu-rgb) / var(--menu-opacity, 1)); box-shadow: none; }
   :root[data-theme='gunjo'] .sidetabs.open:not(.pinned) .panel { box-shadow: 8px 0 0 var(--g-deep); }
-  /* ☰：青い四角（44px）。閉じた帯では上、開くと「正解」の列の真ん中へ */
+  /* ☰：青い四角（44px）。閉じた形・開いた形・固定のどれでも、同じ位置（上 24px・左 10px）。動かさない（パネルだけが広がる）。「正解」の円（64px）は、☰ と真ん中をそろえる */
   :root[data-theme='gunjo'] .sidetabs .toggle { top: 24px; left: 10px; width: 44px; height: 44px; background: var(--color-accent); color: #fff; border: 1px solid rgba(255, 255, 255, 0.7); border-radius: 0; box-shadow: var(--g-btn-shadow); }
-  :root[data-theme='gunjo'] .sidetabs.open .toggle { top: 34px; left: 22px; }
   :root[data-theme='gunjo'] .sidetabs .toggle .icon { width: 20px; height: 20px; }
-  @media (prefers-reduced-motion: no-preference) { :root[data-theme='gunjo'] .sidetabs .toggle { transition: top 0.12s, left 0.12s; } }
   /* 閉じた帯の「正解」の円（44px）：ホームへのリンク */
   :root[data-theme='gunjo'] .sidetabs a.strip-mark {
     position: absolute; top: 82px; left: 10px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 44px; height: 44px; min-height: 0; margin: 0; padding: 0;
     border-radius: 50%; background: #fff; color: var(--color-accent); writing-mode: vertical-rl; font-family: var(--font-mincho); font-size: 15px; font-weight: 500; letter-spacing: 0.08em; box-shadow: 0 8px 14px rgba(0, 0, 0, 0.35);
   }
   /* 上：「正解」の円（64px）と「最後のセーブ」 */
-  :root[data-theme='gunjo'] .sidetabs .menu-head { gap: 14px; min-height: 64px; margin-top: 0; padding: 0 22px 0 80px; border-bottom: 0; }
+  :root[data-theme='gunjo'] .sidetabs .menu-head { gap: 14px; min-height: 64px; margin-top: 0; padding: 0 22px 0 68px; border-bottom: 0; }
   :root[data-theme='gunjo'] .sidetabs a.menu-title {
     display: flex; flex: none; align-items: center; justify-content: center; box-sizing: border-box; width: 64px; height: 64px; min-height: 0; margin: 0; padding: 0;
     border-radius: 50%; background: #fff; color: var(--color-accent); writing-mode: vertical-rl; font-family: var(--font-mincho); font-size: 21px; font-weight: 500; letter-spacing: 0.1em; box-shadow: 0 10px 18px rgba(0, 0, 0, 0.35);
@@ -178,5 +181,6 @@
   :root[data-theme='gunjo'] .subscriptions .g-mid strong { font-size: 17px; font-weight: bold; }
   :root[data-theme='gunjo'] .subscriptions .g-mid .note { font-size: 13px; }
   :root[data-theme='gunjo'] .subscriptions .g-amount { font-family: var(--font-num); font-size: var(--g-s6); font-weight: 500; text-align: right; font-variant-numeric: tabular-nums; }
-  :root[data-theme='gunjo'] .subscriptions .sub-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+  :root[data-theme='gunjo'] .subscriptions .sub-actions { display: flex; gap: var(--g-gap-controls); justify-content: flex-end; margin-top: 6px; }
+  :root[data-theme='gunjo'] .subscriptions .sub-actions > * { margin-inline-start: 0; }
 }
