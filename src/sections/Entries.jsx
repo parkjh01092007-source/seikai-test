@@ -12,6 +12,7 @@ import { loadOpenMode, initialOpenDates, isOpenDate, formatDayHead, formatDayLab
 import EntrySheet from './EntrySheet.jsx'
 import { AmountInput } from './Calculator.jsx'
 import { Icon, IconButton } from './Icon.jsx'
+import { useGunjoPc } from '../gunjoPc.js'
 
 // favoriteIds：その側（借方か貸方）のお気に入り。一番上に「お気に入り」を出し、そこだけ科目名の後ろに区分を付ける（表示だけ。値は科目の id）
 export function AccountSelect({ value, onChange, options, label, favoriteIds = [] }) {
@@ -182,6 +183,7 @@ export default function Entries({ data, update }) {
   const [openRowId, setOpenRowId] = useState(null) // 開いている行（スマホの幅のカード。1つだけ）。月を変える・その日を閉じると閉じる
   const [toggled, setToggled] = useState({}) // 日付の枠を押して開閉した分（日付 → 開いているか）。月を変えると初めの状態に戻る。覚えない
   const phone = usePhone()
+  const gunjoPc = useGunjoPc() // 群青の PC：月の欄と並べ替えのボタンの間の空白を描かない（間は 12px の余白だけ）
   const valuesRef = useRef(null) // 編集画面の今の入力（変えたかの判定用）
   const editedId = useRef(null) // スマホの編集画面を閉じたあと、フォーカスを戻す行
   const confirm = useConfirm()
@@ -238,7 +240,7 @@ export default function Entries({ data, update }) {
         onSubmit={add}
       />
       <h2>{t('entries.listTitle')}</h2>
-      <input type="month" aria-label={t('common.month')} value={month} onChange={(e) => { setMonth(e.target.value); setEditingId(null); setOpenRowId(null); setToggled({}) }} />{' '}
+      <input type="month" aria-label={t('common.month')} value={month} onChange={(e) => { setMonth(e.target.value); setEditingId(null); setOpenRowId(null); setToggled({}) }} />{gunjoPc ? null : ' '}
       {/* 押すたびに切り替える。表示は、押したら切り替わる先 */}
       <IconButton icon="sort" label={t('entries.sortLabel', { now: t(ORDER_LABELS[order]), next: t(ORDER_LABELS[order === 'asc' ? 'desc' : 'asc']) })} onClick={() => setOrder(order === 'asc' ? 'desc' : 'asc')} />
       {!month ? <p className="note">{t('common.chooseMonth')}</p> : groups.length === 0 ? <p className="note">{t('common.noEntriesInMonth')}</p> : (

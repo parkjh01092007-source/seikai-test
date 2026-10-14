@@ -8,6 +8,7 @@ import { t } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import { usePhone } from '../layout.js'
 import { Icon, IconButton } from './Icon.jsx'
+import { useGunjoPc } from '../gunjoPc.js'
 
 function RoleSelect({ value, onChange, disabled }) {
   return (
@@ -30,6 +31,8 @@ function AccountEditor({ account, accounts, entries, subscriptions, budgets, onC
   const [name, setName] = useState(account.name)
   const [error, setError] = useState('')
   const confirm = useConfirm()
+  const gunjoPc = useGunjoPc() // 群青の PC：部品の間の空白を描かない（間は 12px の余白だけ）
+  const sp = gunjoPc ? null : ' '
   const locked = isProtected(account)
   const deletable = canDeleteAccount(account, entries, subscriptions, budgets)
   const typeEditable = canChangeType(account, entries, subscriptions, budgets)
@@ -51,18 +54,18 @@ function AccountEditor({ account, accounts, entries, subscriptions, budgets, onC
   return (
     <>
       <input value={name} onChange={(e) => setName(e.target.value)} />
-      <button onClick={saveName}>{t('common.rename')}</button>{' '}
+      <button onClick={saveName}>{t('common.rename')}</button>{sp}
       <TypeSelect value={account.type} disabled={!typeEditable} onChange={(type) => onChange(changeType(account, type, 'other'))} />
       {account.type === 'asset' && <RoleSelect value={account.role} disabled={!roleEditable} onChange={(role) => touch({ role })} />}
       {account.type === 'liability' && (
         <span className="note"> {ROLE_LABELS[account.role]}{account.role === 'card' && t('ledger.cardDays', { closing: account.closingDay, pay: account.payDay })}</span>
-      )}{' '}
+      )}{sp}
       {hasLivingMonth(account) && (
         <label className="living-month">{t('living.month')} <select value={account.livingMonth} onChange={(e) => touch({ livingMonth: e.target.value })}>
           <option value="same">{t('living.same')}</option>
           <option value="next">{t('living.next')}</option>
         </select></label>
-      )}{' '}
+      )}{sp}
       <button onClick={() => touch({ active: !account.active })} disabled={locked}>
         {account.active ? t('common.disable') : t('common.enable')}
       </button>
