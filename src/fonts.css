@@ -1,0 +1,37 @@
+/* 群青の書体（spec-design.md 第5章・9.1。作業19(d) 区切り2）。同梱の woff2（src/fonts/。OFL は public/licenses/）。
+   画面だけ（@media screen）。印刷にはかけない：6.5 の「普通」の印刷は今までどおり（システムの書体）。6.5 の「今の見た目」の印刷でプリセットの書体を使うための印刷用の @font-face と書体の指定は、19(d) の印刷の作業で足す（記録は spec-design.md 9.1）。
+   @font-face は、その書体を使う要素があるときだけ読み込まれる（使っていなければ通信しない）。外のサーバー（Google Fonts など）は使わない。
+   太さは 400・500・600 だけ（ほかの太さは作らない：font-synthesis: none）。
+   書体を当てるのは、群青 かつ PC の形のときだけ（基本・ほかのプリセット・群青のスマホの形は、変数が定義されないので、何も変わらない）。
+   PC の条件は、layout.js の PHONE_QUERY の反対側（nav.css・index.css の「スマホの形」と同じ条件。変えるときは全部。区切り4 で、同じかを確かめる check を足す）。
+   使い方（これからの区切りで、画面ごとに足す）：見出し・数字・ボタン・マスなど「辞書の文字」と数字は、font-family: var(--font-mincho)／var(--font-num)。
+   本文・表の科目名・補足は、システムのゴシック（var(--font-gothic)）。自分で入力した文字（科目名・メモ・スキル名・カード名・セーブのメモ）が、明朝の要素の中に入るときは、class="user-text" を付けて、システムのままにする。 */
+@media screen {
+  @font-face { font-family: 'Gunjo Mincho'; font-style: normal; font-weight: 400; font-display: swap; src: url('./fonts/gunjo-ja-400.woff2') format('woff2'); }
+  @font-face { font-family: 'Gunjo Mincho'; font-style: normal; font-weight: 500; font-display: swap; src: url('./fonts/gunjo-ja-500.woff2') format('woff2'); }
+  /* 数字・カンマ・ピリオド・−・％・／だけ（韓国語の画面の数字を、日本語の画面と同じ形にする） */
+  @font-face { font-family: 'Gunjo Num'; font-style: normal; font-weight: 500; font-display: swap; src: url('./fonts/gunjo-num-500.woff2?no-inline') format('woff2'); }
+  /* 韓国語の画面の漢字・かな（「正解」など）だけ。日本語の書体のファイル全部は読み込まない */
+  @font-face { font-family: 'Gunjo Mincho Ko'; font-style: normal; font-weight: 400; font-display: swap; src: url('./fonts/gunjo-kokanji-400.woff2?no-inline') format('woff2'); }
+  @font-face { font-family: 'Gunjo Mincho Ko'; font-style: normal; font-weight: 500; font-display: swap; src: url('./fonts/gunjo-kokanji-500.woff2?no-inline') format('woff2'); }
+  @font-face { font-family: 'Gunjo KR'; font-style: normal; font-weight: 400; font-display: swap; src: url('./fonts/gunjo-ko-400.woff2') format('woff2'); }
+  @font-face { font-family: 'Gunjo KR'; font-style: normal; font-weight: 600; font-display: swap; src: url('./fonts/gunjo-ko-600.woff2') format('woff2'); }
+}
+
+@media screen and (not (max-width: 959.98px)) and (not ((pointer: coarse) and (hover: none))) {
+  :root[data-theme='gunjo'] {
+    font-synthesis: none; /* 400・500・600 以外の太さを、ブラウザが作らない */
+    --font-gothic: 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif; /* 本文・表・補足・自分で入力した文字 */
+    --font-mincho: 'Gunjo Mincho', serif; /* 見出し・ボタン・マス・タブなど（日本語の画面）。太さ 400・500 */
+    --font-num: 'Gunjo Num', 'Gunjo Mincho', serif; /* お金・日付などの数字（太さ 500） */
+  }
+  /* 韓国語の画面：ハングルは Noto Serif KR（400・600）、漢字・かな（「正解」など）は日本語の書体の漢字だけのファイル。ない字はシステムの明朝体 */
+  :root[data-theme='gunjo']:lang(ko) {
+    --font-mincho: 'Gunjo KR', 'Gunjo Mincho Ko', serif;
+    --font-num: 'Gunjo Num', 'Gunjo KR', 'Gunjo Mincho Ko', serif;
+  }
+  /* 自分で入力した文字は、明朝の要素の中でも、システムの書体のまま */
+  :root[data-theme='gunjo'] .user-text { font-family: var(--font-gothic); }
+  /* お金・日付の数字は、桁をそろえる（使う要素に class="num" を付ける。区切り4 から） */
+  :root[data-theme='gunjo'] .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+}

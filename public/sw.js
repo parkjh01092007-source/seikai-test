@@ -20,8 +20,27 @@ const htmlAssets = (html, base) => [...html.matchAll(/<(?:script|link)\b[^>]*?\s
 const cssAssets = (css, base) => [...css.matchAll(/url\(\s*['"]?([^'")]+)['"]?\s*\)/g)].map((m) => m[1]).filter((u) => !u.startsWith('data:')).map((u) => new URL(u, base).href)
 const inScope = (url, s) => url.startsWith(s)
 
+// 書体（woff2）：インストールのときは保存しない。使ったときに、保存する（下の fetch の「ほかのファイル」）。
+// ただし、前の版の保存に同じ書体があれば、ネットを使わずに、新しい保存へ写す（書体のファイル名には中身の印がある。同じアドレス＝同じ中身）。
+// 電波がなくて、まだ使っていない書体は、取れないので、書体の指定のあとの serif（システムの明朝体）で出る（機能と配置は変わらない）
+const isFont = (url) => /\.woff2?(?:[?#]|$)/.test(url)
+const splitFonts = (urls) => ({ now: [...urls].filter((u) => !isFont(u)), fonts: [...urls].filter(isFont) })
+// store：Cache Storage（caches）。自分の scope の、今の版ではない保存だけから写す（もう片方の scope のものは見ない）。target：新しい保存
+async function copyFonts(fontUrls, store, s, v, target) {
+  const names = (await store.keys()).filter((n) => isOldOwnCache(n, s, v))
+  const copied = []
+  for (const url of fontUrls) {
+    if (await target.match(url)) continue
+    for (const name of names) {
+      const hit = await (await store.open(name)).match(url)
+      if (hit) { await target.put(url, hit); copied.push(url); break }
+    }
+  }
+  return copied
+}
+
 // node の check から、上の純関数だけを試すための出口（Service Worker の中では使わない）
-if (typeof self.__swTest === 'function') self.__swTest({ cacheName, isOldOwnCache, htmlAssets, cssAssets, inScope })
+if (typeof self.__swTest === 'function') self.__swTest({ cacheName, isOldOwnCache, htmlAssets, cssAssets, inScope, isFont, splitFonts, copyFonts })
 
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
@@ -40,7 +59,9 @@ self.addEventListener('install', (event) => {
       const m = await (await fetch(u)).json()
       for (const i of m.icons ?? []) urls.add(new URL(i.src, u).href)
     }
-    await cache.addAll([...urls])
+    const { now, fonts } = splitFonts(urls) // 書体は、ここでは保存しない
+    await cache.addAll(now)
+    await copyFonts(fonts, caches, s, version(), cache) // 前の版の保存にあるものだけ、写す
     await self.skipWaiting()
   })())
 })

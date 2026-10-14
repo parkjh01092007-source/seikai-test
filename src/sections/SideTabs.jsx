@@ -3,6 +3,7 @@ import '../nav.css'
 import { t } from '../text.js'
 import { HOME, toHash } from '../route.js'
 import { usePhone } from '../layout.js'
+import { useGunjoPc } from '../gunjoPc.js'
 import { useModalLayer } from '../modalLayer.js'
 import { lastSaveLine } from './lastSave.js'
 import { Icon } from './Icon.jsx'
@@ -16,8 +17,15 @@ import { Icon } from './Icon.jsx'
 // スマホ：☰ を押すと、中身の上に重なって開く。☰・外側・Esc・タブを選ぶ、で閉じる。開いている間は、後ろの画面をスクロールさせず、
 // Tab はメニューの中（☰ を含む）だけを回る（ほかの部分は inert）。
 // 共通：☰ を押して開いたら、最初のタブにフォーカスを移す。Esc で閉じたら ☰ に戻す。幅が境目をまたいだら、閉じた状態に戻す
+// 「正解」の円の中の文字（群青の PC）。韓国語の「정해(正解)」は、かっこの前と後ろを2行に分ける（日本語の「正解」は分けない）
+const markParts = (text) => { const m = /^(.*?)\s*(\(.*\))$/.exec(text); return m ? [m[1], m[2]] : [text, ''] }
+function Mark({ text }) {
+  const [main, sub] = markParts(text)
+  return <><span className="mk-main">{main}</span>{sub && <span className="mk-sub">{sub}</span>}</>
+}
 export default function SideTabs({ entry, currentTab, onOpenPanel, notices = [] }) {
   const phone = usePhone()
+  const gunjoPc = useGunjoPc() // 群青の PC のときだけ描く部品（閉じた形の「正解」の円、見出しの英字）
   const [pinned, setPinned] = useState(false)
   const [hover, setHover] = useState(false)
   const [kbFocus, setKbFocus] = useState(false)
@@ -107,6 +115,7 @@ export default function SideTabs({ entry, currentTab, onOpenPanel, notices = [] 
         onMouseEnter={phone ? undefined : () => setHover(true)}
         onClick={pressToggle}
       ><Icon name="menu" /></button>
+      {gunjoPc && !open && <a className="strip-mark" href={toHash(HOME)}>{gunjoPc ? <Mark text={t('home.title')} /> : t('home.title')}</a>}
       {phone && <span className="bar-title">{t(currentTabLabel)}</span>}
       {phone && notices.length > 0 && (
         <span className="bar-notice notices-wrap">
@@ -121,13 +130,13 @@ export default function SideTabs({ entry, currentTab, onOpenPanel, notices = [] 
       {open && (
         <div className="panel" {...(phone ? { role: 'dialog', 'aria-modal': 'true', 'aria-label': entryName } : {})}>
           <div className="menu-head">
-            <a className="menu-title" href={toHash(HOME)} onClick={closePhone}>{t('home.title')}</a>
-            {lastSave && <span className="menu-last">{lastSave}</span>}
+            <a className="menu-title" href={toHash(HOME)} onClick={closePhone}>{gunjoPc ? <Mark text={t('home.title')} /> : t('home.title')}</a>
+            {lastSave && <span className="menu-last">{gunjoPc ? lastSave.split(/(?<=[\uFF1A:])/).flatMap((part, i) => (i ? [<br key="br" />, part] : [part])) : lastSave}</span>}
           </div>
           <nav aria-label={entryName}>
             {entry.groups.map((g) => (
               <section key={g.label}>
-                <h3>{t(g.label)}</h3>
+                <h3>{t(g.label)}{gunjoPc && <span className="en" lang="en">{t(g.en)}</span>}</h3>
                 <ul>
                   {g.tabs.map((tb) => (
                     <li key={tb.id}>

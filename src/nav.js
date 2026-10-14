@@ -10,16 +10,16 @@ export const NAV = [
     id: 'skills',
     label: 'nav.entry.skills',
     groups: [
-      { label: 'nav.group.skills', tabs: [tab('skills', 'nav.tab.skills', { path: '' })] }, // 今は1つだけ。将来、一覧とスキル変更に分けるときは、ここに足す
+      { label: 'nav.group.skills', en: 'nav.groupEn.skills', tabs: [tab('skills', 'nav.tab.skills', { path: '' })] }, // 今は1つだけ。将来、一覧とスキル変更に分けるときは、ここに足す
     ],
   },
   {
     id: 'ledger',
     label: 'nav.entry.ledger',
     groups: [
-      { label: 'nav.group.record', tabs: [tab('entries', 'nav.tab.entries'), tab('subscriptions', 'nav.tab.subscriptions'), tab('opening', 'nav.tab.opening'), tab('adjustment', 'nav.tab.adjustment')] },
-      { label: 'nav.group.inquiry', tabs: [tab('balance', 'nav.tab.balance'), tab('monthly', 'nav.tab.monthly'), tab('book', 'nav.tab.book'), tab('card', 'nav.tab.card', { detail: true }), tab('savings', 'nav.tab.savings'), tab('budgets', 'nav.tab.budgets')] },
-      { label: 'nav.group.manage', tabs: [tab('accounts', 'nav.tab.accounts'), tab('settings', 'nav.tab.settings')] },
+      { label: 'nav.group.record', en: 'nav.groupEn.record', tabs: [tab('entries', 'nav.tab.entries'), tab('subscriptions', 'nav.tab.subscriptions', { en: 'nav.tabEn.subscriptions', band: 'S' }), tab('opening', 'nav.tab.opening'), tab('adjustment', 'nav.tab.adjustment')] },
+      { label: 'nav.group.inquiry', en: 'nav.groupEn.inquiry', tabs: [tab('balance', 'nav.tab.balance'), tab('monthly', 'nav.tab.monthly'), tab('book', 'nav.tab.book'), tab('card', 'nav.tab.card', { detail: true }), tab('savings', 'nav.tab.savings'), tab('budgets', 'nav.tab.budgets')] },
+      { label: 'nav.group.manage', en: 'nav.groupEn.manage', tabs: [tab('accounts', 'nav.tab.accounts'), tab('settings', 'nav.tab.settings')] },
     ],
   },
 ]

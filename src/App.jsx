@@ -9,6 +9,9 @@ import { getReturnTab, startLogin, modalOpen } from './driveStore.js'
 import { useDriveSync } from './useDriveSync.js'
 import Home from './sections/Home.jsx'
 import SideTabs from './sections/SideTabs.jsx'
+import PageBand from './sections/PageBand.jsx'
+import { BandHostContext } from './sections/bandHost.js'
+import { useGunjoPc } from './gunjoPc.js'
 import { ConfirmContext, ConfirmDialog } from './sections/ConfirmDialog.jsx'
 import SaveLoadPanel from './sections/SaveLoadPanel.jsx'
 import ConflictDialog from './sections/ConflictDialog.jsx'
@@ -300,6 +303,8 @@ export default function App() {
   const driveSync = useDriveSync({ data, skip: driveSkip, apply: applyRemote, restore: applyImported }) // 控えから戻す置き換えは、読み込みと同じ（ふつうの変更として、あとで上がる）
   // 食い違いの確認画面（4.4）：食い違いが見つかったとき、ほかの画面・入力が開いていなければ、自動で開く（そうでなければ、帯を押すと開く）。「あとで決める」で閉じても、帯は残る。解決すると閉じる
   const [conflictOpen, setConflictOpen] = useState(false)
+  const gunjoPc = useGunjoPc() // 群青の PC のときだけ、画面の上に帯（PageBand）を描く
+  const [bandHost, setBandHost] = useState(null) // 帯の中の、画面の要点を入れる場所
   const conflictShown = useRef(null)
   const conflictKey = driveSync.conflict ? `${driveSync.conflict.kind}|${driveSync.conflict.theirsRev}` : null
   useEffect(() => {
@@ -312,6 +317,8 @@ export default function App() {
 
   const entry = route && NAV.find((e) => e.id === route.entry)
   const Screen = route && route.tab ? screens[route.tab] : null
+  const tabDef = entry && route.tab ? entry.groups.flatMap((g) => g.tabs).find((x) => x.id === route.tab) : null
+  const band = gunjoPc && !newer && !migrating && tabDef?.band ? tabDef : null // 帯を出す画面（nav.js の band）
 
   // 知らせ（書けない・つながらない・食い違いなどのとき）。1つの並び（notices）にまとめる：{ key, text, title, onPress }。出し場所（spec-mobile.md 第4章）：
   //   PC は右上の帯に並べる／スマホはメニューのある画面では上の帯の右端に「⚠ 件数」（押すと一覧）／ホーム・移行画面では中身の一番上に1つ1行
@@ -337,7 +344,9 @@ export default function App() {
     <ConfirmContext.Provider value={confirm}>
     <div className="frame" key={language}>
       {entry &&<SideTabs entry={entry} currentTab={route.tab} onOpenPanel={openPanel} notices={notices} />}
-      <div className="main-col">
+      <BandHostContext.Provider value={band ? bandHost : null}>
+      <div className={`main-col${band ? ' has-band' : ''}`}>
+        {band && <PageBand name={t(band.label)} en={band.en ? t(band.en) : ''} kind={band.band} hostRef={setBandHost} />}
         {/* 右上の書き出し・読み込みの帯。スマホの形では出さない（同じ機能は 設定 → データ。index.css） */}
         {!newer && <header>
           <div>
@@ -377,6 +386,7 @@ export default function App() {
           )}
         </div>
       </div>
+      </BandHostContext.Provider>
       {panel && <SaveLoadPanel key={panel} mode={panel} data={data} loadBlocked={Boolean(driveSync.conflict)} onClose={() => setPanel(null)} onToSettings={setSettingsTab} onLoad={async (r) => { await applyImported(r); setPanel(null) }} />}
       {request && <ConfirmDialog key={request.id} request={request} onAnswer={answer} />}
       {conflictOpen && driveSync.conflict && <ConflictDialog key={conflictKey} kind={driveSync.conflict.kind} describe={driveSync.describe} resolve={driveSync.resolve} onClose={() => setConflictOpen(false)} onLogin={() => startLogin(onSettingsScreen ? settingsTab : null)} />}

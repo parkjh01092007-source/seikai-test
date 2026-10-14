@@ -1,0 +1,182 @@
+/* 群青の PC の形の、土台と共通の部品（spec-design.md 9.1・作業19(d) 区切り4。決まりの一覧：design-ref/gunjo-pc/E-rules.html の 9・10章）。
+   当てるのは、群青 かつ PC の形のときだけ。基本・ほかのプリセット・群青のスマホの形は、この中の規則も変数も届かない（変えない）。
+   PC の条件は、layout.js の PHONE_QUERY の反対側（fonts.css・nav.css・index.css の「スマホの形」と同じ条件。gunjoPc.check.js が、同じかを確かめる）。
+   画面だけ（@media screen）。印刷にはかからない。 */
+@media screen and (not (max-width: 959.98px)) and (not ((pointer: coarse) and (hover: none))) {
+  /* ---- 変数 ---- */
+  :root[data-theme='gunjo'] {
+    /* 色：青＝今・自分のお金（--color-accent）、紺＝出ていくもの・メニュー、赤＝悪い・削除（--color-error）。地は --color-bg、文字は --color-text／--color-muted */
+    --g-deep: #05023a; /* 青い面の上・ボタンの影の紺 */
+    --g-red-deep: #8f1d1d; /* 削除のボタンの影 */
+    --g-shadow: #c9c8e6; /* 札・表の影（ボタンには使わない） */
+    --g-paper: #f7f7fb;
+    /* 書体の大きさの段階（E-rules.html の 3章）。S1 自由に使える額だけ特別に大きい。S2 月次の「10月」、S3 仕訳の日付 */
+    --g-s1: 112px; --g-s2: 168px; --g-s3: 64px; --g-s4: 40px; --g-s5: 28px; --g-s5-lg: 36px; --g-s6: 22px; --g-s6-lg: 26px; --g-s7: 20px; --g-s8: 16px; --g-s9: 12px;
+    /* 高さ：同じ列に並ぶボタン・選択欄・入力欄は、すべて 34px。絵だけの四角は 34px の正方形（絵は 18px）。大きいボタン（42px）は、同じ列に置かない */
+    --g-h: 34px; --g-h-large: 42px;
+    /* 影：ボタンは、全部、紺の 3px の1種類。削除だけ濃い赤の 3px。札は薄い紫の 8px（ずらすだけ。ぼかさない） */
+    --g-btn-shadow: 3px 3px 0 var(--g-deep);
+    --g-btn-shadow-danger: 3px 3px 0 var(--g-red-deep);
+    --g-card-shadow: 8px 8px 0 var(--g-shadow);
+    --g-dialog-shadow: 10px 10px 0 var(--g-deep);
+  }
+
+  /* ---- ボタン：文字・絵と文字・絵だけ ----
+     ボタンのように見せない「開閉の見出し・タブ・メニュー・電卓のキー・知らせ」は、ここに入れない（それぞれの区切りで作る） */
+  :root[data-theme='gunjo'] button:not(.day-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .calc-open, .key, .op, .toggle, [role='tab'], .sidetabs *) {
+    box-sizing: border-box; height: var(--g-h); min-height: 0; padding: 0 12px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    font-family: var(--font-mincho); font-size: 14px; font-weight: 400; line-height: 1;
+    background: #fff; color: var(--color-accent); border: 1px solid var(--color-accent); border-radius: 0;
+    box-shadow: var(--g-btn-shadow); cursor: pointer;
+  }
+  /* 決定のボタン（青）：送信ボタン。ほかのボタンは白 */
+  :root[data-theme='gunjo'] button:is([type='submit'], .primary, .sub-submit):not(.day-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .calc-open, .key, .op, .toggle, [role='tab'], .sidetabs *) {
+    background: var(--color-accent); color: var(--color-on-accent); border-color: var(--g-deep);
+  }
+  /* 絵だけの四角：34px の正方形（絵は icon.css で 18px） */
+  :root[data-theme='gunjo'] button.icon-only:not(.sidetabs *) {
+    width: var(--g-h); min-width: 0; padding: 0; background: #fff; color: var(--color-text); border-color: var(--color-muted);
+  }
+  /* 削除（ごみ箱の絵のあるボタン）：赤い枠・赤い絵・濃い赤の影 */
+  :root[data-theme='gunjo'] button:has(.icon-trash):not(.sidetabs *) {
+    color: var(--color-error); border-color: var(--color-error); box-shadow: var(--g-btn-shadow-danger);
+  }
+  :root[data-theme='gunjo'] button:disabled:not(.sidetabs *) { opacity: 0.4; box-shadow: none; cursor: default; }
+
+  /* ---- 入力欄・選択欄：高さ 34px。自分で入力した文字・選択肢（科目名）は、システムの書体（--font-gothic）。金額（数字だけの欄）は、明朝 500・右そろえ ---- */
+  :root[data-theme='gunjo'] :is(input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file']), select) {
+    box-sizing: border-box; height: var(--g-h); min-height: 0; padding: 0 8px;
+    font-family: var(--font-gothic); font-size: 15px; line-height: 1.2;
+    background: #fff; color: var(--color-text); border: 1px solid var(--color-field-border); border-radius: 0;
+  }
+  :root[data-theme='gunjo'] textarea {
+    box-sizing: border-box; padding: 6px 8px; font-family: var(--font-gothic); font-size: 15px;
+    background: #fff; color: var(--color-text); border: 1px solid var(--color-field-border); border-radius: 0;
+  }
+  :root[data-theme='gunjo'] input[inputmode='numeric'] { font-family: var(--font-num); font-weight: 500; font-variant-numeric: tabular-nums; text-align: right; }
+  :root[data-theme='gunjo'] :is(input, select, textarea)::placeholder { font-family: var(--font-gothic); }
+  :root[data-theme='gunjo'] :is(input, select, textarea):disabled { opacity: 0.4; }
+
+  /* ---- 表：見出し 12px・薄い文字・下に青の線。行は薄い線。合計の行は、青い地に白い字（左右に 8px の余白）。数字・科目名の書体は、画面の区切りで決める ---- */
+  :root[data-theme='gunjo'] table { border-collapse: collapse; }
+  :root[data-theme='gunjo'] :is(th) {
+    padding: 6px 4px; font-family: var(--font-gothic); font-size: var(--g-s9); font-weight: 400; letter-spacing: 0.1em;
+    color: var(--color-muted); background: transparent; border: 0; border-bottom: 1px solid var(--color-accent);
+  }
+  :root[data-theme='gunjo'] td { padding: 9px 4px; background: transparent; border: 0; border-bottom: 1px solid var(--color-border); }
+  :root[data-theme='gunjo'] tr.total :is(td, th) { background: var(--color-accent); color: var(--color-on-accent); border-bottom: 0; }
+  :root[data-theme='gunjo'] tr.total :is(td, th) * { color: inherit; }
+  :root[data-theme='gunjo'] tr.total > :first-child { padding-left: 8px; }
+  :root[data-theme='gunjo'] tr.total > :last-child { padding-right: 8px; }
+
+  /* ---- ダイアログの枠：白い面・青い細い枠・紺の 10px のずらし影。後ろは暗い紺の幕。中の作りは、画面の区切り（13）で ---- */
+  :root[data-theme='gunjo'] dialog:is(.confirm, .saveload) {
+    background: #fff; color: var(--color-text); border: 1px solid var(--color-accent); border-radius: 0; box-shadow: var(--g-dialog-shadow);
+  }
+  :root[data-theme='gunjo'] dialog:is(.confirm, .saveload)::backdrop { background: rgba(5, 2, 58, 0.62); }
+
+  /* ---- メニュー（縦タブ。SideTabs.jsx）：固定・閉じた形・マウスを乗せて開いた形。見本：design-ref/gunjo-pc の E-menuopen・E-menuclosed と、各画面の左のメニュー ----
+     閉じた形＝細い紺の帯（☰ と「正解」の円）。乗せて開いた形＝パネルが中身の上に重なる（右に紺のずらし影。中身は動かない）。固定＝場所が広がる。
+     斜めの面（14°）は、パネルの下の方。下の「セーブ」「ロード」「ホームへ」は、入りきらないとき「ホームへ」が次の行へ回る（nav.css の作業33 の直し。flex-wrap のまま） */
+  :root[data-theme='gunjo'] {
+    --sidetabs-band: 64px; /* 閉じた帯の幅 */
+    --g-blue2: #1a0fc2; /* 斜めの面の青 */
+    --g-menu-face: linear-gradient(166deg, transparent 0 68%, var(--g-blue2) 68%);
+  }
+  :root[data-theme='gunjo'] .sidetabs { background: var(--g-menu-face), rgb(var(--menu-rgb) / var(--menu-opacity, 1)); }
+  :root[data-theme='gunjo'] .sidetabs.open { background: none; } /* 開いたら、パネルが帯の上を覆う（不透明度が 100％ より低いとき、下の帯が透けない） */
+  :root[data-theme='gunjo'] .sidetabs nav { margin-top: 18px; }
+  :root[data-theme='gunjo'] .sidetabs .panel { padding: 24px 0; border-right: 0; background: var(--g-menu-face), rgb(var(--menu-rgb) / var(--menu-opacity, 1)); box-shadow: none; }
+  :root[data-theme='gunjo'] .sidetabs.open:not(.pinned) .panel { box-shadow: 8px 0 0 var(--g-deep); }
+  /* ☰：青い四角（44px）。閉じた帯では上、開くと「正解」の列の真ん中へ */
+  :root[data-theme='gunjo'] .sidetabs .toggle { top: 24px; left: 10px; width: 44px; height: 44px; background: var(--color-accent); color: #fff; border: 1px solid rgba(255, 255, 255, 0.7); border-radius: 0; box-shadow: var(--g-btn-shadow); }
+  :root[data-theme='gunjo'] .sidetabs.open .toggle { top: 34px; left: 22px; }
+  :root[data-theme='gunjo'] .sidetabs .toggle .icon { width: 20px; height: 20px; }
+  @media (prefers-reduced-motion: no-preference) { :root[data-theme='gunjo'] .sidetabs .toggle { transition: top 0.12s, left 0.12s; } }
+  /* 閉じた帯の「正解」の円（44px）：ホームへのリンク */
+  :root[data-theme='gunjo'] .sidetabs a.strip-mark {
+    position: absolute; top: 82px; left: 10px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 44px; height: 44px; min-height: 0; margin: 0; padding: 0;
+    border-radius: 50%; background: #fff; color: var(--color-accent); writing-mode: vertical-rl; font-family: var(--font-mincho); font-size: 15px; font-weight: 500; letter-spacing: 0.08em; box-shadow: 0 8px 14px rgba(0, 0, 0, 0.35);
+  }
+  /* 上：「正解」の円（64px）と「最後のセーブ」 */
+  :root[data-theme='gunjo'] .sidetabs .menu-head { gap: 14px; min-height: 64px; margin-top: 0; padding: 0 22px 0 80px; border-bottom: 0; }
+  :root[data-theme='gunjo'] .sidetabs a.menu-title {
+    display: flex; flex: none; align-items: center; justify-content: center; box-sizing: border-box; width: 64px; height: 64px; min-height: 0; margin: 0; padding: 0;
+    border-radius: 50%; background: #fff; color: var(--color-accent); writing-mode: vertical-rl; font-family: var(--font-mincho); font-size: 21px; font-weight: 500; letter-spacing: 0.1em; box-shadow: 0 10px 18px rgba(0, 0, 0, 0.35);
+  }
+  :root[data-theme='gunjo']:lang(ko) .sidetabs .menu-last { word-break: keep-all; } /* 韓国語は、空白のところで折り返す */
+  :root[data-theme='gunjo'] .sidetabs .menu-last { font-family: var(--font-gothic); font-size: 11px; line-height: 1.6; color: var(--menu-muted); }
+  /* 韓国語の「정해(正解)」：円の中で横書き。かっこの前を大きく、後ろ（正解）を小さく2行に。閉じた帯の小さい円は、かっこの前だけ */
+  :root[data-theme='gunjo']:lang(ko) .sidetabs :is(a.menu-title, a.strip-mark) { writing-mode: horizontal-tb; flex-direction: column; line-height: 1.15; letter-spacing: 0; }
+  :root[data-theme='gunjo']:lang(ko) .sidetabs a.menu-title .mk-main { font-size: 20px; }
+  :root[data-theme='gunjo']:lang(ko) .sidetabs a.menu-title .mk-sub { font-size: 11px; }
+  :root[data-theme='gunjo']:lang(ko) .sidetabs a.strip-mark .mk-main { font-size: 14px; }
+  :root[data-theme='gunjo']:lang(ko) .sidetabs a.strip-mark .mk-sub { display: none; }
+  /* 見出し（記帳 ENTRY など。英字は辞書 nav.groupEn.*）と、タブ。今いるタブは白い札と紺の 5px の影 */
+  :root[data-theme='gunjo'] .sidetabs h3 { margin: 0; padding: 14px 22px 4px; font-family: var(--font-mincho); font-size: 10px; font-weight: 400; letter-spacing: 0.35em; color: var(--menu-muted); }
+  :root[data-theme='gunjo'] .sidetabs nav section:first-child h3 { padding-top: 8px; }
+  :root[data-theme='gunjo'] .sidetabs h3 .en { margin-left: 0.6em; }
+  :root[data-theme='gunjo'] .sidetabs nav a { min-height: 36px; padding: 0 22px 0 40px; font-family: var(--font-mincho); font-size: 16px; }
+  :root[data-theme='gunjo'] .sidetabs nav a[aria-current='page'] { min-height: 42px; margin: 2px 22px 6px; padding: 0 16px; font-size: 17px; font-weight: 500; background: #fff; color: var(--color-accent); box-shadow: 5px 5px 0 var(--g-deep); }
+  /* 下の3つ：白い細い枠と紺の 3px の影。幅に入りきらないとき「ホームへ」が次の行へ回る（flex-wrap） */
+  :root[data-theme='gunjo'] .sidetabs .bottom { margin-top: auto; padding: 0 18px; gap: 8px; border-top: 0; }
+  :root[data-theme='gunjo'] .sidetabs .bottom > * { min-height: 44px; gap: 6px; font-family: var(--font-mincho); font-size: 13px; color: #fff; border: 1px solid rgba(255, 255, 255, 0.7); box-shadow: var(--g-btn-shadow); }
+  :root[data-theme='gunjo'] .sidetabs .bottom .icon { width: 16px; height: 16px; }
+
+  /* ---- 帯（PageBand.jsx）：画面の上の青い面。高さ 172px（S。月の道なし）、右の端だけ 14° の斜め（切り 43px）、濃い青の面を同じ斜めで重ねる。上にページ名のマスと英字、下に画面の要点。
+     「書き出し」「読み込み」（App の header）は、帯の右上、見本の位置に重ねる。見本：design-ref/gunjo-pc の各画面 ---- */
+  :root[data-theme='gunjo'] {
+    --g-blue3: #2214e0; /* 帯の濃い青の面 */
+    --g-tile-shadow: 6px 6px 0 var(--g-shadow);
+  }
+  :root[data-theme='gunjo'] .g-band { position: relative; z-index: 2; box-sizing: border-box; height: 172px; padding: 26px 48px 0; background: var(--color-accent); color: #fff; clip-path: polygon(0 0, 100% 0, calc(100% - 43px) 100%, 0 100%); }
+  :root[data-theme='gunjo'] .g-band .g-accent { position: absolute; z-index: 0; top: 0; right: 0; bottom: 0; width: 250px; background: var(--g-blue3); clip-path: polygon(43px 0, 100% 0, 100% 100%, 0 100%); }
+  :root[data-theme='gunjo'] .g-band > :not(.g-accent) { position: relative; z-index: 1; }
+  :root[data-theme='gunjo'] .g-top { display: flex; align-items: center; gap: 18px; min-height: 56px; }
+  :root[data-theme='gunjo'] .g-masu { display: flex; margin: 0; font-family: var(--font-mincho); font-size: 34px; font-weight: 400; }
+  :root[data-theme='gunjo'] .g-masu span { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 56px; height: 56px; border: 1px solid #fff; font-size: 34px; line-height: 1; }
+  :root[data-theme='gunjo'] .g-masu span + span { border-left: 0; }
+  :root[data-theme='gunjo'] .g-masu.long span { width: 46px; height: 46px; font-size: 28px; } /* 6字以上（韓国語の長い名前）は、小さいマス */
+  :root[data-theme='gunjo'] .g-en { font-family: var(--font-mincho); font-size: 11px; letter-spacing: 0.45em; }
+  :root[data-theme='gunjo'] .g-hero { display: flex; align-items: flex-end; gap: 46px; margin-top: 8px; }
+  :root[data-theme='gunjo'] .g-stat-lab { font-family: var(--font-gothic); font-size: 12px; letter-spacing: 0.3em; color: var(--menu-muted); }
+  :root[data-theme='gunjo'] .g-stat-num { margin-top: 2px; font-family: var(--font-num); font-size: var(--g-s5); font-weight: 500; line-height: 1.15; font-variant-numeric: tabular-nums; }
+  :root[data-theme='gunjo'] .g-stat-unit { margin-left: 4px; font-size: 14px; }
+  /* 書き出し・読み込み：帯の右上（青い地の上の小さいボタン。白い細い枠と紺の 3px の影） */
+  :root[data-theme='gunjo'] .main-col.has-band { position: relative; }
+  :root[data-theme='gunjo'] .main-col.has-band > header { position: absolute; z-index: 3; top: 37px; right: 148px; padding: 0; border: 0; background: none; }
+  :root[data-theme='gunjo'] .main-col.has-band > header > div { display: flex; align-items: center; gap: 10px; font-family: var(--font-mincho); font-size: 14px; color: #fff; }
+  :root[data-theme='gunjo'] .main-col.has-band > header :is(button, span[role='button']) {
+    display: inline-flex !important; align-items: center; justify-content: center; box-sizing: border-box; height: var(--g-h); margin: 0; padding: 0 12px !important;
+    font-family: var(--font-mincho); font-size: 14px; line-height: 1; background: var(--color-accent); color: #fff; border: 1px solid rgba(255, 255, 255, 0.85) !important; border-radius: 0 !important; box-shadow: var(--g-btn-shadow); cursor: pointer;
+  }
+  :root[data-theme='gunjo'] .main-col.has-band > header .update-notice { margin: 0; color: #fff; font-size: 13px; }
+  :root[data-theme='gunjo'] .main-col.has-band .content { max-width: none; margin: 0; padding: 26px 48px 24px; }
+
+  /* ---- 札（g-card）と、節の見出し（g-h）。画面ごとの区切りで、この class を使う ---- */
+  :root[data-theme='gunjo'] .g-card { box-sizing: border-box; padding: 16px 22px; background: #fff; box-shadow: var(--g-card-shadow); }
+  :root[data-theme='gunjo'] .g-h { margin: 0 0 6px; font-family: var(--font-mincho); font-size: var(--g-s7); font-weight: 400; }
+  :root[data-theme='gunjo'] .g-h small { margin-left: 10px; font-size: 10px; letter-spacing: 0.35em; color: var(--color-accent); }
+  :root[data-theme='gunjo'] .g-form .lab { display: block; margin-bottom: 2px; font-family: var(--font-gothic); font-size: 11px; letter-spacing: 0.2em; color: var(--color-muted); }
+
+  /* ---- 定期支払い（Subscriptions.jsx）：上に「新しい定期支払い」の札（ラベルつきの欄と、大きい決定のボタン）、下に1つずつの札（左に毎月の日、真ん中に名前、右に金額とボタン） ---- */
+  :root[data-theme='gunjo'] .subscriptions .g-new { margin-bottom: 20px; }
+  :root[data-theme='gunjo'] .subscriptions .g-new .note { margin: 6px 0; font-size: 13px; line-height: 1.7; }
+  :root[data-theme='gunjo'] .subscriptions .g-form { display: grid; grid-template-columns: 1.1fr 1.3fr 1fr 80px 1fr 1fr auto; gap: 10px 12px; align-items: end; margin: 10px 0 0; }
+  :root[data-theme='gunjo'] .subscriptions .g-form .fl { display: block; margin: 0; }
+  :root[data-theme='gunjo'] .subscriptions .g-form :is(input, select) { width: 100%; }
+  :root[data-theme='gunjo'] .subscriptions .g-form input.day { width: 100%; text-align: right; }
+  :root[data-theme='gunjo'] .subscriptions .g-form > .error { grid-column: 1 / -1; }
+  :root[data-theme='gunjo'] button.sub-submit.large { height: var(--g-h-large); padding: 0 22px; font-size: 16px; }
+  :root[data-theme='gunjo'] .subscriptions ul { margin: 0; padding: 0; }
+  :root[data-theme='gunjo'] .subscriptions li { display: grid; grid-template-columns: 104px 1fr auto; gap: 0 18px; align-items: center; margin: 0 0 22px; padding: 14px 20px; background: #fff; border: 0; box-shadow: var(--g-tile-shadow); }
+  :root[data-theme='gunjo'] .subscriptions li:has(> form) { display: block; }
+  :root[data-theme='gunjo'] .subscriptions li:has(> form) .g-form { margin: 0; }
+  :root[data-theme='gunjo'] .subscriptions .g-day { font-family: var(--font-mincho); font-size: 13px; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .subscriptions .g-day b { display: block; font-family: var(--font-num); font-size: 44px; font-weight: 400; line-height: 1; color: var(--color-accent); font-variant-numeric: tabular-nums; }
+  :root[data-theme='gunjo'] .subscriptions .g-mid strong { font-size: 17px; font-weight: bold; }
+  :root[data-theme='gunjo'] .subscriptions .g-mid .note { font-size: 13px; }
+  :root[data-theme='gunjo'] .subscriptions .g-amount { font-family: var(--font-num); font-size: var(--g-s6); font-weight: 500; text-align: right; font-variant-numeric: tabular-nums; }
+  :root[data-theme='gunjo'] .subscriptions .sub-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+}

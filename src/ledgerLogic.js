@@ -601,6 +601,44 @@ export function monthReport(accounts, entries, month) {
   return { month, revenue, expense, revenueTotal, expenseTotal, result: revenueTotal - expenseTotal, adjustment: { gain, loss, net: gain - loss } }
 }
 
+// ---- 1日あたりと、日ごとの費用（spec-ledger.md 5.17。作業34）----
+// 今日（'YYYY-MM-DD'）は呼ぶ側から渡す。どれも純関数（元のデータは変えない）
+
+// 今月の残りの日数（今日を含める）。月末の日は 1
+export const daysLeftInMonth = (today) => daysInMonth(today.slice(0, 7)) - Number(today.slice(8, 10)) + 1
+
+// 1日あたり：自由に使える額 ÷ 今月の残りの日数。端数は 0 に向かって切り捨て。マイナスはマイナスのまま（-0 は 0 にする）
+export const perDayAmount = (amount, today) => Math.trunc(amount / daysLeftInMonth(today)) + 0
+
+// 日ごとの費用（月の道・仕訳の日の見出しの「計」）。month は 'YYYY-MM'。
+// amount：その日の、通常の仕訳（kind が normal）のうち、費用の科目が借方の金額 − 貸方の金額（調整損は費用に入れない。クレカも仕訳の日付の日）。マイナスの日はマイナスのまま
+// bar：棒の長さの元になる値（マイナスの日は 0）。count：その日の通常の仕訳の数（開始残高・残高調整は数えない）
+// state：spend＝費用のある日／flat＝仕訳はあるが費用がない日（移動だけの日・返品などでマイナスの日）／
+//        blank＝入力していない過去の日／open＝まだ入力していない今日／future＝入力のない、これからの日
+// total：日ごとの amount の合計。monthReport の費用合計と一致する（調整の仕訳が調整益・調整損だけを使うため）
+export function dailyExpenses(accounts, entries, month, today) {
+  const expenseIds = new Set(accounts.filter((a) => a.type === 'expense' && a.key !== 'adjust-loss').map((a) => a.id))
+  const days = Array.from({ length: daysInMonth(month) }, (_, i) => ({ day: i + 1, date: `${month}-${String(i + 1).padStart(2, '0')}`, amount: 0, count: 0 }))
+  for (const e of entries) {
+    const d = e.kind === 'normal' && e.date.startsWith(month) ? days[Number(e.date.slice(8, 10)) - 1] : undefined
+    if (!d) continue
+    d.count += 1
+    d.amount += (expenseIds.has(e.debitId) ? e.amount : 0) - (expenseIds.has(e.creditId) ? e.amount : 0)
+  }
+  const list = days.map((d) => ({
+    ...d,
+    bar: Math.max(0, d.amount),
+    state: d.count > 0 ? (d.amount > 0 ? 'spend' : 'flat') : d.date > today ? 'future' : d.date === today ? 'open' : 'blank',
+    isToday: d.date === today,
+    isFuture: d.date > today,
+  }))
+  return { month, days: list, total: list.reduce((s, d) => s + d.amount, 0) }
+}
+
+// 費用の内訳の割合（月次）：金額 ÷ 費用の合計。小数第1位まで四捨五入（足して 100.0% にならなくてよい）。合計が 0 以下のときは null
+export const expenseShares = (report) =>
+  report.expense.map((r) => ({ account: r.account, amount: r.amount, percent: report.expenseTotal > 0 ? Math.round((r.amount / report.expenseTotal) * 1000) / 10 : null }))
+
 // B/S：その月の最終日までの全仕訳で計算する。assets / liabilities / equity は、その時点までに仕訳がある科目
 // 純資産 ＝ 純資産の科目の残高合計（開始残高など）＋ 累計の収支（全ての収益 − 全ての費用。調整益・調整損も含む）
 // balanced：資産合計 ＝ 負債合計 ＋ 純資産合計（合わないとき、画面にエラーを出す）
