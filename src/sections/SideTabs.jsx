@@ -3,7 +3,7 @@ import '../nav.css'
 import { t } from '../text.js'
 import { HOME, toHash } from '../route.js'
 import { usePhone } from '../layout.js'
-import { useGunjoPc } from '../gunjoPc.js'
+import { useGunjoPc, useCanPin } from '../gunjoPc.js'
 import { useModalLayer } from '../modalLayer.js'
 import { lastSaveLine } from './lastSave.js'
 import { Icon } from './Icon.jsx'
@@ -26,6 +26,7 @@ function Mark({ text }) {
 export default function SideTabs({ entry, currentTab, onOpenPanel, notices = [] }) {
   const phone = usePhone()
   const gunjoPc = useGunjoPc() // 群青の PC のときだけ描く部品（閉じた形の「正解」の円、見出しの英字）
+  const canPin = useCanPin() // 群青の PC は、幅 1100px 未満では固定しない（☰ は乗せる・Tab で開くだけ）
   const [pinned, setPinned] = useState(false)
   const [hover, setHover] = useState(false)
   const [kbFocus, setKbFocus] = useState(false)
@@ -36,6 +37,7 @@ export default function SideTabs({ entry, currentTab, onOpenPanel, notices = [] 
   const toggleRef = useRef(null)
   const focusFirst = useRef(false) // ☰ を押して開いたとき、最初のタブへフォーカスを移す印
   const open = phone ? phoneOpen : pinned || hover || kbFocus
+  useEffect(() => { if (!canPin) setPinned(false) }, [canPin]) // 固定していて、幅が 1100px 未満になったら外す
 
   // 幅が境目をまたいだら、閉じた状態に戻す
   useEffect(() => {
@@ -82,7 +84,7 @@ export default function SideTabs({ entry, currentTab, onOpenPanel, notices = [] 
     if (phone) {
       focusFirst.current = !phoneOpen
       setPhoneOpen((o) => !o)
-    } else {
+    } else if (canPin) {
       focusFirst.current = !pinned
       setPinned((p) => !p)
     }
@@ -111,7 +113,7 @@ export default function SideTabs({ entry, currentTab, onOpenPanel, notices = [] 
         aria-label={t('nav.menu')}
         title={t('nav.menu')}
         aria-expanded={open}
-        aria-pressed={phone ? undefined : pinned}
+        aria-pressed={phone || !canPin ? undefined : pinned}
         onMouseEnter={phone ? undefined : () => setHover(true)}
         onClick={pressToggle}
       ><Icon name="menu" /></button>

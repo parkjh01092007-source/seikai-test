@@ -49,8 +49,14 @@
      余白の規則は特異度 0（:where）。行が自分で余白を決めたいときは、その行の規則が勝つ。
      並べる行の中に、空白の文字（JSX の {' '}）があると、その分だけ広がる。群青の PC では、その空白を描かない（Entries.jsx・Ledger.jsx）。 */
   :where(:root[data-theme='gunjo']) :where(:is(button:not(.day-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .calc-open, .key, .op, .toggle, [role='tab'], .sidetabs *), input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden']), select) + :is(button:not(.day-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .calc-open, .key, .op, .toggle, [role='tab'], .sidetabs *), input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden']), select)) { margin-inline-start: var(--g-gap-controls); }
-  :root[data-theme='gunjo'] :has(> :is(button:not(.day-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .calc-open, .key, .op, .toggle, [role='tab'], .sidetabs *), input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden']), select) + :is(button:not(.day-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .calc-open, .key, .op, .toggle, [role='tab'], .sidetabs *), input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden']), select)) { column-gap: 0; }
+  :root[data-theme='gunjo'] :has(> :is(button:not(.day-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .calc-open, .key, .op, .toggle, [role='tab'], .sidetabs *), input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden']), select) + :is(button:not(.day-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .calc-open, .key, .op, .toggle, [role='tab'], .sidetabs *), input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden']), select)):not(:has(> .field)) { column-gap: 0; }
   :root[data-theme='gunjo'] { --g-gap-controls: 12px; }
+  /* 仕訳の入力の行（Entries.jsx の EntryForm）：入力欄は <label class="field">（display: contents＝箱がない）の中にあり、隣り合う部品と見なされないので、上の余白の規則は届かない。
+     ここは余白でなく、行の gap（12px）であける（上の column-gap: 0 から外し、メモと「追加」の間の余白も 0 にして、二重にしない） */
+  :root[data-theme='gunjo'] .entries form:has(> .field) { column-gap: var(--g-gap-controls); }
+  :root[data-theme='gunjo'] .entries form:has(> .field) > * { margin-inline-start: 0; }
+  /* 間が入った分、行が 800px に入りきらず「追加」が次の行へ回らないよう、メモの欄は、残りの幅に合わせて縮む・伸びる（6em まで） */
+  :root[data-theme='gunjo'] .entries form:has(> .field) > .memo-input { flex: 1 1 6em; min-width: 6em; width: auto; }
 
   /* ---- 入力欄・選択欄：高さ 34px。自分で入力した文字・選択肢（科目名）は、システムの書体（--font-gothic）。金額（数字だけの欄）は、明朝 500・右そろえ ---- */
   :root[data-theme='gunjo'] :is(input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file']), select) {
@@ -102,7 +108,7 @@
   :root[data-theme='gunjo'] .sidetabs.open { background: none; } /* 開いたら、パネルが帯の上を覆う（不透明度が 100％ より低いとき、下の帯が透けない） */
   :root[data-theme='gunjo'] .sidetabs nav { margin-top: 26px; }
   :root[data-theme='gunjo'] .sidetabs .panel { padding: 14px 0 24px; border-right: 0; background: rgb(var(--menu-rgb) / var(--menu-opacity, 1)); box-shadow: none; }
-  :root[data-theme='gunjo'] .sidetabs.open:not(.pinned) .panel { box-shadow: 8px 0 0 var(--g-deep); }
+  :root[data-theme='gunjo'] .sidetabs.open .panel { box-shadow: 8px 0 0 var(--g-deep); } /* 乗せて開いた形も固定も、同じ見た目（右に紺の 8px の影）。見本 E-menuopen */
   /* ☰：青い四角（44px）。閉じた形・開いた形・固定のどれでも、同じ位置（上 24px・左 10px）。動かさない（パネルだけが広がる）。「正解」の円（64px）は、☰ と真ん中をそろえる */
   :root[data-theme='gunjo'] .sidetabs .toggle { top: 24px; left: 10px; width: 44px; height: 44px; background: var(--color-accent); color: #fff; border: 1px solid rgba(255, 255, 255, 0.7); border-radius: 0; box-shadow: var(--g-btn-shadow); }
   :root[data-theme='gunjo'] .sidetabs .toggle .icon { width: 20px; height: 20px; }
@@ -191,4 +197,14 @@
   :root[data-theme='gunjo'] .subscriptions .g-mid .note { font-size: 13px; }
   :root[data-theme='gunjo'] .subscriptions .g-amount { font-family: var(--font-num); font-size: var(--g-s6); font-weight: 500; text-align: right; font-variant-numeric: tabular-nums; }
   :root[data-theme='gunjo'] .subscriptions .sub-actions { display: flex; justify-content: flex-end; margin-top: 6px; }
+
+  /* 設定 → 記帳「日付の開き方」（Settings.jsx の OpenModeSelect）：ラベルの幅を固定して、2つの選択欄を同じ位置（左端がそろう）に置き、上下は 14px あける（行の高さ 34px＋14px＝48px は、倍率 125％・150％・175％ でも画素が割り切れる高さ。2つの選択欄の枠が、同じ画素に乗る）。
+     以前は、ラベルの文字の幅（小数）に押されて、選択欄が小数の位置・上下にぴったり重なる形になり、画面の倍率が 125％・150％ のとき、片方の枠だけ薄く太く見えた */
+  :root[data-theme='gunjo'] .settings .open-mode { display: grid; grid-template-columns: 18em auto; column-gap: 12px; align-items: center; justify-content: start; margin: 0 0 14px; }
+
+  /* 固定（☰ を押す）：中身を右へずらさず、乗せて開いた形と同じく、パネルが中身の上に重なったまま開いておく（場所は閉じた帯の 64px のまま）。固定できるのは幅 1100px 以上だけ
+     （layout.js の PIN_QUERY・SideTabs.jsx の useCanPin と同じ値。gunjoPc.check.js が確かめる） */
+  @media (min-width: 1100px) {
+    :root[data-theme='gunjo'] .sidetabs.pinned { width: var(--sidetabs-band); }
+  }
 }
