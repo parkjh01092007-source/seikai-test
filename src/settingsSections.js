@@ -10,21 +10,21 @@ export const SETTINGS_GROUPS = [
 ]
 export const DEFAULT_TAB = 'record' // 初めに開くタブ（どのタブを開いていたかは覚えない）
 
-// 項目（タブの順に、タブごとに続けて並べる）。phoneOnly：スマホの形だけに出す。danger：エラーの色の枠で囲む（危ない操作）
+// 項目（タブの順に、タブごとに続けて並べる）。en：群青の PC の見出しの英字（辞書のキー）。phoneOnly：スマホの形だけに出す。danger：エラーの色の枠で囲む（危ない操作）
 export const SETTINGS_SECTIONS = [
-  { id: 'entries', group: 'record', title: 'settings.entriesHeading' },
-  { id: 'favorites', group: 'record', title: 'settings.favoritesHeading' },
-  { id: 'balanceView', group: 'inquiry', title: 'balanceView.title' },
-  { id: 'card', group: 'inquiry', title: 'card.title' },
-  { id: 'save', group: 'data', title: 'save.title' },
-  { id: 'drive', group: 'data', title: 'drive.title' },
-  { id: 'driveBackups', group: 'data', title: 'backups.title' },
-  { id: 'backup', group: 'data', title: 'dataSettings.backupTitle', phoneOnly: true }, // PC は右上の帯にある
-  { id: 'purge', group: 'data', title: 'dataSettings.purgeTitle', danger: true },
-  { id: 'reset', group: 'data', title: 'dataSettings.resetTitle', danger: true },
-  { id: 'language', group: 'general', title: 'language.title' },
-  { id: 'currency', group: 'general', title: 'currency.title' },
-  { id: 'display', group: 'general', title: 'theme.title' },
+  { id: 'entries', en: 'settings.en.entries', group: 'record', title: 'settings.entriesHeading' },
+  { id: 'favorites', en: 'settings.en.favorites', group: 'record', title: 'settings.favoritesHeading' },
+  { id: 'balanceView', en: 'settings.en.balanceView', group: 'inquiry', title: 'balanceView.title' },
+  { id: 'card', en: 'settings.en.card', group: 'inquiry', title: 'card.title' },
+  { id: 'save', en: 'settings.en.save', group: 'data', title: 'save.title' },
+  { id: 'drive', en: 'settings.en.drive', group: 'data', title: 'drive.title' },
+  { id: 'driveBackups', en: 'settings.en.driveBackups', group: 'data', title: 'backups.title' },
+  { id: 'backup', en: 'settings.en.backup', group: 'data', title: 'dataSettings.backupTitle', phoneOnly: true }, // PC は右上の帯にある
+  { id: 'purge', en: 'settings.en.purge', group: 'data', title: 'dataSettings.purgeTitle', danger: true },
+  { id: 'reset', en: 'settings.en.reset', group: 'data', title: 'dataSettings.resetTitle', danger: true },
+  { id: 'language', en: 'settings.en.language', group: 'general', title: 'language.title' },
+  { id: 'currency', en: 'settings.en.currency', group: 'general', title: 'currency.title' },
+  { id: 'display', en: 'settings.en.display', group: 'general', title: 'theme.title' },
 ]
 
 // タブとパネルの id（aria-controls・aria-labelledby 用）。作りは tabs.js（予算の画面と共通）

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import './ledger.css'
 import {
   TYPES, TYPE_LABELS, ROLES, ROLE_LABELS, newAccount, changeType, validateAccountName,
@@ -9,6 +10,8 @@ import { useConfirm } from './ConfirmDialog.jsx'
 import { usePhone } from '../layout.js'
 import { Icon, IconButton } from './Icon.jsx'
 import { useGunjoPc } from '../gunjoPc.js'
+import { useBandHost } from './bandHost.js'
+import { BandStat } from './PageBand.jsx'
 
 function RoleSelect({ value, onChange, disabled }) {
   return (
@@ -58,7 +61,7 @@ function AccountEditor({ account, accounts, entries, subscriptions, budgets, onC
       <TypeSelect value={account.type} disabled={!typeEditable} onChange={(type) => onChange(changeType(account, type, 'other'))} />
       {account.type === 'asset' && <RoleSelect value={account.role} disabled={!roleEditable} onChange={(role) => touch({ role })} />}
       {account.type === 'liability' && (
-        <span className="note"> {ROLE_LABELS[account.role]}{account.role === 'card' && t('ledger.cardDays', { closing: account.closingDay, pay: account.payDay })}</span>
+        <span className="note">{sp}{ROLE_LABELS[account.role]}{account.role === 'card' && t('ledger.cardDays', { closing: account.closingDay, pay: account.payDay })}</span>
       )}{sp}
       {hasLivingMonth(account) && (
         <label className="living-month">{t('living.month')} <select value={account.livingMonth} onChange={(e) => touch({ livingMonth: e.target.value })}>
@@ -70,7 +73,7 @@ function AccountEditor({ account, accounts, entries, subscriptions, budgets, onC
         {account.active ? t('common.disable') : t('common.enable')}
       </button>
       <IconButton icon="trash" label={t('common.delete')} onClick={remove} disabled={!deletable} />
-      {!account.active && <span className="note"> {t('common.inactive')}</span>}
+      {!account.active && <span className="note">{sp}{t('common.inactive')}</span>}
       {locked && <div className="note">{t('ledger.noteLocked')}</div>}
       {!locked && !deletable && <div className="note">{t('ledger.noteInUse')}</div>}
       {!locked && account.role === 'card' && <div className="note">{t('ledger.noteCard')}</div>}
@@ -106,6 +109,7 @@ function AddForm({ accounts, onAdd }) {
   const [type, setType] = useState('expense')
   const [role, setRole] = useState('cash')
   const [error, setError] = useState('')
+  const gunjoPc = useGunjoPc()
 
   const submit = (e) => {
     e.preventDefault()
@@ -121,7 +125,7 @@ function AddForm({ accounts, onAdd }) {
       <TypeSelect value={type} onChange={setType} />
       {type === 'asset' && <RoleSelect value={role} onChange={setRole} />}
       <input placeholder={t('ledger.namePlaceholder')} value={name} onChange={(e) => setName(e.target.value)} />
-      <button><Icon name="plus" />{t('common.add')}</button>
+      <button className={gunjoPc ? 'primary large' : undefined}><Icon name="plus" />{t('common.add')}</button>
       {error && <span className="error">{error}</span>}
     </form>
   )
@@ -131,17 +135,22 @@ export default function Ledger({ data, update }) {
   const { accounts, entries, subscriptions, budgets } = data
   const setAccounts = (next) => update({ ...data, accounts: next })
   const phone = usePhone()
+  const gunjoPc = useGunjoPc()
+  const bandHost = useBandHost()
+  const typeEn = { asset: t('typeEn.asset'), liability: t('typeEn.liability'), revenue: t('typeEn.revenue'), expense: t('typeEn.expense'), equity: t('typeEn.equity') }
   const [openId, setOpenId] = useState(null) // スマホの幅で開いている科目（1つだけ）
   // 科目を削除したときは、お気に入りからも外す（1回の update で。2回に分けると、古い data で上書きされる）
   const deleteAccount = (id) => update({ ...data, accounts: accounts.filter((x) => x.id !== id), settings: removeAccountFromSettings(data.settings, id) })
 
+  // 群青の PC（見本 E-accounts）：画面の名前は帯のマス。帯に科目の件数。節の見出しは「資産 ASSETS」の形（見本は単数 ASSET。開始残高にそろえて複数）
   return (
-    <div className="ledger">
-      <h2>{t('ledger.title')}</h2>
+    <div className={gunjoPc ? 'ledger g-accounts' : 'ledger'}>
+      {bandHost && createPortal(<BandStat label={t('ledger.count')} value={accounts.length} unit={t('settings.countUnit')} />, bandHost)}
+      {!gunjoPc && <h2>{t('ledger.title')}</h2>}
       <AddForm accounts={accounts} onAdd={(a) => setAccounts([...accounts, a])} />
       {TYPES.map((type) => (
         <section key={type}>
-          <h3>{TYPE_LABELS[type]}</h3>
+          {gunjoPc ? <h2 className="g-h">{TYPE_LABELS[type]}<small lang="en">{typeEn[type]}</small></h2> : <h3>{TYPE_LABELS[type]}</h3>}
           <ul className={phone ? 'accts' : ''}>
             {accounts.filter((a) => a.type === type).map((a) => {
               const props = {

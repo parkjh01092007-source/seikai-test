@@ -19,6 +19,7 @@ import { SETTINGS_GROUPS, SETTINGS_SECTIONS, tabDomId, panelDomId } from '../set
 import Tabs from './Tabs.jsx'
 import { versionLabel, BUILT_AT, CURRENT_BUILD } from '../pwa.js'
 import { usePhone } from '../layout.js'
+import { useGunjoPc } from '../gunjoPc.js'
 import { Icon, IconButton } from './Icon.jsx'
 
 const SIDE_KEYS = { debit: 'common.debit', credit: 'common.credit' } // 借方・貸方の名前（辞書のキー）
@@ -160,11 +161,12 @@ function FavoriteSide({ side, data, update }) {
 
 // 「よく使う」：今月・前月・前々月の通常の仕訳から、借方・貸方別々に上位5件（回数つき）。登録の手がかり（選択肢には出さない）
 function Frequent({ data }) {
+  const gunjoPc = useGunjoPc()
   const { accounts, entries, settings } = data
   const stats = favoriteStats(entries, accounts, today())
   return (
     <section>
-      <h4 className="sub-title">{t('settings.frequentTitle')}</h4>
+      <h4 className={gunjoPc ? 'sub-title g-sec' : 'sub-title'}>{t('settings.frequentTitle')}{gunjoPc && <small lang="en">{t('settings.frequentEn')}</small>}</h4>
       <div className="columns">
         {['debit', 'credit'].map((side) => (
           <div key={side}>
@@ -213,6 +215,7 @@ export default function Settings({ driveSync, data, update, openPanel, replaceDa
     update({ ...data, settings: setCurrency(data.settings, next) })
   }
   const phone = usePhone()
+  const gunjoPc = useGunjoPc()
 
   // 項目の中身（id → 中身）。並びと見出しは settingsSections.js。項目を足すときは、そちらと、ここの両方に足す（settingsSections.check.js が合っているか見る）
   const BODIES = {
@@ -241,8 +244,17 @@ export default function Settings({ driveSync, data, update, openPanel, replaceDa
     favorites: () => (
       <>
         <p className="note">{t('settings.favoritesNote')}</p>
-        <FavoriteSide side="debit" data={data} update={update} />
-        <FavoriteSide side="credit" data={data} update={update} />
+        {gunjoPc ? (
+          <div className="g-fav-cols">
+            <FavoriteSide side="debit" data={data} update={update} />
+            <FavoriteSide side="credit" data={data} update={update} />
+          </div>
+        ) : (
+          <>
+            <FavoriteSide side="debit" data={data} update={update} />
+            <FavoriteSide side="credit" data={data} update={update} />
+          </>
+        )}
         <Frequent data={data} />
       </>
     ),
@@ -262,11 +274,11 @@ export default function Settings({ driveSync, data, update, openPanel, replaceDa
   const items = SETTINGS_SECTIONS.filter((s) => s.group === tab && (phone || !s.phoneOnly)) // スマホの形だけの項目（書き出し・読み込み）は、PC では出さない
   return (
     <div className="settings">
-      <h2>{t('settings.title')}</h2>
+      {!gunjoPc && <h2>{t('settings.title')}</h2>}
       <Tabs label={t('settings.title')} tabs={SETTINGS_GROUPS.map((g) => ({ id: g.id, title: t(g.title) }))} current={tab} onChange={onTab} prefix="settings" />
       <div role="tabpanel" id={panelDomId(tab)} aria-labelledby={tabDomId(tab)} className="set-panel">
-        {items.map(({ id, title, danger }) => {
-          const item = <><h3 className="set-title">{t(title)}</h3>{BODIES[id]()}</>
+        {items.map(({ id, title, en, danger }) => {
+          const item = <><h3 className="set-title">{t(title)}{gunjoPc && <small lang="en">{t(en)}</small>}</h3>{BODIES[id]()}</>
           // 危ない操作（仕訳の一括削除・全体の初期化）は、エラーの色の枠で囲む（ボタンの動き・確認画面は変えない）。ほかの項目は、枠も囲みも足さない
           return danger ? <div key={id} className="set-danger">{item}</div> : <Fragment key={id}>{item}</Fragment>
         })}

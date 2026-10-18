@@ -4,3 +4,7 @@ import { createContext, useContext } from 'react'
 // 画面は、この場所へ createPortal で要点を入れる（帯の中身は、その画面のデータから出す。App は画面のデータを知らなくてよい）
 export const BandHostContext = createContext(null)
 export const useBandHost = () => useContext(BandHostContext)
+
+// 帯の上の段（マスの右）の、ボタンを入れる場所（「一覧へ戻る」など）。同じく、帯がないときは null
+export const BandTopContext = createContext(null)
+export const useBandTop = () => useContext(BandTopContext)

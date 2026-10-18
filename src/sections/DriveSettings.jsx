@@ -6,11 +6,13 @@ import { LOGIN_ERROR_KEYS } from '../driveLogic.js'
 import DriveCopy from './DriveCopy.jsx'
 import { CHANGE_EVENT, isConfigured, getSync, getToken, getLoginError, startLogin, disconnect } from '../driveStore.js'
 import { Icon } from './Icon.jsx'
+import { useGunjoPc } from '../gunjoPc.js'
 
 // 設定 → データ → Google ドライブ（spec-drive.md 5章）：つなぐ・切る、つないでいるアカウント、ログインの状態、最後に同期した日時。
 // 覚えていること（つないでいるか・アカウント・鍵）は driveStore が持つ。変わったら CHANGE_EVENT で知らされる。保存データには触らない
 export default function DriveSettings({ tab }) {
   const [, redraw] = useState(0)
+  const gunjoPc = useGunjoPc() // 群青の PC：「Google ドライブにつなぐ」は、幅いっぱいの大きい青いボタン（見本 E-set3）
   useEffect(() => {
     const on = () => redraw((n) => n + 1)
     window.addEventListener(CHANGE_EVENT, on)
@@ -41,7 +43,7 @@ export default function DriveSettings({ tab }) {
         </>
       ) : (
         <div className="row">
-          <button type="button" onClick={login} disabled={!isConfigured()}>{t('drive.connect')}</button>
+          <button type="button" className={gunjoPc ? 'primary large g-wide' : undefined} onClick={login} disabled={!isConfigured()}>{t('drive.connect')}</button>
         </div>
       )}
       {errorKey && <p className="error" role="alert">{t(LOGIN_ERROR_KEYS[errorKey])}</p>}

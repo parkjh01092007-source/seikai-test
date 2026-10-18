@@ -207,4 +207,210 @@
   @media (min-width: 1100px) {
     :root[data-theme='gunjo'] .sidetabs.pinned { width: var(--sidetabs-band); }
   }
+
+  /* ---- 同じ行の部品の間 12px：文字・単位・ラベルをはさむ行（区切り7 の最初の直し。これらの画面は、区切り8・9 で作り直す。ここは間だけ）---- */
+  /* 書き出し・読み込み（帯のない画面の右上） */
+  :root[data-theme='gunjo'] .main-col:not(.has-band) > header > div { display: flex; align-items: center; column-gap: var(--g-gap-controls); }
+  /* 部品と「文字つきのラベル」が並ぶ行（設定・クレカの追加）：行の gap を 12px に（部品どうしが隣り合う行は、上の余白の規則で 12px。そちらは上の column-gap: 0 が勝つ） */
+  :root[data-theme='gunjo'] :is(.settings form, .card-form) { column-gap: var(--g-gap-controls); }
+  /* 科目管理の行（インラインの流れ）：選択欄・役割の文字・「月」のラベルとボタンの間 */
+  :root[data-theme='gunjo'] .ledger li > select + :is(span.note, label.living-month),
+  :root[data-theme='gunjo'] .ledger li > :is(span.note, label.living-month) + :is(button, label.living-month) { margin-inline-start: var(--g-gap-controls); }
+
+  /* 大きい決定のボタン（42px）。同じ列には置かない */
+  :root[data-theme='gunjo'] button.primary.large { height: var(--g-h-large); padding: 0 22px; font-size: 16px; }
+
+  /* ---- 開始残高（Opening.jsx。見本 E-opening）：説明の札、開始日（ラベルが上）、左に資産・右に負債の2列。行は 科目名／150px の入力／円。保存は右の列の下 ---- */
+  :root[data-theme='gunjo'] .g-opening .g-notes { padding: 12px 20px; margin-bottom: 12px; }
+  :root[data-theme='gunjo'] .g-opening .g-notes .note { margin: 6px 0; font-size: 13px; line-height: 1.7; }
+  :root[data-theme='gunjo'] .g-opening form { display: block; }
+  :root[data-theme='gunjo'] .g-opening .g-date { display: block; max-width: 240px; margin: 0; }
+  :root[data-theme='gunjo'] .g-opening .g-date input { width: 100%; }
+  :root[data-theme='gunjo'] .g-opening .g-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 40px; margin-top: 24px; align-items: start; }
+  :root[data-theme='gunjo'] .g-opening .g-cols h2.g-h { margin: 0 0 6px; }
+  :root[data-theme='gunjo'] .g-opening .g-cols section + section { margin-top: 18px; }
+  :root[data-theme='gunjo'] .g-opening .row { display: grid; grid-template-columns: minmax(0, 1fr) 150px 20px; column-gap: 10px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--color-border); font-size: 16px; }
+  :root[data-theme='gunjo'] .g-opening .row > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+  :root[data-theme='gunjo'] .g-opening .row input { width: 100%; min-width: 0; font-size: 17px; }
+  :root[data-theme='gunjo'] .g-opening .g-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin-top: 24px; }
+  :root[data-theme='gunjo'] .g-opening .g-actions .error { flex: 1 1 100%; }
+  :root[data-theme='gunjo'] .g-opening .g-actions .note { flex: 1 1 100%; font-size: 13px; }
+
+  /* ---- 残高調整（Adjustment.jsx。見本 E-adjust）：帯に 1 文。左に札（幅 560px）、右に説明。入力欄の高さは 34px（欄は 34px の決め。見本の 42px にはしない） ---- */
+  :root[data-theme='gunjo'] .g-lead { margin: 4px 0 0; font-family: var(--font-mincho); font-size: 17px; line-height: 1.8; color: var(--menu-muted); }
+  :root[data-theme='gunjo'] .g-adjust { display: grid; grid-template-columns: minmax(0, 560px) minmax(0, 1fr); column-gap: 34px; align-items: start; }
+  :root[data-theme='gunjo'] .g-adj .g-form { display: flex; flex-direction: column; align-items: stretch; gap: 8px; margin: 0; }
+  :root[data-theme='gunjo'] .g-adj .fl { display: block; margin: 0; }
+  :root[data-theme='gunjo'] .g-adj select { width: 100%; }
+  :root[data-theme='gunjo'] .g-adj .g-amount-row { display: flex; align-items: center; gap: 8px; }
+  :root[data-theme='gunjo'] .g-adj .g-amount-row input { flex: 1 1 auto; min-width: 0; font-size: 17px; }
+  :root[data-theme='gunjo'] .g-adj button.primary.large { align-self: flex-start; margin-top: 10px; }
+  :root[data-theme='gunjo'] .g-adj .note { margin: 0; font-size: 13px; line-height: 1.7; }
+  :root[data-theme='gunjo'] .g-side { max-width: 340px; padding-top: 8px; }
+  :root[data-theme='gunjo'] .g-side .note { margin: 6px 0; font-size: 13px; line-height: 1.7; }
+
+  /* ---- 元帳（LedgerBook.jsx。見本 E-book）：帯に選んだ科目の残高。上に 選択欄 180px・月 160px・「全期間」、説明、表（日付・相手・メモ・種類は読みやすいゴシック、数字は明朝の数字） ---- */
+  :root[data-theme='gunjo'] .g-book .month-bar { margin-top: 0; }
+  :root[data-theme='gunjo'] .g-book .month-bar select { width: 180px; }
+  :root[data-theme='gunjo'] .g-book .month-bar input[type='month'] { width: 160px; }
+  :root[data-theme='gunjo'] .g-book .note { margin: 12px 0; font-size: 13px; }
+  :root[data-theme='gunjo'] .g-book table { margin-top: 24px; }
+  :root[data-theme='gunjo'] .g-book td { font-family: var(--font-num); font-size: 15px; }
+  :root[data-theme='gunjo'] .g-book td:first-child, :root[data-theme='gunjo'] .g-book td.text { font-family: var(--font-gothic); }
+  :root[data-theme='gunjo'] .g-book :is(th, td):nth-child(6) { padding-left: 18px; }
+  :root[data-theme='gunjo'] .g-book tr.total td:nth-child(6) { padding-left: 4px; }
+  :root[data-theme='gunjo'] .g-book :is(th, td):nth-child(2) { min-width: 10em; } /* 相手の科目の列が、長いメモに押されて縦に割れないように */
+  :root[data-theme='gunjo'] .g-book td:nth-child(1) { white-space: nowrap; }
+  :root[data-theme='gunjo'] .g-stat-lab { max-width: 640px; overflow-wrap: anywhere; } /* 長い科目名の「…の残高」が帯からはみ出さない */
+
+  /* ---- 区切り8の共通：帯の上の段（戻るボタンの場所）、青い下線のタブ、表（g-rep）、達成率の棒 ---- */
+  :root[data-theme='gunjo'] .g-band > .g-top-extra { position: absolute; z-index: 2; top: 37px; right: 440px; }
+  :root[data-theme='gunjo'] .g-top-extra:empty { display: none; }
+  /* タブ（Tabs.jsx。予算・設定）：選んでいる方は青い太字と青い 3px の下線。ほかは薄い文字。明朝 16px、幅を等分 */
+  :root[data-theme='gunjo'] .tabs { margin: 0 0 24px; border-bottom: 1px solid var(--color-border); }
+  :root[data-theme='gunjo'] .tabs .tab { font-family: var(--font-mincho); font-size: 16px; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .tabs .tab[aria-selected='true'] { border-bottom-color: var(--color-accent); color: var(--color-accent); font-weight: 500; }
+  :root[data-theme='gunjo'] .tabs .tab:hover { color: var(--color-accent); }
+  /* 表（g-rep）：数字は明朝・右そろえ、科目名・メモ・日付などはゴシック（元帳の g-book と同じ） */
+  :root[data-theme='gunjo'] .g-rep td { font-family: var(--font-num); font-size: 15px; }
+  :root[data-theme='gunjo'] .g-rep td:first-child, :root[data-theme='gunjo'] .g-rep td.wrap, :root[data-theme='gunjo'] .g-rep td.text { font-family: var(--font-gothic); }
+  :root[data-theme='gunjo'] .g-rep .note { margin: 12px 0; font-size: 13px; }
+  /* 達成率の棒：幅 70px・高さ 8px。地の行は青（溝は薄い紫）、青い合計の行は白（溝は白の 30%）、超過は赤。意味は数字と判定の文字でも伝わる（飾り） */
+  :root[data-theme='gunjo'] .g-rate { display: inline-flex; align-items: center; gap: 8px; }
+  :root[data-theme='gunjo'] .g-bar { display: inline-block; width: 70px; height: 8px; background: var(--color-border); }
+  :root[data-theme='gunjo'] .g-bar > i { display: block; height: 100%; background: var(--color-accent); }
+  :root[data-theme='gunjo'] .g-bar.over > i { background: var(--color-error); }
+  :root[data-theme='gunjo'] tr.total .g-bar { background: rgba(255, 255, 255, 0.3); }
+  :root[data-theme='gunjo'] tr.total .g-bar > i { background: #fff; }
+
+  /* ---- クレカ一覧（CreditCard.jsx。見本 E-card）：左にカードの札、右に「カードを追加」の札。帯に今月・前月の利用 ---- */
+  :root[data-theme='gunjo'] .g-card-list { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 420px); column-gap: 34px; align-items: start; }
+  :root[data-theme='gunjo'] .g-card-list .g-h { margin-bottom: 14px; }
+  :root[data-theme='gunjo'] .g-cards { display: block; margin: 0; padding: 0; }
+  :root[data-theme='gunjo'] .g-cards li { margin: 0 0 16px; }
+  :root[data-theme='gunjo'] .g-cards .card-button { box-sizing: border-box; width: 100%; padding: 22px 24px; border: 0; background: #fff; box-shadow: var(--g-tile-shadow); font-size: 17px; }
+  :root[data-theme='gunjo'] .g-cards .card-button .amount { font-family: var(--font-mincho); font-size: 15px; color: var(--color-text); }
+  :root[data-theme='gunjo'] .g-cards .card-button .amount b { margin-left: 8px; font-family: var(--font-num); font-size: 22px; font-weight: 500; color: var(--color-accent); }
+  :root[data-theme='gunjo'] .g-cards .card-button .amount b.neg { color: var(--color-error); }
+  :root[data-theme='gunjo'] .g-cards .card-button.inactive { color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-addcard .note { margin: 12px 0 0; font-size: 13px; line-height: 1.7; }
+  :root[data-theme='gunjo'] .g-addcard .card-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px 12px; align-items: end; margin: 10px 0 0; }
+  :root[data-theme='gunjo'] .g-addcard .card-form .fl { display: block; margin: 0; }
+  :root[data-theme='gunjo'] .g-addcard .card-form .g-wide { grid-column: 1 / -1; }
+  :root[data-theme='gunjo'] .g-addcard .card-form :is(input, input.day) { width: 100%; }
+  :root[data-theme='gunjo'] .g-addcard .card-form button.g-wide { justify-self: start; margin-top: 8px; }
+
+  /* ---- クレカ個別（CreditCardDetail.jsx。見本 E-carddetail）：帯に「一覧へ戻る」とカード名。左に「次の引き落とし分」の札と項目の表、右に請求期間の表 ---- */
+  :root[data-theme='gunjo'] .g-back {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-sizing: border-box; height: var(--g-h); padding: 0 12px;
+    font-family: var(--font-mincho); font-size: 14px; line-height: 1; text-decoration: none; background: var(--color-accent); color: #fff; border: 1px solid rgba(255, 255, 255, 0.85); box-shadow: var(--g-btn-shadow);
+  }
+  :root[data-theme='gunjo'] .g-back .icon { width: 16px; height: 16px; }
+  :root[data-theme='gunjo'] .g-stat-num .user-text { font-size: 28px; font-weight: 500; line-height: 1.15; } /* カード名（自分の入力）は、システムのゴシック */
+  :root[data-theme='gunjo'] .g-detail { display: grid; grid-template-columns: minmax(0, 440px) minmax(0, 1fr); column-gap: 40px; align-items: start; }
+  :root[data-theme='gunjo'] .g-next { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; margin-bottom: 14px; }
+  :root[data-theme='gunjo'] .g-next > span { font-family: var(--font-mincho); font-size: 16px; }
+  :root[data-theme='gunjo'] .g-next > b { font-family: var(--font-num); font-size: 28px; font-weight: 500; color: var(--color-accent); }
+  :root[data-theme='gunjo'] .g-next > b.neg { color: var(--color-error); }
+  :root[data-theme='gunjo'] .g-detail table { width: 100%; }
+  :root[data-theme='gunjo'] .g-detail-left td:last-child { text-align: right; }
+  :root[data-theme='gunjo'] .g-detail-right .g-h { margin: 6px 0 10px; }
+  :root[data-theme='gunjo'] .g-detail-right td.text, :root[data-theme='gunjo'] .g-detail-right th.text { text-align: right; }
+  :root[data-theme='gunjo'] .g-detail-right :is(td, th):first-child { text-align: left; }
+  :root[data-theme='gunjo'] .g-detail .note { margin: 12px 0; font-size: 13px; line-height: 1.7; }
+
+  /* ---- 貯蓄（Savings.jsx。見本 E-savings）：帯に取り分けの科目ごとの残高。科目ごとに「科目名 EARMARK」と表（相手の科目・メモは左、金額・累計は右） ---- */
+  :root[data-theme='gunjo'] .g-savings section + section { margin-top: 34px; }
+  :root[data-theme='gunjo'] .g-savings .g-h { margin-bottom: 22px; }
+  :root[data-theme='gunjo'] .g-savings table { width: 100%; }
+  :root[data-theme='gunjo'] .g-savings :is(td, th).text, :root[data-theme='gunjo'] .g-savings td.wrap { text-align: left; }
+
+  /* ---- 予算：月の予算のタブ（Budgets.jsx。見本 E-budgets1）：「上限（費用）LIMIT」「予算未設定 UNSET」「目標（取り分け）GOAL」。達成率は棒と数字。判定の列は残す（色だけで伝えない） ---- */
+  :root[data-theme='gunjo'] .budgets .tab-panel { padding-top: 0; }
+  :root[data-theme='gunjo'] .budgets .month-bar { margin: 0 0 24px; }
+  :root[data-theme='gunjo'] .budgets .month-bar input[type='month'] { width: 170px; }
+  :root[data-theme='gunjo'] .budgets .g-h { margin: 28px 0 8px; }
+  :root[data-theme='gunjo'] .budgets .month-bar + .g-h { margin-top: 0; }
+  :root[data-theme='gunjo'] .budgets .g-budget-new .g-h { margin: 0 0 6px; }
+  :root[data-theme='gunjo'] .budgets .budget-table { width: 100%; }
+  :root[data-theme='gunjo'] .budgets .budget-table td:last-child { white-space: nowrap; }
+  :root[data-theme='gunjo'] .budgets tr.over td:last-child { color: var(--color-error); font-weight: 500; }
+  :root[data-theme='gunjo'] .budgets tr.total td.over { color: inherit; }
+  :root[data-theme='gunjo'] .budgets .g-rate { justify-content: flex-end; }
+
+  /* ---- 予算：登録・履歴のタブ（見本 E-budgets2）：「予算を追加 NEW」の札（ラベルつきの欄＋大きい決定のボタン）と、科目ごとの履歴（開閉の行。開くと 2026-10から・金額・入力・「金額を変更」・ごみ箱）。
+     「金額を変更」は、見本では右端に離れているが、同じ行の部品の間は 12px の決めに従い、入力のすぐ右に置く ---- */
+  :root[data-theme='gunjo'] .g-budget-new .g-form { display: grid; grid-template-columns: 110px minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) auto; gap: 10px 12px; align-items: end; margin: 10px 0 0; }
+  :root[data-theme='gunjo'] .g-budget-new .fl { display: block; margin: 0; }
+  :root[data-theme='gunjo'] .g-budget-new .g-form :is(input, select) { width: 100%; }
+  :root[data-theme='gunjo'] .g-budget-new .g-form > .error { grid-column: 1 / -1; }
+  :root[data-theme='gunjo'] .g-budget-new .note { margin: 10px 0 0; font-size: 13px; line-height: 1.7; }
+  :root[data-theme='gunjo'] .budgets details { padding: 14px 0; border-bottom: 1px solid var(--color-border); }
+  :root[data-theme='gunjo'] .budgets summary { display: flex; align-items: center; gap: 8px; list-style: none; cursor: pointer; font-size: 17px; }
+  :root[data-theme='gunjo'] .budgets summary::-webkit-details-marker { display: none; }
+  :root[data-theme='gunjo'] .budgets summary .chev { display: inline-flex; flex: none; width: 20px; height: 20px; }
+  :root[data-theme='gunjo'] .budgets summary .note { margin: 0; font-size: 13px; }
+  :root[data-theme='gunjo'] .budgets details > ul { list-style: none; margin: 12px 0 0; padding: 0; }
+  :root[data-theme='gunjo'] .budgets details li { display: flex; flex-wrap: wrap; align-items: center; margin: 0; padding: 6px 0 6px 28px; border: 0; }
+  :root[data-theme='gunjo'] .budgets details li .start { width: 130px; }
+  :root[data-theme='gunjo'] .budgets details li .amount { width: 118px; margin-right: 12px; font-family: var(--font-num); font-size: 22px; font-weight: 500; }
+  :root[data-theme='gunjo'] .budgets details li input { width: 160px; }
+  :root[data-theme='gunjo'] .budgets details li > .error { flex: 1 1 100%; margin-top: 6px; }
+
+  /* ---- ホーム（Home.jsx。見本 E-home）：帯（マス「正解」・1 文）と、入口の札（270×156px・8px の影。上に英字、名前、右下に ›）。メニューはホームでは出さない ---- */
+  :root[data-theme='gunjo'] .g-home { text-align: left; }
+  :root[data-theme='gunjo'] .g-home .g-entries li { margin: 0; padding: 0; border: 0; }
+  :root[data-theme='gunjo'] .g-home .g-entries { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 40px; margin: 0; padding: 0; }
+  :root[data-theme='gunjo'] .g-home .entry-button {
+    position: relative; box-sizing: border-box; width: 270px; height: 156px; min-width: 0; padding: 18px 22px; display: flex; flex-direction: column; justify-content: space-between;
+    background: #fff; border: 0; box-shadow: var(--g-card-shadow); color: var(--color-text); text-decoration: none;
+  }
+  :root[data-theme='gunjo'] .g-home .entry-button .en { font-family: var(--font-mincho); font-size: 11px; letter-spacing: 0.4em; color: var(--color-accent); }
+  :root[data-theme='gunjo'] .g-home .entry-button b { font-family: var(--font-mincho); font-size: 30px; font-weight: 400; line-height: 1.2; }
+  :root[data-theme='gunjo'] .g-home .entry-button .icon { align-self: flex-end; width: 20px; height: 20px; color: var(--color-accent); }
+
+  /* ---- スキル（Skills.jsx。見本 E-skills）：帯に登録の件数。「スキルを追加 NEW」の札、スキルごとの札。スキルの画面は作り直す予定なので、札と部品を当てるだけ ---- */
+  :root[data-theme='gunjo'] .g-skills .g-skill-new { margin-bottom: 24px; }
+  :root[data-theme='gunjo'] .g-skills form { display: flex; flex-wrap: wrap; align-items: center; margin: 10px 0 0; }
+  :root[data-theme='gunjo'] .g-skills ul { list-style: none; margin: 0; padding: 0; }
+  :root[data-theme='gunjo'] .g-skills li.skill-row { display: flex; flex-wrap: wrap; align-items: center; margin: 0 0 24px; padding: 16px 22px; background: #fff; border: 0; box-shadow: var(--g-tile-shadow); }
+  :root[data-theme='gunjo'] .g-skills li.skill-row > .lv { margin: 0 12px 0 24px; font-family: var(--font-mincho); font-size: 14px; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-skills li.skill-row > :is(button, input) + .lv { margin-left: 24px; }
+  :root[data-theme='gunjo'] .g-skills li.skill-row > div, :root[data-theme='gunjo'] .g-skills li.skill-row > button:last-of-type { flex: 1 1 100%; }
+  :root[data-theme='gunjo'] .g-skills li.skill-row > div { margin-top: 10px; font-size: 13px; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-skills li.skill-row > div:first-of-type { font-family: var(--font-mincho); font-size: 17px; color: var(--color-text); }
+  :root[data-theme='gunjo'] .g-skills li.skill-row > button:last-of-type { flex: 0 0 auto; margin-top: 10px; }
+
+  /* ---- 科目管理（Ledger.jsx。見本 E-accounts）：帯に科目の件数。上に追加の行、「資産 ASSETS」などの節ごとに 1 科目 1 行（名前・名前を変更・種類・役割・使わない・ごみ箱。下に薄い説明）。行の間は 12px（区切り7 の最初の直し） ---- */
+  :root[data-theme='gunjo'] .g-accounts > form { display: flex; flex-wrap: wrap; align-items: center; margin: 0 0 28px; }
+  :root[data-theme='gunjo'] .g-accounts > form input:not([type]) { width: 260px; }
+  :root[data-theme='gunjo'] .g-accounts .g-h { margin: 28px 0 8px; }
+  :root[data-theme='gunjo'] .g-accounts ul { list-style: none; margin: 0; padding: 0; }
+  :root[data-theme='gunjo'] .g-accounts li { margin: 0; padding: 10px 0; border: 0; border-bottom: 1px solid var(--color-border); }
+  :root[data-theme='gunjo'] .g-accounts li > input:first-child { width: 190px; }
+  :root[data-theme='gunjo'] .g-accounts li .note { margin: 4px 0 0; font-size: 13px; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-accounts li > span.note { margin: 0; font-size: 15px; color: var(--color-text); }
+  :root[data-theme='gunjo'] .g-accounts li.inactive { color: var(--color-muted); }
+
+  /* ---- 設定（Settings.jsx。見本 E-set1〜4）：画面の名前は帯のマス（要点はなし）。節の見出しは S7（20px・明朝・400）＋右に英字。項目の中の小見出しは 16px の明朝。記帳のお気に入りは、借方が左・貸方が右 ---- */
+  :root[data-theme='gunjo'] .settings .set-title, :root[data-theme='gunjo'] .settings .sub-title.g-sec { margin: 28px 0 8px; font-family: var(--font-mincho); font-size: var(--g-s7); font-weight: 400; }
+  :root[data-theme='gunjo'] .settings .set-panel > .set-title:first-child { margin-top: 0; }
+  :root[data-theme='gunjo'] .settings :is(.set-title, .sub-title.g-sec) small { margin-left: 10px; font-size: 10px; letter-spacing: 0.35em; color: var(--color-accent); }
+  :root[data-theme='gunjo'] .settings .sub-title:not(.g-sec) { margin: 18px 0 6px; font-family: var(--font-mincho); font-size: var(--g-s8); font-weight: 400; }
+  :root[data-theme='gunjo'] .settings .sub-sub { font-family: var(--font-mincho); font-weight: 400; }
+  :root[data-theme='gunjo'] .settings .note { margin: 6px 0; font-size: 13px; line-height: 1.7; }
+  :root[data-theme='gunjo'] .settings .g-fav-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 40px; align-items: start; }
+  :root[data-theme='gunjo'] .settings .fav-item { display: list-item; margin: 0 0 8px; padding: 0; border: 0; }
+  :root[data-theme='gunjo'] .settings .fav-item .name { display: inline-block; min-width: 120px; margin-right: 12px; }
+  :root[data-theme='gunjo'] .settings .card-row { padding: 10px 0; border: 0; }
+  :root[data-theme='gunjo'] .settings .card-row strong { margin-right: 12px; font-weight: bold; }
+  :root[data-theme='gunjo'] .settings .card-list { list-style: none; margin: 8px 0; padding: 0; }
+
+  /* ---- 設定：データ・一般（見本 E-set3・E-set4）。「Google ドライブにつなぐ」は幅いっぱいの大きい青いボタン。危ない項目（仕訳の一括削除・全体の初期化）は、赤い 2px の枠・白い地・薄い赤の影（6px）・赤い絵のボタン。確認画面は変えない ---- */
+  :root[data-theme='gunjo'] .settings button.g-wide { width: 100%; }
+  :root[data-theme='gunjo'] .settings .set-danger { margin: 24px 0; padding: 18px 22px; background: #fff; border: 2px solid var(--color-error); border-radius: 0; box-shadow: 6px 6px 0 #e8bdbd; }
+  :root[data-theme='gunjo'] .settings .set-danger .set-title { margin-top: 0; }
+  :root[data-theme='gunjo'] .settings .set-danger .set-title small { color: var(--color-error); }
+  :root[data-theme='gunjo'] .settings .set-danger button:not(:disabled) { color: var(--color-error); border-color: var(--color-error); box-shadow: var(--g-btn-shadow-danger); }
+  :root[data-theme='gunjo'] .settings .app-version { margin-top: 24px; }
 }

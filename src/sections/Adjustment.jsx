@@ -1,10 +1,13 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import './adjustment.css'
 import { groupByType, adjustmentRows, planAdjustment, formatMoney, currencyUnit } from '../ledgerLogic.js'
 import { today } from '../today.js'
 import { t } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import { usePhone } from '../layout.js'
+import { useGunjoPc } from '../gunjoPc.js'
+import { useBandHost } from './bandHost.js'
 
 export default function Adjustment({ data, update }) {
   const { accounts, entries } = data
@@ -16,6 +19,8 @@ export default function Adjustment({ data, update }) {
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const phone = usePhone()
+  const gunjoPc = useGunjoPc()
+  const bandHost = useBandHost()
   const rows = adjustmentRows(accounts, entries)
   const balances = new Map(rows.map((r) => [r.account.id, r.balance]))
 
@@ -31,6 +36,40 @@ export default function Adjustment({ data, update }) {
     update({ ...data, entries: plan.entries })
     setActual('')
     setMessage(t('adjustment.done', { kind: plan.kindLabel, amount: money(plan.amount) }))
+  }
+
+  // 群青の PC（見本 E-adjust）：帯に 1 文、左に札（科目・実際の残高・大きい決定のボタン）、右に説明。画面の名前は帯のマス。ほかの形は、下のまま
+  if (gunjoPc) {
+    return (
+      <div className="adjustment g-adjust">
+        {bandHost && createPortal(<p className="g-lead">{t('adjustment.lead')}</p>, bandHost)}
+        <section className="g-card g-adj">
+          <h2 className="g-h">{t('adjustment.cardTitle')}<small lang="en">{t('adjustment.cardTitleEn')}</small></h2>
+          <form className="g-form" onSubmit={save}>
+            <label className="fl"><span className="lab">{t('common.account')}</span>
+              <select aria-label={t('common.account')} value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+                <option value="">{t('common.chooseAccount')}</option>
+                {groupByType(rows.map((r) => r.account)).map((g) => (
+                  <optgroup key={g.type} label={g.label}>
+                    {g.accounts.map((a) => <option key={a.id} value={a.id}>{t('adjustment.optionLabel', { name: a.name, balance: money(balances.get(a.id)) })}</option>)}
+                  </optgroup>
+                ))}
+              </select>
+            </label>
+            <label className="fl"><span className="lab">{t('adjustment.actual')}</span>
+              <span className="g-amount-row"><input inputMode="numeric" aria-label={t('adjustment.actual')} value={actual} onChange={(e) => setActual(e.target.value)} /><span>{currencyUnit(currency)}</span></span>
+            </label>
+            <button className="primary large">{t('adjustment.submit')}</button>
+            {error && <span className="error" role="alert">{error}</span>}
+            {message && <span className="note" role="status">{message}</span>}
+          </form>
+        </section>
+        <div className="g-side">
+          <p className="note">{t('adjustment.note')}</p>
+          <p className="note">{t('adjustment.noteLocked')}</p>
+        </div>
+      </div>
+    )
   }
 
   return (

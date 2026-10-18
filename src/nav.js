@@ -9,17 +9,19 @@ export const NAV = [
   {
     id: 'skills',
     label: 'nav.entry.skills',
+    en: 'nav.entryEn.skills',
     groups: [
-      { label: 'nav.group.skills', en: 'nav.groupEn.skills', tabs: [tab('skills', 'nav.tab.skills', { path: '' })] }, // 今は1つだけ。将来、一覧とスキル変更に分けるときは、ここに足す
+      { label: 'nav.group.skills', en: 'nav.groupEn.skills', tabs: [tab('skills', 'nav.tab.skills', { path: '', en: 'nav.tabEn.skills', band: 'S' })] }, // 今は1つだけ。将来、一覧とスキル変更に分けるときは、ここに足す
     ],
   },
   {
     id: 'ledger',
     label: 'nav.entry.ledger',
+    en: 'nav.entryEn.ledger',
     groups: [
-      { label: 'nav.group.record', en: 'nav.groupEn.record', tabs: [tab('entries', 'nav.tab.entries'), tab('subscriptions', 'nav.tab.subscriptions', { en: 'nav.tabEn.subscriptions', band: 'S' }), tab('opening', 'nav.tab.opening'), tab('adjustment', 'nav.tab.adjustment')] },
-      { label: 'nav.group.inquiry', en: 'nav.groupEn.inquiry', tabs: [tab('balance', 'nav.tab.balance'), tab('monthly', 'nav.tab.monthly'), tab('book', 'nav.tab.book'), tab('card', 'nav.tab.card', { detail: true }), tab('savings', 'nav.tab.savings'), tab('budgets', 'nav.tab.budgets')] },
-      { label: 'nav.group.manage', en: 'nav.groupEn.manage', tabs: [tab('accounts', 'nav.tab.accounts'), tab('settings', 'nav.tab.settings')] },
+      { label: 'nav.group.record', en: 'nav.groupEn.record', tabs: [tab('entries', 'nav.tab.entries'), tab('subscriptions', 'nav.tab.subscriptions', { en: 'nav.tabEn.subscriptions', band: 'S' }), tab('opening', 'nav.tab.opening', { en: 'nav.tabEn.opening', band: 'S' }), tab('adjustment', 'nav.tab.adjustment', { en: 'nav.tabEn.adjustment', band: 'S' })] },
+      { label: 'nav.group.inquiry', en: 'nav.groupEn.inquiry', tabs: [tab('balance', 'nav.tab.balance'), tab('monthly', 'nav.tab.monthly'), tab('book', 'nav.tab.book', { en: 'nav.tabEn.book', band: 'S' }), tab('card', 'nav.tab.card', { detail: true, en: 'nav.tabEn.card', band: 'S' }), tab('savings', 'nav.tab.savings', { en: 'nav.tabEn.savings', band: 'S' }), tab('budgets', 'nav.tab.budgets', { en: 'nav.tabEn.budgets', band: 'S' })] },
+      { label: 'nav.group.manage', en: 'nav.groupEn.manage', tabs: [tab('accounts', 'nav.tab.accounts', { en: 'nav.tabEn.accounts', band: 'S' }), tab('settings', 'nav.tab.settings', { en: 'nav.tabEn.settings', band: 'S' })] },
     ],
   },
 ]

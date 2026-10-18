@@ -1,8 +1,12 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import './balance.css'
-import { groupByType, ledgerBook, formatYen } from '../ledgerLogic.js'
+import { groupByType, ledgerBook, formatYen, currencyUnit } from '../ledgerLogic.js'
 import { t } from '../text.js'
 import { usePhone } from '../layout.js'
+import { useGunjoPc } from '../gunjoPc.js'
+import { useBandHost } from './bandHost.js'
+import { BandStat } from './PageBand.jsx'
 import { KIND_LABELS } from './Entries.jsx'
 
 const Num = ({ n }) => <span className={n < 0 ? 'neg' : ''}>{formatYen(n)}</span>
@@ -14,10 +18,16 @@ export default function LedgerBook({ data }) {
   const name = (id) => accounts.find((a) => a.id === id)?.name ?? ''
   const book = accountId ? ledgerBook(accounts, entries, accountId, month) : null
   const phone = usePhone()
+  const gunjoPc = useGunjoPc()
+  const bandHost = useBandHost()
+  const dateText = (d) => (gunjoPc ? d.replaceAll('-', '/') : d) // 群青の PC は、見本どおり 2026/10/02
+  const heroValue = book ? `${book.balance < 0 ? '−' : ''}${formatYen(Math.abs(book.balance))}` : ''
 
   return (
-    <div className="report">
-      <h2>{t('book.title')}</h2>
+    <div className={`report${gunjoPc ? ' g-book' : ''}`}>
+      {/* 群青の PC：画面の名前は帯のマス。帯に、選んだ科目の残高（マイナスは白地の上で読めるよう、赤にせず「−」を付ける） */}
+      {bandHost && book && createPortal(<BandStat label={t('book.heroLabel', { name: book.account.name })} value={heroValue} unit={currencyUnit(data.settings.currency)} />, bandHost)}
+      {!gunjoPc && <h2>{t('book.title')}</h2>}
       <div className="month-bar">
         <select aria-label={t('common.account')} value={accountId} onChange={(e) => setAccountId(e.target.value)}>
           <option value="">{t('common.chooseAccount')}</option>
@@ -77,7 +87,7 @@ export default function LedgerBook({ data }) {
               )}
               {book.rows.map((r) => (
                 <tr key={r.entry.id}>
-                  <td>{r.entry.date}</td>
+                  <td>{dateText(r.entry.date)}</td>
                   <td className="text wrap">{name(r.otherId)}</td>
                   <td>{r.debit !== null && formatYen(r.debit)}</td>
                   <td>{r.credit !== null && formatYen(r.credit)}</td>

@@ -1,6 +1,11 @@
+import { createPortal } from 'react-dom'
 import { periodRows, formatYen } from '../ledgerLogic.js'
 import { t } from '../text.js'
 import { usePhone } from '../layout.js'
+import { useGunjoPc } from '../gunjoPc.js'
+import { useBandHost, useBandTop } from './bandHost.js'
+import { BandStat, signedYen } from './PageBand.jsx'
+import { Icon } from './Icon.jsx'
 
 const Num = ({ n }) => <span className={n < 0 ? 'neg' : ''}>{formatYen(n)}</span>
 
@@ -8,6 +13,53 @@ const Num = ({ n }) => <span className={n < 0 ? 'neg' : ''}>{formatYen(n)}</span
 export default function CreditCardDetail({ card, backHref, unit }) {
   const periods = periodRows(card.periods, card.lastClosing, card.payDay)
   const phone = usePhone()
+  const gunjoPc = useGunjoPc()
+  const bandHost = useBandHost()
+  const bandTop = useBandTop()
+  // 群青の PC（見本 E-carddetail）：帯にカード名（自分の入力なので、システムのゴシック）と「一覧へ戻る」。左に「次の引き落とし分」の札と項目の表、右に請求期間の表（請求期間・利用額・引き落とし）
+  if (gunjoPc) {
+    return (
+      <div className="g-detail">
+        {bandHost && createPortal(<BandStat label={t('card.heroLabel')} value={<span className="user-text">{card.account.name}{!card.account.active && ` ${t('common.inactive')}`}</span>} />, bandHost)}
+        {bandTop && createPortal(<a className="g-back" href={backHref}><Icon name="back" />{t('card.back')}</a>, bandTop)}
+        <div className="g-detail-left">
+          <section className="g-card g-next">
+            <span>{t('card.next')}</span>
+            <b className={card.next < 0 ? 'neg' : ''}>{signedYen(card.next, formatYen)}{unit}</b>
+          </section>
+          <div className="table-box"><table>
+            <tbody>
+              <tr><td>{t('card.unbilled')}</td><td><Num n={card.unbilled} />{unit}</td></tr>
+              <tr><td>{t('card.payDateApprox')}</td><td>{card.payDate.replaceAll('-', '/')}</td></tr>
+              <tr><td>{t('card.balanceTotal')}</td><td><Num n={card.balance} />{unit}</td></tr>
+              <tr><td>{t('card.closingDay')}</td><td>{t('card.everyMonthDay', { day: card.closingDay })}</td></tr>
+              <tr><td>{t('card.payDay')}</td><td>{t('card.everyMonthDay', { day: card.payDay })}</td></tr>
+            </tbody>
+          </table></div>
+          <p className="note">{t('card.noteFormula', { date: card.lastClosing })} {t('card.noteRules')}</p>
+        </div>
+        <div className="g-detail-right">
+          <h2 className="g-h">{t('card.periodsTitle')}<small lang="en">{t('card.periodsEn')}</small></h2>
+          {periods.length === 0 ? <p className="note">{t('card.noUsage')}</p> : (
+            <div className="table-box"><table>
+              <thead>
+                <tr><th className="text">{t('card.period')}</th><th>{t('card.usage')}</th><th>{t('card.payColumn')}</th></tr>
+              </thead>
+              <tbody>
+                {periods.map((p) => (
+                  <tr key={p.closingDate} className={p.open ? 'open-period' : ''}>
+                    <td>{p.label}{p.open && t('card.unconfirmed')}</td>
+                    <td><Num n={p.amount} />{unit}</td>
+                    <td className="text">{p.payLabel}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table></div>
+          )}
+        </div>
+      </div>
+    )
+  }
   return (
     <>
       <div className="back"><a href={backHref}>{t('card.back')}</a></div>
