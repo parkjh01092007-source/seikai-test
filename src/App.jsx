@@ -357,8 +357,8 @@ export default function App() {
         {/* 右上の書き出し・読み込みの帯。スマホの形では出さない（同じ機能は 設定 → データ。index.css） */}
         {!newer && <header>
           <div>
-            {updateNotice}
-            {notice}
+            {/* 群青の PC：知らせは、書き出し・読み込みの下に、縦に並べる（月の選びと重ならない。帯 S・L とも同じ場所。gunjo-pc.css の g-notices） */}
+            {gunjoPc ? <div className="g-notices">{updateNotice}{notice}</div> : <>{updateNotice}{notice}</>}
             <button onClick={doExport}>{t('app.export')}</button>
             <label>
               <input type="file" accept=".json" onChange={doImport} hidden />
