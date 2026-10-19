@@ -104,6 +104,8 @@ export default {
   'settings.en.display': 'DISPLAY',
   'settings.frequentEn': 'FREQUENT',
   'nav.tabEn.settings': 'SETTINGS',
+  'entries.fabLabel': '분개 입력',
+  'entries.newSheetTitle': '분개 추가',
   'card.lastMonthHero': '지난달({month}) 이용',
   'nav.tab.skills': '스킬',
   'nav.tab.entries': '분개',

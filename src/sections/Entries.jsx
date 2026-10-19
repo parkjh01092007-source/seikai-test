@@ -181,10 +181,12 @@ export default function Entries({ data, update }) {
   const [editingId, setEditingId] = useState(null)
   const [order, setOrder] = useState('asc') // 日付の枠の並び。画面の中だけで持ち、保存しない（画面を移る・再読み込みで古い順に戻る）
   const [openRowId, setOpenRowId] = useState(null) // 開いている行（スマホの幅のカード。1つだけ）。月を変える・その日を閉じると閉じる
+  const [creating, setCreating] = useState(false) // スマホ：右下の「＋」から開く、新しい仕訳の入力画面
   const [toggled, setToggled] = useState({}) // 日付の枠を押して開閉した分（日付 → 開いているか）。月を変えると初めの状態に戻る。覚えない
   const phone = usePhone()
   const gunjoPc = useGunjoPc() // 群青の PC：月の欄と並べ替えのボタンの間の空白を描かない（間は 12px の余白だけ）
   const valuesRef = useRef(null) // 編集画面の今の入力（変えたかの判定用）
+  const fabRef = useRef(null) // 「＋」ボタン（入力画面を閉じたあと、フォーカスを戻す）
   const editedId = useRef(null) // スマホの編集画面を閉じたあと、フォーカスを戻す行
   const confirm = useConfirm()
   const setEntries = (next) => update({ ...data, entries: next })
@@ -193,9 +195,11 @@ export default function Entries({ data, update }) {
     if (input.date.slice(0, 7) !== month) setToggled({}) // 月が変わるときは、押した分を捨てる（月を変えたのと同じ）
     setToggled((s) => ({ ...s, [input.date]: true })) // 追加した日は、開き方の設定にかかわらず開く
     setMonth(input.date.slice(0, 7)) // 追加した仕訳が見える月に切り替える
+    setCreating(false) // スマホの入力画面は、追加できたら閉じる
   }
   const last = lastCreditId(entries)
   const creditId = entryAccountOptions(accounts).some((a) => a.id === last) ? last : '' // 選択肢にあるときだけ使う
+  const newInitial = { date: today(), amount: '', debitId: '', creditId, memo: '', living: defaultLiving(accounts, '', creditId) }
   const groups = month ? groupEntriesByDate(entriesOfMonth(entries, month), order) : []
   const initialOpen = initialOpenDates(groups, loadOpenMode(phone ? 'phone' : 'pc')) // 日付の枠の初めの状態（設定 → 仕訳。スマホの幅と PC の幅で別）
 
@@ -206,6 +210,12 @@ export default function Entries({ data, update }) {
     ;(button && !button.closest('[hidden]') ? button : document.querySelector('.entries > input[type="month"]'))?.focus()
     editedId.current = null
   }, [editingId])
+
+  const wasCreating = useRef(false)
+  useEffect(() => { // スマホの入力画面を閉じたら、フォーカスを「＋」へ戻す（初めの描画では動かさない）
+    if (wasCreating.current && !creating) fabRef.current?.focus({ preventScroll: true })
+    wasCreating.current = creating
+  }, [creating])
 
   const save = (entry) => (input, memo) => {
     setEntries(entries.map((e) => (e.id === entry.id ? editEntry(entry, input, memo) : e)))
@@ -224,6 +234,16 @@ export default function Entries({ data, update }) {
     }
     setEditingId(null)
   }
+  // 外側（幕）を押したとき（新しい仕訳）：何も入力していなければ閉じる。入力していれば「変更を捨てますか」
+  const outsideNew = async () => {
+    if (valuesRef.current && entryChanged(newInitial, valuesRef.current)) {
+      if (!(await confirm({ message: t('entries.discardConfirm') }))) {
+        document.querySelector('.sheet input[type="date"]')?.focus()
+        return
+      }
+    }
+    setCreating(false)
+  }
   const remove = async (entry) => {
     if (!(await confirm({ message: t('entries.deleteConfirm') }))) return
     setEntries(entries.filter((e) => e.id !== entry.id))
@@ -231,14 +251,17 @@ export default function Entries({ data, update }) {
 
   return (
     <div className="entries">
-      <h2>{t('entries.inputTitle')}</h2>
-      <EntryForm
-        accounts={accounts}
-        favorites={settings.favorites}
-        initial={{ date: today(), amount: '', debitId: '', creditId, memo: '', living: defaultLiving(accounts, '', creditId) }}
-        submitLabel={t('common.add')}
-        onSubmit={add}
-      />
+      {/* 入力欄の固定：PC の幅は、入力の行が画面の上に貼り付く（entries.css）。スマホの形は、一覧の上に置かず、右下の「＋」から入力画面を出す */}
+      {!phone && <h2>{t('entries.inputTitle')}</h2>}
+      {!phone && (
+        <EntryForm
+          accounts={accounts}
+          favorites={settings.favorites}
+          initial={newInitial}
+          submitLabel={t('common.add')}
+          onSubmit={add}
+        />
+      )}
       <h2>{t('entries.listTitle')}</h2>
       <input type="month" aria-label={t('common.month')} value={month} onChange={(e) => { setMonth(e.target.value); setEditingId(null); setOpenRowId(null); setToggled({}) }} />{gunjoPc ? null : ' '}
       {/* 押すたびに切り替える。表示は、押したら切り替わる先 */}
@@ -287,6 +310,23 @@ export default function Entries({ data, update }) {
             </section>
           )
         })
+      )}
+      {phone && !editing && !creating && (
+        <button ref={fabRef} type="button" className="entry-fab" aria-label={t('entries.fabLabel')} title={t('entries.fabLabel')} onClick={() => { valuesRef.current = null; setCreating(true) }}><Icon name="plus" /></button>
+      )}
+      {creating && (
+        <EntrySheet title={t('entries.newSheetTitle')} onClose={() => setCreating(false)} onOutside={outsideNew}>
+          <EntryForm
+            variant="sheet"
+            accounts={accounts}
+            favorites={settings.favorites}
+            initial={newInitial}
+            submitLabel={t('common.add')}
+            onSubmit={add}
+            onCancel={() => setCreating(false)}
+            onValues={(f) => { valuesRef.current = f }}
+          />
+        </EntrySheet>
       )}
       {editing && (
         <EntrySheet nth={t('entries.sheetNth', { date: formatDayLabel(editing.date), n: editingNth })} onClose={() => setEditingId(null)} onOutside={outside}>

@@ -1,6 +1,8 @@
 .entries { font-size: var(--font-size); color: var(--color-text); --cols: 2.5em 9em 9em 6em 1fr 9em; }
 .entries form { display: flex; gap: var(--space); flex-wrap: wrap; align-items: center; margin-bottom: var(--space); }
 .entries .error { color: var(--color-error); }
+/* 入力欄の固定（PC の幅）：入力の行は、一覧をスクロールしても画面の上に貼り付く（地は各見た目の --color-bg の無地）。スマホの形は、この行を出さず、右下の「＋」ボタン（下の @media）。電卓の帯などは、行の中なので、行と一緒に一覧の上の層に出る */
+.entries > form { position: sticky; top: 0; z-index: 5; background: var(--color-bg); padding: var(--space) 0; margin: 0; border-bottom: 1px solid var(--color-border); }
 .entries .field { display: contents; } /* PC：入力欄のラベル（Field）は箱も文字も出さない */
 .entries .field-label { display: none; }
 
@@ -77,4 +79,9 @@
   .sheet-actions { display: flex; gap: var(--space); margin-top: 4px; }
   .entries .sheet-actions button { flex: 1; min-width: 0; min-height: 48px; white-space: nowrap; } /* :root の高さ 44px の規則（index.css）より先に効かせる */
   .entries .sheet-actions .primary { border: 0; background: var(--color-accent); color: var(--color-on-accent); }
+
+  /* 右下の「＋」ボタン（入力欄の固定。スマホの形）：押すと、新しい仕訳の入力画面（編集画面と同じ形）が下から開く。メニュー（z-index 10〜11）より下、入力画面（20）より下。一覧の最後の行がボタンに隠れないよう、下に余白 */
+  .entries { padding-bottom: 88px; }
+  .entry-fab { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 8; display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 56px; height: 56px; min-height: 0; padding: 0; border: 0; border-radius: 50%; background: var(--color-accent); color: var(--color-on-accent); box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35); cursor: pointer; }
+  .entry-fab .icon { width: 26px; height: 26px; }
 }

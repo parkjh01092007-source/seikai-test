@@ -69,6 +69,8 @@ export default {
   'settings.en.display': 'DISPLAY',
   'settings.frequentEn': 'FREQUENT',
   'nav.tabEn.settings': 'SETTINGS',
+  'entries.fabLabel': '仕訳を入力',
+  'entries.newSheetTitle': '仕訳を追加',
   'card.lastMonthHero': '前月（{month}）の利用',
   'nav.tab.skills': 'スキル',
   'nav.tab.entries': '仕訳',
