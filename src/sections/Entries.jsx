@@ -2,17 +2,21 @@ import { useState, useEffect, useRef } from 'react'
 import './entries.css'
 import {
   entryAccountOptions, validateEntryInput, livingAccount, defaultLiving, livingOnAccountChange, livingOptionLabel, newEntry, editEntry, lastCreditId, favoriteOptionGroups, accountLabelWithType,
-  entriesOfMonth, groupEntriesByDate, canEditEntry, formatMoney,
+  entriesOfMonth, groupEntriesByDate, canEditEntry, formatMoney, formatYen, currencyUnit, dailyExpenses,
 } from '../ledgerLogic.js'
 import { today } from '../today.js'
 import { t } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import { usePhone } from '../layout.js'
-import { loadOpenMode, initialOpenDates, isOpenDate, formatDayHead, formatDayLabel, entryChanged } from '../entryView.js'
+import { loadOpenMode, initialOpenDates, isOpenDate, formatDayHead, formatDayLabel, entryChanged, weekdayName } from '../entryView.js'
 import EntrySheet from './EntrySheet.jsx'
 import { AmountInput } from './Calculator.jsx'
 import { Icon, IconButton } from './Icon.jsx'
 import { useGunjoPc } from '../gunjoPc.js'
+import { createPortal } from 'react-dom'
+import { useBandHost, useBandTop, useBandRoad } from './bandHost.js'
+import { BandStat, signedYen } from './PageBand.jsx'
+import MonthRoad from './MonthRoad.jsx'
 
 // favoriteIds：その側（借方か貸方）のお気に入り。一番上に「お気に入り」を出し、そこだけ科目名の後ろに区分を付ける（表示だけ。値は科目の id）
 export function AccountSelect({ value, onChange, options, label, favoriteIds = [] }) {
@@ -70,6 +74,22 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
     ),
   }
 
+  // variant='card'：群青の PC の入力の札（見本 E-entries）。ラベルが上の縦の並び（日付・借方・貸方・金額・メモ）と、幅いっぱいの大きい「追加」
+  if (variant === 'card') {
+    return (
+      <form className="g-slip" onSubmit={submit}>
+        {fields.date}
+        {fields.debit}
+        {fields.credit}
+        {fields.living}
+        {fields.amount}
+        <Field label={t('common.memo')}><input className="memo-input" aria-label={t('common.memo')} value={f.memo} onChange={(e) => set('memo')(e.target.value)} /></Field>
+        {error && <span className="error">{error}</span>}
+        <button className="primary large"><Icon name={submitIcon} />{submitLabel}</button>
+      </form>
+    )
+  }
+
   if (variant === 'sheet') {
     return (
       <form className="sheet-form" onSubmit={submit}>
@@ -110,6 +130,7 @@ export const KIND_LABELS = {
 }
 
 function EntryRow({ entry, number, accounts, favorites, currency, editing, onEdit, onCancel, onSave, onDelete }) {
+  const gunjoPc = useGunjoPc()
   const name = (id) => accounts.find((a) => a.id === id)?.name ?? ''
   if (editing) {
     return (
@@ -124,6 +145,31 @@ function EntryRow({ entry, number, accounts, favorites, currency, editing, onEdi
           onSubmit={onSave}
           onCancel={onCancel}
         />
+      </li>
+    )
+  }
+  // 群青の PC（見本 E-entries）：左に「借方 ／ 貸方」とメモ、右に金額（明朝）と編集・削除
+  if (gunjoPc) {
+    return (
+      <li className="row g-row">
+        <div className="g-main">
+          <div className="g-names">{name(entry.debitId)}<span className="g-sep">{t('entries.pairSeparator')}</span>{name(entry.creditId)}</div>
+          {(entry.memo || KIND_LABELS[entry.kind]) && (
+            <div className="g-memo">
+              {KIND_LABELS[entry.kind] && <span>{t('entries.kindNote', { kind: KIND_LABELS[entry.kind] })}{entry.memo ? ' ' : ''}</span>}
+              {entry.memo}
+            </div>
+          )}
+        </div>
+        <span className="amount">{formatMoney(entry.amount, currency)}</span>
+        <span className="g-ops">
+          {canEditEntry(entry) && (
+            <>
+              <IconButton icon="edit" label={t('common.edit')} onClick={onEdit} />
+              <IconButton icon="trash" label={t('common.delete')} onClick={onDelete} />
+            </>
+          )}
+        </span>
       </li>
     )
   }
@@ -185,6 +231,9 @@ export default function Entries({ data, update }) {
   const [toggled, setToggled] = useState({}) // 日付の枠を押して開閉した分（日付 → 開いているか）。月を変えると初めの状態に戻る。覚えない
   const phone = usePhone()
   const gunjoPc = useGunjoPc() // 群青の PC：月の欄と並べ替えのボタンの間の空白を描かない（間は 12px の余白だけ）
+  const bandHost = useBandHost()
+  const bandTop = useBandTop()
+  const bandRoad = useBandRoad()
   const valuesRef = useRef(null) // 編集画面の今の入力（変えたかの判定用）
   const fabRef = useRef(null) // 「＋」ボタン（入力画面を閉じたあと、フォーカスを戻す）
   const editedId = useRef(null) // スマホの編集画面を閉じたあと、フォーカスを戻す行
@@ -200,6 +249,9 @@ export default function Entries({ data, update }) {
   const last = lastCreditId(entries)
   const creditId = entryAccountOptions(accounts).some((a) => a.id === last) ? last : '' // 選択肢にあるときだけ使う
   const newInitial = { date: today(), amount: '', debitId: '', creditId, memo: '', living: defaultLiving(accounts, '', creditId) }
+  const changeMonth = (v) => { setMonth(v); setEditingId(null); setOpenRowId(null); setToggled({}) }
+  const shiftMonth = (d) => { const [y, m] = month.split('-').map(Number); const x = new Date(y, m - 1 + d, 1); changeMonth(`${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}`) } // 前の月・次の月（群青の PC の帯）
+  const road = gunjoPc && month ? dailyExpenses(accounts, entries, month, today()) : null // 月の道（群青の PC の帯 L）
   const groups = month ? groupEntriesByDate(entriesOfMonth(entries, month), order) : []
   const initialOpen = initialOpenDates(groups, loadOpenMode(phone ? 'phone' : 'pc')) // 日付の枠の初めの状態（設定 → 仕訳。スマホの幅と PC の幅で別）
 
@@ -249,27 +301,45 @@ export default function Entries({ data, update }) {
     setEntries(entries.filter((e) => e.id !== entry.id))
   }
 
-  return (
-    <div className="entries">
-      {/* 入力欄の固定：PC の幅は、入力の行が画面の上に貼り付く（entries.css）。スマホの形は、一覧の上に置かず、右下の「＋」から入力画面を出す */}
-      {!phone && <h2>{t('entries.inputTitle')}</h2>}
-      {!phone && (
-        <EntryForm
-          accounts={accounts}
-          favorites={settings.favorites}
-          initial={newInitial}
-          submitLabel={t('common.add')}
-          onSubmit={add}
-        />
-      )}
-      <h2>{t('entries.listTitle')}</h2>
-      <input type="month" aria-label={t('common.month')} value={month} onChange={(e) => { setMonth(e.target.value); setEditingId(null); setOpenRowId(null); setToggled({}) }} />{gunjoPc ? null : ' '}
-      {/* 押すたびに切り替える。表示は、押したら切り替わる先 */}
-      <IconButton icon="sort" label={t('entries.sortLabel', { now: t(ORDER_LABELS[order]), next: t(ORDER_LABELS[order === 'asc' ? 'desc' : 'asc']) })} onClick={() => setOrder(order === 'asc' ? 'desc' : 'asc')} />
-      {!month ? <p className="note">{t('common.chooseMonth')}</p> : groups.length === 0 ? <p className="note">{t('common.noEntriesInMonth')}</p> : (
+  const list = !month ? <p className="note">{t('common.chooseMonth')}</p> : groups.length === 0 ? <p className="note">{t('common.noEntriesInMonth')}</p> : (
         groups.map((g) => {
           const open = isOpenDate(g.date, initialOpen, toggled)
           const listId = `day-${g.date}`
+          if (gunjoPc) {
+            // 群青の PC：日ごとの青い線、左に大きな日付（開閉のボタン）・「10月・日曜日」・「計 3,900円」（0 の日は出さない）、右にその日の行
+            const sum = road?.days[Number(g.date.slice(8, 10)) - 1]?.amount ?? 0
+            return (
+              <section key={g.date} className="g-daybox">
+                <h3>
+                  <button type="button" className="day-toggle g-day-head" aria-expanded={open} aria-controls={listId} aria-label={formatDayHead(g.date, g.entries.length)} onClick={() => { if (open && g.entries.some((e) => e.id === openRowId)) setOpenRowId(null); setToggled((s) => ({ ...s, [g.date]: !open })) }}>
+                    <b className="g-dnum">{Number(g.date.slice(8, 10))}</b>
+                    <span className="g-dsub">{t('entries.dayCaption', { m: Number(g.date.slice(5, 7)), wd: weekdayName(g.date) })}</span>
+                    {sum !== 0 && <em className="g-dsum">{t('entries.dayTotal', { amount: formatMoney(sum, settings.currency) })}</em>}
+                    <span className="mark"><Icon name={open ? 'chevDown' : 'chevRight'} /></span>
+                  </button>
+                </h3>
+                <div id={listId} hidden={!open}>
+                  <ol>
+                    {g.entries.map((e, i) => (
+                      <EntryRow
+                        key={e.id}
+                        entry={e}
+                        number={i + 1}
+                        accounts={accounts}
+                        favorites={settings.favorites}
+                        currency={settings.currency}
+                        editing={editingId === e.id}
+                        onEdit={() => { editedId.current = null; setEditingId(e.id) }}
+                        onCancel={() => setEditingId(null)}
+                        onSave={save(e)}
+                        onDelete={() => remove(e)}
+                      />
+                    ))}
+                  </ol>
+                </div>
+              </section>
+            )
+          }
           return (
             <section key={g.date} className="day">
               <h3>
@@ -310,6 +380,61 @@ export default function Entries({ data, update }) {
             </section>
           )
         })
+      )
+
+  return (
+    <div className="entries">
+      {/* 群青の PC（見本 E-entries）：帯 L に、月の選び（前の月・今の月・次の月）、10月の費用と今月の仕訳の件数、月の道 */}
+      {bandTop && createPortal(
+        <div className="g-month">
+          <IconButton icon="chevRight" className="g-prev" label={t('entries.monthPrev')} disabled={!month} onClick={() => shiftMonth(-1)} />
+          <input type="month" aria-label={t('common.month')} value={month} onChange={(e) => changeMonth(e.target.value)} />
+          <IconButton icon="chevRight" label={t('entries.monthNext')} disabled={!month} onClick={() => shiftMonth(1)} />
+        </div>, bandTop)}
+      {bandHost && road && createPortal(<>
+        <BandStat label={t('entries.heroSpend', { m: Number(month.slice(5)) })} value={signedYen(road.total, formatYen)} unit={currencyUnit(settings.currency)} />
+        <BandStat label={t('entries.heroCount')} value={road.days.reduce((s, d) => s + d.count, 0)} unit={t('settings.countUnit')} />
+      </>, bandHost)}
+      {bandRoad && road && createPortal(<MonthRoad road={road} currency={settings.currency} />, bandRoad)}
+      {gunjoPc ? (
+        // 群青の PC（見本 E-entries）：左に「新しい仕訳」の札（画面の上に貼り付く）、右に一覧（並べ替えのボタンと、日ごとの枠）。画面の名前は帯のマス
+        <div className="g-entries-body">
+          <section className="g-card g-slip-card">
+            <h2 className="g-h">{t('entries.cardTitle')}<small lang="en">{t('entries.cardEn')}</small></h2>
+            <EntryForm
+              variant="card"
+              accounts={accounts}
+              favorites={settings.favorites}
+              initial={newInitial}
+              submitLabel={t('common.add')}
+              onSubmit={add}
+            />
+          </section>
+          <div className="g-entries-list">
+      {/* 押すたびに切り替える。表示は、押したら切り替わる先 */}
+      <IconButton icon="sort" label={t('entries.sortLabel', { now: t(ORDER_LABELS[order]), next: t(ORDER_LABELS[order === 'asc' ? 'desc' : 'asc']) })} onClick={() => setOrder(order === 'asc' ? 'desc' : 'asc')} />
+      {list}
+          </div>
+        </div>
+      ) : (
+        <>
+      {/* 入力欄の固定：PC の幅は、入力の行が画面の上に貼り付く（entries.css）。スマホの形は、一覧の上に置かず、右下の「＋」から入力画面を出す */}
+      {!phone && <h2>{t('entries.inputTitle')}</h2>}
+      {!phone && (
+        <EntryForm
+          accounts={accounts}
+          favorites={settings.favorites}
+          initial={newInitial}
+          submitLabel={t('common.add')}
+          onSubmit={add}
+        />
+      )}
+      <h2>{t('entries.listTitle')}</h2>
+      {!gunjoPc && <input type="month" aria-label={t('common.month')} value={month} onChange={(e) => changeMonth(e.target.value)} />}{gunjoPc ? null : ' '}
+      {/* 押すたびに切り替える。表示は、押したら切り替わる先 */}
+      <IconButton icon="sort" label={t('entries.sortLabel', { now: t(ORDER_LABELS[order]), next: t(ORDER_LABELS[order === 'asc' ? 'desc' : 'asc']) })} onClick={() => setOrder(order === 'asc' ? 'desc' : 'asc')} />
+      {list}
+        </>
       )}
       {phone && !editing && !creating && (
         <button ref={fabRef} type="button" className="entry-fab" aria-label={t('entries.fabLabel')} title={t('entries.fabLabel')} onClick={() => { valuesRef.current = null; setCreating(true) }}><Icon name="plus" /></button>

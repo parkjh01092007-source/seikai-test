@@ -10,7 +10,7 @@ import { useDriveSync } from './useDriveSync.js'
 import Home from './sections/Home.jsx'
 import SideTabs from './sections/SideTabs.jsx'
 import PageBand from './sections/PageBand.jsx'
-import { BandHostContext, BandTopContext } from './sections/bandHost.js'
+import { BandHostContext, BandTopContext, BandRoadContext } from './sections/bandHost.js'
 
 // 群青の PC のホームの帯（メニューはホームでは出さない）
 const HOME_BAND = { label: 'home.title', en: 'home.titleEn', band: 'S' }
@@ -309,6 +309,7 @@ export default function App() {
   const gunjoPc = useGunjoPc() // 群青の PC のときだけ、画面の上に帯（PageBand）を描く
   const [bandHost, setBandHost] = useState(null) // 帯の中の、画面の要点を入れる場所
   const [bandTop, setBandTop] = useState(null) // 帯の上の段の、ボタンを入れる場所
+  const [bandRoad, setBandRoad] = useState(null) // 帯 L の一番下の、月の道を入れる場所
   const conflictShown = useRef(null)
   const conflictKey = driveSync.conflict ? `${driveSync.conflict.kind}|${driveSync.conflict.theirsRev}` : null
   useEffect(() => {
@@ -350,8 +351,9 @@ export default function App() {
       {entry &&<SideTabs entry={entry} currentTab={route.tab} onOpenPanel={openPanel} notices={notices} />}
       <BandHostContext.Provider value={band ? bandHost : null}>
       <BandTopContext.Provider value={band ? bandTop : null}>
+      <BandRoadContext.Provider value={band ? bandRoad : null}>
       <div className={`main-col${band ? ' has-band' : ''}`}>
-        {band && <PageBand name={t(band.label)} en={band.en ? t(band.en) : ''} kind={band.band} hostRef={setBandHost} topRef={setBandTop} />}
+        {band && <PageBand name={t(band.label)} en={band.en ? t(band.en) : ''} kind={band.band} hostRef={setBandHost} topRef={setBandTop} roadRef={setBandRoad} />}
         {/* 右上の書き出し・読み込みの帯。スマホの形では出さない（同じ機能は 設定 → データ。index.css） */}
         {!newer && <header>
           <div>
@@ -391,6 +393,7 @@ export default function App() {
           )}
         </div>
       </div>
+      </BandRoadContext.Provider>
       </BandTopContext.Provider>
       </BandHostContext.Provider>
       {panel && <SaveLoadPanel key={panel} mode={panel} data={data} loadBlocked={Boolean(driveSync.conflict)} onClose={() => setPanel(null)} onToSettings={setSettingsTab} onLoad={async (r) => { await applyImported(r); setPanel(null) }} />}

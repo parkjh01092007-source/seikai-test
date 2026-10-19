@@ -8,3 +8,7 @@ export const useBandHost = () => useContext(BandHostContext)
 // 帯の上の段（マスの右）の、ボタンを入れる場所（「一覧へ戻る」など）。同じく、帯がないときは null
 export const BandTopContext = createContext(null)
 export const useBandTop = () => useContext(BandTopContext)
+
+// 帯 L の一番下（月の道を入れる場所）。S の帯・帯がないときは null
+export const BandRoadContext = createContext(null)
+export const useBandRoad = () => useContext(BandRoadContext)

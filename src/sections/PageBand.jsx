@@ -3,7 +3,7 @@
 // 上：ページ名のマス（見出しだけ。1文字ずつ 56px の四角。5文字まで）と英字。下：画面の要点（画面が hostRef の場所へ入れる）。右の端は 14° の斜め。
 // kind：'S'（高さ 172px。月の道なし）。'L' は、月の道つき（仕訳・残高・月次。区切り10〜）
 // マスの文字は、空白を除いた字。6字以上（韓国語の長い名前）は、小さいマスにする
-export default function PageBand({ name, en, kind = 'S', hostRef, topRef }) {
+export default function PageBand({ name, en, kind = 'S', hostRef, topRef, roadRef }) {
   const main = /^(.*?)\s*\(.*\)$/.exec(name)?.[1] ?? name // 韓国語の「정해(正解)」は、かっこの前だけをマスにする（aria-label は全部）
   const chars = [...main.replace(/\s/g, '')]
   return (
@@ -17,6 +17,7 @@ export default function PageBand({ name, en, kind = 'S', hostRef, topRef }) {
       </div>
       <div className="g-top-extra" ref={topRef} />
       <div className="g-hero" ref={hostRef} />
+      {kind === 'L' && <div className="g-road-slot" ref={roadRef} />}
     </div>
   )
 }

@@ -413,4 +413,65 @@
   :root[data-theme='gunjo'] .settings .set-danger .set-title small { color: var(--color-error); }
   :root[data-theme='gunjo'] .settings .set-danger button:not(:disabled) { color: var(--color-error); border-color: var(--color-error); box-shadow: var(--g-btn-shadow-danger); }
   :root[data-theme='gunjo'] .settings .app-version { margin-top: 24px; }
+
+  /* ---- 仕訳の帯 L と月の道（Entries.jsx・MonthRoad.jsx。見本 E-entries。E-rules 7章）：高さ 360px、右の端は 14° の斜め（切り 90px）。月の選びは帯の上の段、要点は 30px の明朝。月の道は帯の一番下（下から 28px の上に高さ 76px。左 48px・右 112px）、凡例は下から 6px ---- */
+  :root[data-theme='gunjo'] .g-band.L { height: 360px; clip-path: polygon(0 0, 100% 0, calc(100% - 90px) 100%, 0 100%); }
+  :root[data-theme='gunjo'] .g-band.L .g-accent { width: 250px; clip-path: polygon(90px 0, 100% 0, 100% 100%, 0 100%); }
+  :root[data-theme='gunjo'] .g-band.L .g-hero { margin-top: 34px; gap: 44px; }
+  :root[data-theme='gunjo'] .g-band.L .g-stat-num { font-size: 30px; line-height: 1.1; }
+  :root[data-theme='gunjo'] .g-band > .g-top-extra:has(> .g-month) { right: 358px; }
+  :root[data-theme='gunjo'] .g-month { display: flex; align-items: center; color: #fff; }
+  :root[data-theme='gunjo'] .g-month input[type='month'] { width: 150px; height: var(--g-h); text-align: center; font-family: var(--font-mincho); font-size: 16px; color: #fff; background: transparent; border: 0; box-shadow: none; }
+  :root[data-theme='gunjo'] .g-month input[type='month']::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.7; }
+  :root[data-theme='gunjo'] .g-month .g-prev .icon { transform: rotate(180deg); }
+  :root[data-theme='gunjo'] .g-month button.icon-only { background: var(--color-accent); color: #fff; border-color: rgba(255, 255, 255, 0.85); box-shadow: var(--g-btn-shadow); }
+  :root[data-theme='gunjo'] .g-band > .g-road-slot { position: absolute; left: 0; right: 0; bottom: 0; height: 110px; }
+  :root[data-theme='gunjo'] .g-road { position: absolute; left: 48px; right: 112px; bottom: 28px; display: grid; gap: 3px; align-items: end; height: 76px; }
+  :root[data-theme='gunjo'] .g-road .d { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; font-family: var(--font-mincho); font-size: 12px; line-height: 16px; color: #d6d5ff; }
+  :root[data-theme='gunjo'] .g-road .d i { display: block; width: 100%; margin-bottom: 4px; }
+  :root[data-theme='gunjo'] .g-road .d.s i { background: #d6d5ff; }
+  :root[data-theme='gunjo'] .g-road .d.z i { height: 2px; background: #d6d5ff; }
+  :root[data-theme='gunjo'] .g-road .d.e i { height: 18px; border: 1px dashed #d6d5ff; box-sizing: border-box; }
+  :root[data-theme='gunjo'] .g-road .d.f i { height: 0; border-top: 2px dotted #d6d5ff; }
+  :root[data-theme='gunjo'] .g-road .d.t { font-size: 13px; font-weight: 500; color: #fff; }
+  :root[data-theme='gunjo'] .g-road .d.t i { background: #fff; }
+  :root[data-theme='gunjo'] .g-road .d u { display: block; width: 0; height: 0; margin-bottom: 3px; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 7px solid #fff; }
+  :root[data-theme='gunjo'] .g-legend { position: absolute; left: 48px; bottom: 6px; display: flex; gap: 18px; font-family: var(--font-gothic); font-size: 12px; line-height: 16px; color: #d6d5ff; }
+  :root[data-theme='gunjo'] .g-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  :root[data-theme='gunjo'] .g-legend i { display: inline-block; width: 12px; height: 10px; box-sizing: border-box; }
+  :root[data-theme='gunjo'] .g-legend .lg-s { background: #d6d5ff; }
+  :root[data-theme='gunjo'] .g-legend .lg-e { border: 1px dashed #d6d5ff; }
+  :root[data-theme='gunjo'] .g-legend .lg-f { height: 0; border-top: 2px dotted #d6d5ff; }
+  :root[data-theme='gunjo'] .g-legend .lg-t { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 7px solid #fff; }
+
+  /* ---- 仕訳の入力の札（EntryForm の variant='card'。見本 E-entries）：左に幅 330px の札「新しい仕訳 NEW」。ラベルが上の縦の並び、金額は右そろい（欄は 34px。見本の 42px にはしない）、幅いっぱいの大きい「追加」。画面をスクロールしても、札は貼り付く（入力欄の固定）。右に一覧 ---- */
+  :root[data-theme='gunjo'] .g-entries-body { display: grid; grid-template-columns: 330px minmax(0, 1fr); column-gap: 34px; align-items: start; }
+  :root[data-theme='gunjo'] .g-slip-card { position: sticky; top: 24px; z-index: 5; max-height: calc(100vh - 48px); overflow-y: auto; padding: 14px 20px; } /* 画面が低くても、札の下（追加）まで、札の中でスクロールして届く */
+  :root[data-theme='gunjo'] .g-slip-card .g-h { margin-bottom: 6px; }
+  :root[data-theme='gunjo'] .entries .g-slip { display: flex; flex-direction: column; align-items: stretch; gap: 6px; margin: 0; }
+  :root[data-theme='gunjo'] .entries .g-slip .field { display: block; margin: 0; }
+  :root[data-theme='gunjo'] .entries .g-slip .field-label { display: block; margin-bottom: 2px; font-family: var(--font-gothic); font-size: 11px; letter-spacing: 0.2em; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-slip :is(input, select) { width: 100%; }
+  :root[data-theme='gunjo'] .g-slip .amount-input, :root[data-theme='gunjo'] .g-slip .calc-field { width: 100%; }
+  :root[data-theme='gunjo'] .g-slip button.primary.large { width: 100%; margin-top: 6px; }
+  :root[data-theme='gunjo'] .g-entries-list > .icon-only { display: flex; margin: 0 0 6px auto; }
+
+  /* ---- 仕訳の一覧の行（Entries.jsx。見本 E-entries）：日ごとに青い線。左に大きな日付（64px の青い明朝。押すと、その日を開閉）・「10月・日曜日」・「計 3,900円」、右に行（左に「借方 ／ 貸方」とメモ、右に金額と編集・削除） ---- */
+  :root[data-theme='gunjo'] .g-daybox { display: grid; grid-template-columns: 112px minmax(0, 1fr); column-gap: 24px; align-items: start; margin: 0 0 8px; padding: 10px 0 14px; border-top: 1px solid var(--color-accent); }
+  :root[data-theme='gunjo'] .g-daybox > h3 { grid-column: 1; margin: 0; }
+  :root[data-theme='gunjo'] .g-daybox > div { grid-column: 2; min-width: 0; }
+  :root[data-theme='gunjo'] .entries .g-daybox .g-day-head { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: auto; text-align: left; font-weight: 400; }
+  :root[data-theme='gunjo'] .g-dnum { font-family: var(--font-num); font-size: var(--g-s3); font-weight: 400; line-height: 1; color: var(--color-accent); }
+  :root[data-theme='gunjo'] .g-dsub { font-family: var(--font-mincho); font-size: 12px; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-dsum { font-style: normal; font-family: var(--font-num); font-size: 12px; color: var(--color-text); }
+  :root[data-theme='gunjo'] .g-day-head .mark { margin: 4px 0 0; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-daybox ol { list-style: none; margin: 0; padding: 0; }
+  :root[data-theme='gunjo'] .entries .g-daybox li { margin: 0; padding: 0; border: 0; }
+  :root[data-theme='gunjo'] .entries .g-daybox li.g-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--color-border); }
+  :root[data-theme='gunjo'] .entries .g-daybox li.g-row:last-child { border-bottom: 0; }
+  :root[data-theme='gunjo'] .g-names { font-size: 17px; overflow-wrap: anywhere; }
+  :root[data-theme='gunjo'] .g-sep { margin: 0 12px; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-memo { margin-top: 2px; font-size: 12px; color: var(--color-muted); overflow-wrap: anywhere; }
+  :root[data-theme='gunjo'] .g-row .amount { font-family: var(--font-num); font-size: var(--g-s6); font-weight: 500; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  :root[data-theme='gunjo'] .g-ops { display: flex; align-items: center; min-width: 80px; }
 }
