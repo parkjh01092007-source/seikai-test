@@ -12,7 +12,7 @@ import { loadOpenMode, initialOpenDates, isOpenDate, formatDayHead, formatDayLab
 import EntrySheet from './EntrySheet.jsx'
 import { AmountInput } from './Calculator.jsx'
 import { Icon, IconButton } from './Icon.jsx'
-import { useGunjoPc, useFixedEntries } from '../gunjoPc.js'
+import { useGunjoPc } from '../gunjoPc.js'
 import { createPortal } from 'react-dom'
 import { useBandHost, useBandTop, useBandRoad } from './bandHost.js'
 import { BandStat, signedYen } from './PageBand.jsx'
@@ -231,7 +231,6 @@ export default function Entries({ data, update }) {
   const [toggled, setToggled] = useState({}) // 日付の枠を押して開閉した分（日付 → 開いているか）。月を変えると初めの状態に戻る。覚えない
   const phone = usePhone()
   const gunjoPc = useGunjoPc() // 群青の PC：月の欄と並べ替えのボタンの間の空白を描かない（間は 12px の余白だけ）
-  const fixedList = useFixedEntries() // 一覧の領域だけが中でスクロールする高さ
   const bandHost = useBandHost()
   const bandTop = useBandTop()
   const bandRoad = useBandRoad()
@@ -411,7 +410,7 @@ export default function Entries({ data, update }) {
               onSubmit={add}
             />
           </section>
-          <div className="g-entries-list" {...(fixedList ? { tabIndex: 0, role: 'region', 'aria-label': t('entries.listTitle') } : {})}>
+          <div className="g-entries-list">
       {/* 押すたびに切り替える。表示は、押したら切り替わる先 */}
       <IconButton icon="sort" label={t('entries.sortLabel', { now: t(ORDER_LABELS[order]), next: t(ORDER_LABELS[order === 'asc' ? 'desc' : 'asc']) })} onClick={() => setOrder(order === 'asc' ? 'desc' : 'asc')} />
       {list}

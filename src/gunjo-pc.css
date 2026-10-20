@@ -415,9 +415,8 @@
   :root[data-theme='gunjo'] .settings .app-version { margin-top: 24px; }
 
   /* ---- 仕訳の帯 L と月の道（Entries.jsx・MonthRoad.jsx。見本 E-entries。E-rules 7章）：高さ 360px、右の端は 14° の斜め（切り 90px）。月の選びは帯の上の段、要点は 30px の明朝。月の道は帯の一番下（下から 28px の上に高さ 76px。左 48px・右 112px）、凡例は下から 6px ---- */
-  :root[data-theme='gunjo'] { --g-band-h: 360px; } /* 帯 L の高さ（1 つの変数。固定のときは 260px。下の @media (min-height: 701px)）。右の斜めの切りは、高さ × tan 14° */
-  :root[data-theme='gunjo'] .g-band.L { --g-cut: calc(var(--g-band-h) * 0.2493); height: var(--g-band-h); clip-path: polygon(0 0, 100% 0, calc(100% - var(--g-cut)) 100%, 0 100%); }
-  :root[data-theme='gunjo'] .g-band.L .g-accent { width: 250px; clip-path: polygon(var(--g-cut) 0, 100% 0, 100% 100%, 0 100%); }
+  :root[data-theme='gunjo'] .g-band.L { height: 360px; clip-path: polygon(0 0, 100% 0, calc(100% - 90px) 100%, 0 100%); }
+  :root[data-theme='gunjo'] .g-band.L .g-accent { width: 250px; clip-path: polygon(90px 0, 100% 0, 100% 100%, 0 100%); }
   :root[data-theme='gunjo'] .g-band.L .g-hero { margin-top: 34px; gap: 44px; }
   :root[data-theme='gunjo'] .g-band.L .g-stat-num { font-size: 30px; line-height: 1.1; }
   :root[data-theme='gunjo'] .g-band > .g-top-extra:has(> .g-month) { right: 358px; }
@@ -500,20 +499,7 @@
   :root[data-theme='gunjo'] .main-col.has-band > header .g-notices .update-notice { padding: 0 0 0 12px; line-height: 26px; color: var(--g-deep); font-size: 13px; cursor: default; }
   :root[data-theme='gunjo'] .g-notices .update-notice button { height: 26px; padding: 0 12px; background: var(--color-accent); color: #fff; box-shadow: none; }
 
-  /* ---- 仕訳の画面の固定（画面の高さ 701px 以上。FIX_QUERY。群青の PC の仕訳だけ）：帯 L（260px）と入力の札は動かさず、右の一覧の領域だけが中でスクロールする（画面全体のスクロールはなくなる）。
-     帯の中の配置は、要点（マスの下すぐ）・月の道（下から 22px）・凡例（下から 4px）を 260px に収める。光の最大の長さは 42px（一番大きい日の金額の札が、要点に重ならない高さ）。画面の高さが 700px 以下は、今までどおり（帯 360px・ページ全体がスクロール・札は 28vh で貼り付く） ---- */
-  @media (min-height: 701px) {
-    :root[data-theme='gunjo'] .main-col.has-band:has(.g-entries-body) { --g-band-h: 260px; --ray-max: 42px; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-    :root[data-theme='gunjo'] .main-col.has-band:has(.g-entries-body) .g-band.L { flex: none; }
-    :root[data-theme='gunjo'] .main-col.has-band:has(.g-entries-body) .g-band.L .g-hero { margin-top: 6px; }
-    :root[data-theme='gunjo'] .main-col.has-band:has(.g-entries-body) .g-road { bottom: 22px; }
-    :root[data-theme='gunjo'] .main-col.has-band:has(.g-entries-body) .g-legend { bottom: 4px; }
-    :root[data-theme='gunjo'] .main-col.has-band:has(.g-entries-body) .content { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; padding-top: 20px; padding-bottom: 12px; }
-    :root[data-theme='gunjo'] .main-col.has-band:has(.g-entries-body) main { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
-    :root[data-theme='gunjo'] .main-col.has-band:has(.g-entries-body) .entries { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
-    :root[data-theme='gunjo'] .g-entries-body { flex: 1 1 0; min-height: 0; align-items: stretch; }
-    :root[data-theme='gunjo'] .g-slip-card { position: static; align-self: start; max-height: 100%; }
-    :root[data-theme='gunjo'] .g-entries-list { min-height: 0; overflow-y: auto; padding: 0 8px 96px 0; scrollbar-gutter: stable; } /* 下の余白は、電卓の帯が一番下の行で出ても届くように */
-    :root[data-theme='gunjo'] .g-entries-list:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
-  }
+  /* ---- 入力の札の中の電卓の帯：札の中の幅（親の幅）に収め、入りきらないボタンは折り返す（横スクロールを出さない）。帯は、今までどおり、金額の欄の下で、メモなどの上に重なって出る（幅 24em の最小の幅が、札の中の幅 290px より広く、札の横スクロールが出ていた） ---- */
+  :root[data-theme='gunjo'] .g-slip .calc-band { width: 100%; min-width: 0; }
+  :root[data-theme='gunjo'] .g-slip .calc-band-tools { flex-wrap: wrap; }
 }

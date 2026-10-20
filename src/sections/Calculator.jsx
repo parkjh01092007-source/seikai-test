@@ -138,9 +138,13 @@ export function AmountInput({ value, onChange, label }) {
   // PC の帯が、画面の右端を越えないようにする（越えるときは、式の前の方を省く）
   useLayoutEffect(() => {
     const band = bandRef.current
-    if (band) band.style.maxWidth = `${document.documentElement.clientWidth - wrapRef.current.getBoundingClientRect().left - 8}px`
-    if (band?.closest('.g-entries-list, .g-slip-card')) band.scrollIntoView({ block: 'nearest' }) // 群青の PC の仕訳：一覧・札の中でスクロールする領域で、帯が下の端で切れないように
-  }, [focused, dismissed, phone, value]) // value：式を打つと帯の上の行が出て高さが変わるので、そのたびに見える位置へ（block: 'nearest' なので、見えているときは動かない）
+    if (band) {
+      // 帯の右端の限り：ふつうは画面の右端。群青の PC の入力の札の中では、札の中の右端（札の幅からはみ出して、横スクロールを出さない）
+      const card = band.closest('.g-slip-card')
+      const right = card ? card.getBoundingClientRect().right - (parseFloat(getComputedStyle(card).paddingRight) || 0) : document.documentElement.clientWidth - 8
+      band.style.maxWidth = `${right - wrapRef.current.getBoundingClientRect().left}px`
+    }
+  }, [focused, dismissed, phone])
 
   const close = () => setOpen(false)
   const keypad = open && <Keypad initial={value} onInsert={(v) => { onChange(v); close() }} onClose={close} />

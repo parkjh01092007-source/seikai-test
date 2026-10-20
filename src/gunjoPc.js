@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { usePhone, PIN_QUERY, FIX_QUERY } from './layout.js'
+import { usePhone, PIN_QUERY } from './layout.js'
 
 // 群青の PC の形かどうか（spec-design.md 9.1・作業19(d)）。群青を選んでいて、スマホの形（layout.js）ではない。
 // 群青の PC のときだけ描く部品（メニューの閉じた形の「正解」の円、見出しの英字ラベルなど）を出すかどうかに使う。
@@ -27,16 +27,4 @@ export const useCanPin = () => {
   const gunjoPc = useGunjoPc()
   const wide = useSyncExternalStore(subscribePin, () => window.matchMedia(PIN_QUERY).matches)
   return !gunjoPc || wide
-}
-
-// 一覧の領域だけが中でスクロールする高さか（群青の PC の仕訳。FIX_QUERY）。そのとき、一覧の領域は、キーボードで動かせるように tabindex を持つ
-const subscribeFix = (onChange) => {
-  const m = window.matchMedia(FIX_QUERY)
-  m.addEventListener('change', onChange)
-  return () => m.removeEventListener('change', onChange)
-}
-export const useFixedEntries = () => {
-  const gunjoPc = useGunjoPc()
-  const tall = useSyncExternalStore(subscribeFix, () => window.matchMedia(FIX_QUERY).matches)
-  return gunjoPc && tall
 }
