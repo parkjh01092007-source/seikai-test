@@ -207,6 +207,11 @@
   @media (min-width: 1100px) {
     :root[data-theme='gunjo'] .sidetabs.pinned { width: var(--sidetabs-band); }
   }
+  /* 固定のとき、本文を右へ押し出す（幅 1280px 以上。layout.js の PUSH_QUERY と同じ値）。.sidetabs は flex の子、本文（.main-col）は flex: 1 なので、幅を 64px → パネルの幅（270px）にすると、本文が 206px 狭くなる。
+     マウスを乗せて開く形（.pinned なし）は、今までどおり重ねる。1100〜1279px の固定も、今までどおり重ねる。動きはなし（瞬間） */
+  @media (min-width: 1280px) {
+    :root[data-theme='gunjo'] .sidetabs.pinned { width: var(--sidetabs-width); }
+  }
 
   /* ---- 同じ行の部品の間 12px：文字・単位・ラベルをはさむ行（区切り7 の最初の直し。これらの画面は、区切り8・9 で作り直す。ここは間だけ）---- */
   /* 書き出し・読み込み（帯のない画面の右上） */
@@ -503,6 +508,13 @@
   /* ---- 入力の札の中の電卓の帯：札の中の幅（親の幅）に収め、入りきらないボタンは折り返す（横スクロールを出さない）。帯は、今までどおり、金額の欄の下で、メモなどの上に重なって出る（幅 24em の最小の幅が、札の中の幅 290px より広く、札の横スクロールが出ていた） ---- */
   :root[data-theme='gunjo'] .g-slip .calc-band { width: 100%; min-width: 0; }
   :root[data-theme='gunjo'] .g-slip .calc-band-tools { flex-wrap: wrap; }
+  /* 札の中の帯：2 行。1 行目＝電卓の絵と + − × ÷、2 行目＝×1.1 ×1.08（いつも一緒に次の行へ。::before が行を区切る）。
+     ×1.1・×1.08 は、群青のふつうのボタン（白・影・34px）でなく、+ − × ÷ と同じ見た目（電卓のキーは区切り14で作る）。DOM は変えず、位置で選ぶ。
+     間は margin で作る（52 行目の規則が、この行の column-gap を 0 にするため）。行の頭（×1.1）には余白を付けない。行の間は、2 行目の margin-top 8px */
+  :root[data-theme='gunjo'] .g-slip .calc-band-tools { row-gap: 0; }
+  :root[data-theme='gunjo'] .g-slip .calc-band-tools::before { content: ''; order: 1; flex: 0 0 100%; height: 0; }
+  :root[data-theme='gunjo'] .g-slip .calc-band-tools > button:nth-last-child(-n+2) { all: revert; order: 2; flex: none; min-width: 28px; height: 32px; margin-top: 8px; padding: 0 6px; font-size: 16px; }
+  :root[data-theme='gunjo'] .g-slip .calc-band-tools > button:not(:first-child, :nth-last-child(2)) { margin-inline-start: 8px; }
 
   /* ---- 仕訳の画面の固定（画面の高さ 600px 以上。FIX_QUERY。群青の PC の仕訳だけ）：帯 L と入力の札は動かさず、右の一覧の領域だけが中でスクロールする（画面全体のスクロールはなくなる）。
      帯は 2 段：一番上＝大きい帯（--g-band-top。clamp(260px, 36vh, 380px)）、一覧を --g-band-diff（2 つの差）以上スクロールしたら＝小さい帯（--g-band-low。clamp(200px, 28vh, 300px)。Entries.jsx が main-col に data-band-low を付ける）。
