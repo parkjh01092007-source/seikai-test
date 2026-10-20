@@ -4,6 +4,7 @@ import './calc.css'
 import { Icon } from './Icon.jsx'
 import { t } from '../text.js'
 import { usePhone } from '../layout.js'
+import { useGunjoPc } from '../gunjoPc.js'
 import { answerOf, normalize, press, formatExpr, formatNumber, isExpression } from '../calc.js'
 
 const hasOperator = isExpression
@@ -121,6 +122,7 @@ const answerLine = (expr, answer) => (answer && !answer.error && !answer.decimal
 // PC の Enter：欄に記号があるときだけ、答えを欄に入れる（送信しない）。記号がなければ、今までどおり（送信）
 export function AmountInput({ value, onChange, label }) {
   const phone = usePhone()
+  const gunjoPc = useGunjoPc() // 群青の PC の帯には、税率のボタン（×1.1・×1.08）を出さない
   const [open, setOpen] = useState(false)
   const [focused, setFocused] = useState(false) // PC：欄（と帯）にフォーカスがあるか
   const [dismissed, setDismissed] = useState(false) // PC：Esc で帯を閉じた（打つ・入り直すと戻る）
@@ -194,8 +196,8 @@ export function AmountInput({ value, onChange, label }) {
           <span className="calc-band-tools">
             <button type="button" tabIndex={-1} className="calc-open" aria-label={t('calc.name')} title={t('calc.name')} onMouseDown={hold} onClick={() => setOpen(true)}><Icon name="calc" /></button>
             {OPS.map(([label, k]) => <button key={k} type="button" tabIndex={-1} className="op" onMouseDown={hold} onClick={() => apply(k)}>{label}</button>)}
-            <button type="button" tabIndex={-1} onMouseDown={hold} onClick={() => apply('*1.1')}>×1.1</button>
-            <button type="button" tabIndex={-1} onMouseDown={hold} onClick={() => apply('*1.08')}>×1.08</button>
+            {!gunjoPc && <button type="button" tabIndex={-1} onMouseDown={hold} onClick={() => apply('*1.1')}>×1.1</button>}
+            {!gunjoPc && <button type="button" tabIndex={-1} onMouseDown={hold} onClick={() => apply('*1.08')}>×1.08</button>}
           </span>
         </span>
       )}
