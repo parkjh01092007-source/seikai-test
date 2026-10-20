@@ -415,8 +415,9 @@
   :root[data-theme='gunjo'] .settings .app-version { margin-top: 24px; }
 
   /* ---- 仕訳の帯 L と月の道（Entries.jsx・MonthRoad.jsx。見本 E-entries。E-rules 7章）：高さ 360px、右の端は 14° の斜め（切り 90px）。月の選びは帯の上の段、要点は 30px の明朝。月の道は帯の一番下（下から 28px の上に高さ 76px。左 48px・右 112px）、凡例は下から 6px ---- */
-  :root[data-theme='gunjo'] .g-band.L { height: 360px; clip-path: polygon(0 0, 100% 0, calc(100% - 90px) 100%, 0 100%); }
-  :root[data-theme='gunjo'] .g-band.L .g-accent { width: 250px; clip-path: polygon(90px 0, 100% 0, 100% 100%, 0 100%); }
+  :root[data-theme='gunjo'] { --g-band-h: 360px; } /* 帯 L の高さ（1 つの変数。固定のときは 2 段。下の @media (min-height: 600px)）。右の斜めの切りは、高さ × tan 14° */
+  :root[data-theme='gunjo'] .g-band.L { --g-cut: calc(var(--g-band-h) * 0.2493); height: var(--g-band-h); clip-path: polygon(0 0, 100% 0, calc(100% - var(--g-cut)) 100%, 0 100%); }
+  :root[data-theme='gunjo'] .g-band.L .g-accent { width: 250px; clip-path: polygon(var(--g-cut) 0, 100% 0, 100% 100%, 0 100%); }
   :root[data-theme='gunjo'] .g-band.L .g-hero { margin-top: 34px; gap: 44px; }
   :root[data-theme='gunjo'] .g-band.L .g-stat-num { font-size: 30px; line-height: 1.1; }
   :root[data-theme='gunjo'] .g-band > .g-top-extra:has(> .g-month) { right: 358px; }
@@ -502,4 +503,27 @@
   /* ---- 入力の札の中の電卓の帯：札の中の幅（親の幅）に収め、入りきらないボタンは折り返す（横スクロールを出さない）。帯は、今までどおり、金額の欄の下で、メモなどの上に重なって出る（幅 24em の最小の幅が、札の中の幅 290px より広く、札の横スクロールが出ていた） ---- */
   :root[data-theme='gunjo'] .g-slip .calc-band { width: 100%; min-width: 0; }
   :root[data-theme='gunjo'] .g-slip .calc-band-tools { flex-wrap: wrap; }
+
+  /* ---- 仕訳の画面の固定（画面の高さ 600px 以上。FIX_QUERY。群青の PC の仕訳だけ）：帯 L と入力の札は動かさず、右の一覧の領域だけが中でスクロールする（画面全体のスクロールはなくなる）。
+     帯は 2 段：一番上＝大きい帯（--g-band-top。clamp(260px, 36vh, 380px)）、一覧を --g-band-diff（2 つの差）以上スクロールしたら＝小さい帯（--g-band-low。clamp(200px, 28vh, 300px)。Entries.jsx が main-col に data-band-low を付ける）。
+     一覧の箱は、いつも小さい帯の下から始まる。大きい帯のときは帯が箱の上に重なり、その分（差）を一覧の先頭の余白（padding-top）にしてある。余白が全部スクロールして消えた瞬間に帯が縮むので、行は跳ねない（余白とスクロールのしきい値は、同じ変数 --g-band-diff から作る） ---- */
+  @media (min-height: 600px) {
+    :root[data-theme='gunjo'] .main-col.has-band:has(.g-entries-body) { --g-band-top: clamp(260px, 36vh, 380px); --g-band-low: clamp(200px, 28vh, 300px); --g-band-diff: calc(var(--g-band-top) - var(--g-band-low)); --g-band-h: var(--g-band-top); --ray-max: calc(42px + (var(--g-band-top) - 260px) * 0.5); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+    :root[data-theme='gunjo'] .main-col.has-band[data-band-low]:has(.g-entries-body) { --g-band-h: var(--g-band-low); --ray-max: calc(28px + (var(--g-band-low) - 200px) * 0.5); }
+    :root[data-theme='gunjo'] .main-col.has-band:has(.g-entries-body) .g-band.L { flex: none; margin-bottom: calc(var(--g-band-low) - var(--g-band-h)); }
+    :root[data-theme='gunjo'] .main-col.has-band:has(.g-entries-body) .g-band.L .g-hero { margin-top: 6px; }
+    :root[data-theme='gunjo'] .main-col.has-band:has(.g-entries-body) .g-road { bottom: 22px; }
+    :root[data-theme='gunjo'] .main-col.has-band:has(.g-entries-body) .g-legend { bottom: 4px; }
+    :root[data-theme='gunjo'] .main-col.has-band[data-band-low]:has(.g-entries-body) .g-band.L .g-stat-num { font-size: 24px; }
+    :root[data-theme='gunjo'] .main-col.has-band[data-band-low]:has(.g-entries-body) .g-road { bottom: 8px; height: 62px; }
+    :root[data-theme='gunjo'] .main-col.has-band[data-band-low]:has(.g-entries-body) .g-road .d { height: 62px; }
+    :root[data-theme='gunjo'] .main-col.has-band[data-band-low]:has(.g-entries-body) :is(.g-legend, .g-road .d .tag) { display: none; } /* 凡例と、最大の日の金額の札（要点に重なる高さしか残らない）。一番上へ戻れば見える */
+    :root[data-theme='gunjo'] .main-col.has-band:has(.g-entries-body) .content { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; padding-top: 20px; padding-bottom: 12px; }
+    :root[data-theme='gunjo'] .main-col.has-band:has(.g-entries-body) main { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
+    :root[data-theme='gunjo'] .main-col.has-band:has(.g-entries-body) .entries { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
+    :root[data-theme='gunjo'] .g-entries-body { flex: 1 1 0; min-height: 0; align-items: stretch; }
+    :root[data-theme='gunjo'] .g-slip-card { position: static; align-self: start; margin-top: calc(var(--g-band-h) - var(--g-band-low)); max-height: calc(100% - var(--g-band-h) + var(--g-band-low)); } /* 札は、帯の下端について動く（大きい帯のときは、帯に隠れない位置） */
+    :root[data-theme='gunjo'] .g-entries-list { min-height: 0; overflow-y: auto; padding: var(--g-band-diff) 8px 96px 0; scrollbar-gutter: stable; } /* 先頭の余白＝帯の差。下の余白は、電卓の帯が一番下の行で出ても届くように */
+    :root[data-theme='gunjo'] .g-entries-list:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+  }
 }

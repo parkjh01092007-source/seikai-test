@@ -12,7 +12,7 @@ import { loadOpenMode, initialOpenDates, isOpenDate, formatDayHead, formatDayLab
 import EntrySheet from './EntrySheet.jsx'
 import { AmountInput } from './Calculator.jsx'
 import { Icon, IconButton } from './Icon.jsx'
-import { useGunjoPc } from '../gunjoPc.js'
+import { useGunjoPc, useFixedEntries } from '../gunjoPc.js'
 import { createPortal } from 'react-dom'
 import { useBandHost, useBandTop, useBandRoad } from './bandHost.js'
 import { BandStat, signedYen } from './PageBand.jsx'
@@ -231,6 +231,8 @@ export default function Entries({ data, update }) {
   const [toggled, setToggled] = useState({}) // 日付の枠を押して開閉した分（日付 → 開いているか）。月を変えると初めの状態に戻る。覚えない
   const phone = usePhone()
   const gunjoPc = useGunjoPc() // 群青の PC：月の欄と並べ替えのボタンの間の空白を描かない（間は 12px の余白だけ）
+  const fixedList = useFixedEntries() // 一覧の領域だけが中でスクロールする高さ
+  const listRef = useRef(null)
   const bandHost = useBandHost()
   const bandTop = useBandTop()
   const bandRoad = useBandRoad()
@@ -262,6 +264,21 @@ export default function Entries({ data, update }) {
     ;(button && !button.closest('[hidden]') ? button : document.querySelector('.entries > input[type="month"]'))?.focus()
     editedId.current = null
   }, [editingId])
+
+  // 帯の 2 段（gunjo-pc.css の固定）：一覧を、先頭の余白（＝大きい帯と小さい帯の差）の分だけスクロールしたら、main-col に data-band-low を付けて帯を小さくする。しきい値は余白の実測（同じ CSS 変数から作られる）。DOM 直接：再描画しない
+  useEffect(() => {
+    const list = listRef.current, col = list?.closest('.main-col')
+    if (!list || !col) return
+    const sync = () => {
+      const diff = parseFloat(getComputedStyle(list).paddingTop) || 0
+      if (diff > 0 && list.scrollTop >= diff) col.setAttribute('data-band-low', '')
+      else col.removeAttribute('data-band-low')
+    }
+    sync()
+    list.addEventListener('scroll', sync, { passive: true })
+    window.addEventListener('resize', sync)
+    return () => { list.removeEventListener('scroll', sync); window.removeEventListener('resize', sync); col.removeAttribute('data-band-low') }
+  }, [gunjoPc, fixedList, month])
 
   const wasCreating = useRef(false)
   useEffect(() => { // スマホの入力画面を閉じたら、フォーカスを「＋」へ戻す（初めの描画では動かさない）
@@ -410,7 +427,7 @@ export default function Entries({ data, update }) {
               onSubmit={add}
             />
           </section>
-          <div className="g-entries-list">
+          <div className="g-entries-list" ref={listRef} {...(fixedList ? { tabIndex: 0, role: 'region', 'aria-label': t('entries.listTitle') } : {})}>
       {/* 押すたびに切り替える。表示は、押したら切り替わる先 */}
       <IconButton icon="sort" label={t('entries.sortLabel', { now: t(ORDER_LABELS[order]), next: t(ORDER_LABELS[order === 'asc' ? 'desc' : 'asc']) })} onClick={() => setOrder(order === 'asc' ? 'desc' : 'asc')} />
       {list}

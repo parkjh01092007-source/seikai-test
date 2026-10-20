@@ -9,6 +9,11 @@ export const PHONE_QUERY = '(max-width: 959.98px), (pointer: coarse) and (hover:
 export const PIN_MIN_WIDTH = 1100
 export const PIN_QUERY = `(min-width: ${PIN_MIN_WIDTH}px)`
 
+// 群青の PC の仕訳の画面で、画面（帯＋入力の札）を動かさず、一覧の領域だけを中でスクロールさせる、最小の画面の高さ（それ以下は、今までどおりページ全体がスクロール）。
+// gunjo-pc.css の @media (min-height: 600px) と同じ値（gunjoPc.check.js が確かめる）
+export const FIX_MIN_HEIGHT = 600
+export const FIX_QUERY = `(min-height: ${FIX_MIN_HEIGHT}px)`
+
 const subscribe = (onChange) => {
   const m = window.matchMedia(PHONE_QUERY)
   m.addEventListener('change', onChange)

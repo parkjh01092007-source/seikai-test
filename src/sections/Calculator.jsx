@@ -144,7 +144,8 @@ export function AmountInput({ value, onChange, label }) {
       const right = card ? card.getBoundingClientRect().right - (parseFloat(getComputedStyle(card).paddingRight) || 0) : document.documentElement.clientWidth - 8
       band.style.maxWidth = `${right - wrapRef.current.getBoundingClientRect().left}px`
     }
-  }, [focused, dismissed, phone])
+    if (band?.closest('.g-entries-list, .g-slip-card')) band.scrollIntoView({ block: 'nearest' }) // 群青の PC の仕訳：一覧・札の中でスクロールする領域で、帯が下の端で切れないように
+  }, [focused, dismissed, phone, value]) // value：式を打つと帯の上の行が出て高さが変わるので、そのたびに見える位置へ（block: 'nearest' なので、見えているときは動かない）
 
   const close = () => setOpen(false)
   const keypad = open && <Keypad initial={value} onInsert={(v) => { onChange(v); close() }} onClose={close} />
