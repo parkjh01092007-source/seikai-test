@@ -506,7 +506,7 @@
   :root[data-theme='gunjo'] .g-notices .update-notice button { height: 26px; padding: 0 12px; background: var(--color-accent); color: #fff; box-shadow: none; }
 
   /* ---- 入力の札の中の電卓の帯：札の中の幅（親の幅）に収め、入りきらないボタンは折り返す（横スクロールを出さない）。帯は、今までどおり、金額の欄の下で、メモなどの上に重なって出る（幅 24em の最小の幅が、札の中の幅 290px より広く、札の横スクロールが出ていた） ---- */
-  :root[data-theme='gunjo'] .g-slip .calc-band { width: 100%; min-width: 0; }
+  :root[data-theme='gunjo'] .g-slip .calc-band { width: 100%; min-width: 0; padding: 8px 12px; }
   :root[data-theme='gunjo'] .g-slip .calc-band-tools { flex-wrap: wrap; }
   /* 帯の 5 つのボタン（電卓の絵と + − × ÷）：群青のふつうのボタン（白・青い枠・影）の 34px の正方形。税率のボタンはない。
      間は、隣り合うふつうのボタンの左の余白 12px。札の中（中身 272px）に 1 行で収まる（5×34＋4×12＝218px）。収まらないときだけ、上の flex-wrap で次の行へ */

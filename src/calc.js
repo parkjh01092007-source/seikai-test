@@ -92,7 +92,8 @@ export function press(text, key) {
     if (r.error) return expr
     return hasOuterAddSub(expr) ? `(${expr})${key}` : expr + key // 足し算の式には、合計に掛ける
   }
-  if (key === '=') return r.error || r.value < 0 ? expr : String(r.value) // マイナスの値は式に書けない（先頭が記号）ので、変えない
+  // マイナスの値は式に書けない（先頭が記号）ので変えない。1e21 以上は String が指数（9.9e+21）にして式が読めなくなるので変えない。小さい値も toFixed で普通の小数に（1e-7 → 0.0000001）
+  if (key === '=') return r.error || r.value < 0 || r.value >= 1e21 ? expr : r.value.toFixed(9).replace(/\.?0+$/, '')
   return expr
 }
 
