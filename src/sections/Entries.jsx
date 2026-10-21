@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import './entries.css'
 import {
   entryAccountOptions, validateEntryInput, livingAccount, defaultLiving, livingOnAccountChange, livingOptionLabel, newEntry, editEntry, lastCreditId, favoriteOptionGroups, accountLabelWithType,
-  entriesOfMonth, groupEntriesByDate, canEditEntry, formatMoney, formatYen, currencyUnit, dailyExpenses,
+  entriesOfMonth, groupEntriesByDate, canEditEntry, formatMoney, formatYen, currencyUnit, roadDays,
 } from '../ledgerLogic.js'
 import { today } from '../today.js'
 import { t } from '../text.js'
@@ -253,7 +253,7 @@ export default function Entries({ data, update }) {
   const newInitial = { date: today(), amount: '', debitId: '', creditId, memo: '', living: defaultLiving(accounts, '', creditId) }
   const changeMonth = (v) => { setMonth(v); setEditingId(null); setOpenRowId(null); setToggled({}) }
   const shiftMonth = (d) => { const [y, m] = month.split('-').map(Number); const x = new Date(y, m - 1 + d, 1); changeMonth(`${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}`) } // 前の月・次の月（群青の PC の帯）
-  const road = gunjoPc && month ? dailyExpenses(accounts, entries, month, today()) : null // 月の道（群青の PC の帯 L）
+  const road = gunjoPc && month ? roadDays(accounts, entries, month, today()) : null // 月の道（群青の PC の帯 L）
   const groups = month ? groupEntriesByDate(entriesOfMonth(entries, month), order) : []
   const initialOpen = initialOpenDates(groups, loadOpenMode(phone ? 'phone' : 'pc')) // 日付の枠の初めの状態（設定 → 仕訳。スマホの幅と PC の幅で別）
 

@@ -24,6 +24,10 @@ export const KINDS = ['normal', 'opening', 'adjustment']
 export const LIVING = ['same', 'next']
 // 生活費の月の決まり（livingMonth）を持つ科目：収益のうち、調整益を除いたもの
 export const hasLivingMonth = (account) => account?.type === 'revenue' && account.key !== 'adjust-gain'
+// 固定費の印（fixed。v10。docs/formulas.md）を持つ科目：費用のうち、調整損を除いたもの（調整損は日ごとの費用に入らない）
+export const hasFixed = (account) => account?.type === 'expense' && account.key !== 'adjust-loss'
+// 最初から固定費の初期科目（preset）と、移行で古い科目に付ける値。名前の一致では決めない（本人が作った「家賃」などは OFF から始まり、本人が ON にする）
+export const FIXED_PRESETS = ['phone']
 
 // 初期科目（仕様 6.5。どの国にもある科目だけ）。[名前の辞書のキー, type, role, preset, key, card（role が card のときだけ { closingDay, payDay }）]
 // 名前は言語ごとの辞書（accountName.*）から取る。preset は内部の印で、計算には使わない（計算は key で探す）。key を持つ4つは preset を持たない
@@ -118,6 +122,7 @@ export const newAccount = (name, type, role, now = new Date().toISOString(), key
     ...(type === 'liability' && { role: isCardRole ? 'card' : 'other' }),
     ...(isCardRole && { closingDay: card.closingDay, payDay: card.payDay }),
     ...(hasLivingMonth({ type, key }) && { livingMonth: 'same' }), // 新しい収益の科目は「受け取った月の生活費」
+    ...(hasFixed({ type, key }) && { fixed: FIXED_PRESETS.includes(preset) }), // 新しい費用の科目は固定費でない（初期科目の通信費だけ固定費）
     ...(key && { key }),
     ...(preset && { preset }),
     active: true,
@@ -169,11 +174,12 @@ export function validateAccountName(name, accounts, selfId) {
 // type を変えたら role を整える（asset は role 必須、liability は other、ほかは role なし）。締め日・引き落とし日は消える。
 // 収益にしたら生活費の月の決まりは same、収益から変えたら消える（区分を変えられるのは仕訳のない科目だけなので、仕訳には影響しない）
 export function changeType(account, type, role, now = new Date().toISOString()) {
-  const { role: _old, closingDay: _closing, payDay: _pay, livingMonth: _living, ...rest } = account
+  const { role: _old, closingDay: _closing, payDay: _pay, livingMonth: _living, fixed: _fixed, ...rest } = account
   return {
     ...rest, type,
     ...(type === 'asset' && { role: role ?? 'other' }), ...(type === 'liability' && { role: 'other' }),
     ...(hasLivingMonth({ type, key: account.key }) && { livingMonth: 'same' }),
+    ...(hasFixed({ type, key: account.key }) && { fixed: false }), // 費用にしたら固定費でない、費用から変えたら消える
     updatedAt: now,
   }
 }
@@ -232,6 +238,10 @@ export function addLiving(accounts, entries) {
     e.kind === 'normal' && e.living === undefined && livingAccount(nextAccounts, e.debitId, e.creditId) ? { ...e, living: 'same' } : e)
   return { accounts: nextAccounts, entries: nextEntries }
 }
+
+// v9 → v10：費用の科目（調整損を除く）に fixed を付ける（preset が FIXED_PRESETS なら true、ほかは false）。持っているものは変えない。元の配列は変えない
+export const addFixed = (accounts) =>
+  accounts.map((a) => (hasFixed(a) && a.fixed === undefined ? { ...a, fixed: FIXED_PRESETS.includes(a.preset) } : a))
 
 // ---- 仕訳の入力・一覧 ----
 
@@ -634,6 +644,38 @@ export function dailyExpenses(accounts, entries, month, today) {
   }))
   return { month, days: list, total: list.reduce((s, d) => s + d.amount, 0) }
 }
+
+// ---- 月の道の「光」と「固定費の線」（docs/formulas.md 11.5。区切り10の修正（6））----
+// 月の道の基準の下限（床）。通貨ごと。足すときは CURRENCIES と同じ所に足す
+export const ROAD_FLOOR = { JPY: 2000, KRW: 20000 }
+export const roadFloor = (currency) => ROAD_FLOOR[isCurrency(currency) ? currency : 'JPY']
+
+// 日ごとの費用を、固定費と変動費に分ける。判定は費用の科目の fixed だけ（前月との比較・日付の近さは見ない）。
+// dailyExpenses の日ごとの値に fixedAmount（fixed が true の費用の科目の、借方 − 貸方）と variableAmount（amount − fixedAmount）を足す。
+// fixedAmount + variableAmount = amount（月の合計も dailyExpenses の total と同じ）。dailyExpenses の返す値は変えない
+export function roadDays(accounts, entries, month, today) {
+  const road = dailyExpenses(accounts, entries, month, today)
+  const fixedIds = new Set(accounts.filter((a) => hasFixed(a) && a.fixed === true).map((a) => a.id))
+  const fixedByDay = road.days.map(() => 0)
+  for (const e of entries) {
+    if (e.kind !== 'normal' || !e.date.startsWith(month)) continue
+    fixedByDay[Number(e.date.slice(8, 10)) - 1] += (fixedIds.has(e.debitId) ? e.amount : 0) - (fixedIds.has(e.creditId) ? e.amount : 0)
+  }
+  return { ...road, days: road.days.map((d, i) => ({ ...d, fixedAmount: fixedByDay[i], variableAmount: d.amount - fixedByDay[i] })) }
+}
+
+// 光の長さの基準：max(変動費の中央値 × 3, 床)。中央値は、変動費が 0 より大きい日だけで取る（偶数個なら真ん中 2 つの平均）。
+// そういう日がない月は中央値 0（基準は床）。光の高さの割合は min(その日の変動費 ÷ base, 1)。days は roadDays の days、floor は roadFloor(通貨)
+// field に 'fixedAmount' を渡すと、固定費用の基準（固定費が 0 より大きい日の中央値の 3 倍と床）になる。変動費の基準とは別に作る（家賃が変動費の基準を引きずらない）
+export function roadScale(days, floor, field = 'variableAmount') {
+  const v = days.map((d) => d[field]).filter((x) => x > 0).sort((a, b) => a - b)
+  const mid = v.length >> 1
+  const median = v.length === 0 ? 0 : v.length % 2 ? v[mid] : (v[mid - 1] + v[mid]) / 2
+  return { median, base: Math.max(median * 3, floor) }
+}
+
+// 光・柱の高さの割合：金額 ÷ 基準（roadScale の base）。0〜1（頭打ち。マイナスは 0）
+export const roadRatio = (amount, base) => Math.min(Math.max(amount, 0) / base, 1)
 
 // 費用の内訳の割合（月次）：金額 ÷ 費用の合計。小数第1位まで四捨五入（足して 100.0% にならなくてよい）。合計が 0 以下のときは null
 export const expenseShares = (report) =>

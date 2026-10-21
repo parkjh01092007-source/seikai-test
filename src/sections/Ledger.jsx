@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import './ledger.css'
 import {
   TYPES, TYPE_LABELS, ROLES, ROLE_LABELS, newAccount, changeType, validateAccountName,
-  isProtected, hasLivingMonth, canDeleteAccount, canChangeType, canChangeRole, hasBudget, removeAccountFromSettings,
+  isProtected, hasLivingMonth, hasFixed, canDeleteAccount, canChangeType, canChangeRole, hasBudget, removeAccountFromSettings,
 } from '../ledgerLogic.js'
 import { t } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
@@ -68,6 +68,9 @@ function AccountEditor({ account, accounts, entries, subscriptions, budgets, onC
           <option value="same">{t('living.same')}</option>
           <option value="next">{t('living.next')}</option>
         </select></label>
+      )}{sp}
+      {hasFixed(account) && (
+        <label className="fixed-flag"><input type="checkbox" checked={account.fixed} onChange={(e) => touch({ fixed: e.target.checked })} title={t('ledger.fixedNote')} /> {t('ledger.fixed')}</label>
       )}{sp}
       <button onClick={() => touch({ active: !account.active })} disabled={locked}>
         {account.active ? t('common.disable') : t('common.enable')}

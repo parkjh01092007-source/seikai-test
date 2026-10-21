@@ -20,6 +20,7 @@
   .ledger .acct-detail > input { flex: 1 1 100%; min-width: 0; }
   .ledger .acct-detail > .note, .ledger .acct-detail > .error { flex: 1 1 100%; margin: 0; }
   .ledger .acct-detail > .living-month { flex: 1 1 100%; display: flex; flex-direction: column; gap: 2px; color: var(--color-muted); font-size: 13px; } /* 作業22：生活費の月（収益の科目） */
+  .ledger .acct-detail > .fixed-flag { flex: 1 1 100%; display: flex; align-items: center; gap: 8px; color: var(--color-muted); font-size: 13px; } /* 固定費の印（費用の科目） */
   .ledger .acct-detail > .living-month select { color: var(--color-text); font-size: max(16px, 1em); }
   .ledger form select, .ledger form input { min-width: 0; }
   .ledger form input { flex: 1 1 8em; }
