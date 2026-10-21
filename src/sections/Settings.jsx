@@ -6,6 +6,7 @@ import SaveSettings from './SaveSettings.jsx'
 import DriveSettings from './DriveSettings.jsx'
 import DriveBackups from './DriveBackups.jsx'
 import DisplaySettings from './DisplaySettings.jsx'
+import PresetSettings from './PresetSettings.jsx'
 import { t, LANGUAGES } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import { BALANCE_VIEWS, BALANCE_VIEW_LABELS, loadBalanceView, rememberBalanceView } from '../storage.js'
@@ -14,7 +15,7 @@ import {
   validateFavoriteLimit, setFavoriteLimit, CURRENCIES, setCurrency, renameRows, applyRenames,
 } from '../ledgerLogic.js'
 import { today } from '../today.js'
-import { OPEN_MODES, OPEN_MODE_LABELS, loadOpenMode, rememberOpenMode } from '../entryView.js'
+import { OPEN_MODES, OPEN_MODE_LABELS, loadOpenMode, rememberOpenMode, NO_SPEND_SHAPES, NO_SPEND_SHAPE_LABELS, loadNoSpendShape, rememberNoSpendShape, PRESET_PROMPTS, PRESET_PROMPT_LABELS, loadPresetPrompt, rememberPresetPrompt } from '../entryView.js'
 import { SETTINGS_GROUPS, SETTINGS_SECTIONS, tabDomId, panelDomId } from '../settingsSections.js'
 import Tabs from './Tabs.jsx'
 import { versionLabel, BUILT_AT, CURRENT_BUILD } from '../pwa.js'
@@ -77,6 +78,46 @@ function OpenModeSelect({ side, label }) {
           {OPEN_MODES.map((m) => <option key={m} value={m}>{t(OPEN_MODE_LABELS[m])}</option>)}
         </select>
       </label>
+    </div>
+  )
+}
+
+// スマホの「＋」を押したとき、最初にプリセットを選ぶ画面を出すか。ブラウザごとに覚える（保存データには入れない）。変えたらすぐ覚える。プリセットが 1 件もないときは、この設定にかかわらず出ない
+function PresetPromptSelect() {
+  const [value, setValue] = useState(loadPresetPrompt)
+  const change = (next) => {
+    rememberPresetPrompt(next)
+    setValue(next)
+  }
+  return (
+    <div>
+      <label className="open-mode">
+        {t('presets.promptLabel')}{' '}
+        <select value={value} onChange={(e) => change(e.target.value)}>
+          {PRESET_PROMPTS.map((v) => <option key={v} value={v}>{t(PRESET_PROMPT_LABELS[v])}</option>)}
+        </select>
+      </label>
+      <p className="note">{t('presets.promptNote')}</p>
+    </div>
+  )
+}
+
+// 月の道の「使っていない日」の図形（群青の PC だけ。見本 design-ref/gunjo-pc/E-road-nouse.html）。ブラウザごとに覚える（保存データには入れない）。変えたらすぐ覚える
+function NoSpendShapeSelect() {
+  const [value, setValue] = useState(loadNoSpendShape)
+  const change = (next) => {
+    rememberNoSpendShape(next)
+    setValue(next)
+  }
+  return (
+    <div>
+      <label className="open-mode">
+        {t('nospend.shapeLabel')}{' '}
+        <select value={value} onChange={(e) => change(e.target.value)}>
+          {NO_SPEND_SHAPES.map((v) => <option key={v} value={v}>{t(NO_SPEND_SHAPE_LABELS[v])}</option>)}
+        </select>
+      </label>
+      <p className="note">{t('nospend.shapeNote')}</p>
     </div>
   )
 }
@@ -239,6 +280,8 @@ export default function Settings({ driveSync, data, update, openPanel, replaceDa
       <>
         <OpenModeSelect side="phone" label={t('entries.openModePhone')} />
         <OpenModeSelect side="pc" label={t('entries.openModePc')} />
+        <PresetPromptSelect />
+        {gunjoPc && <NoSpendShapeSelect />}
       </>
     ),
     favorites: () => (
@@ -258,6 +301,7 @@ export default function Settings({ driveSync, data, update, openPanel, replaceDa
         <Frequent data={data} />
       </>
     ),
+    presets: () => <PresetSettings data={data} update={update} />,
     card: () => <CardSettings data={data} update={update} />,
     save: () => <SaveSettings autosave={autosave} />,
     drive: () => <DriveSettings tab={tab} />,

@@ -64,6 +64,45 @@ export function saveOpenMode(storage, side, mode) {
   } catch { /* 覚えられなくてもよい */ }
 }
 
+// ---- スマホの「＋」で、最初にプリセットを選ぶ画面を出すか（端末ごと。保存データ・書き出し・セーブには入れない）。初めの値は「出す」（プリセットが 0 件のときは、設定にかかわらず出さない）
+export const PRESET_PROMPT_KEY = 'orenoyome-preset-prompt'
+export const PRESET_PROMPTS = ['on', 'off']
+export const PRESET_PROMPT_LABELS = { on: 'presets.promptOn', off: 'presets.promptOff' } // 選択肢の文言（辞書のキー）
+export const readPresetPrompt = (storage) => {
+  try {
+    const v = storage.getItem(PRESET_PROMPT_KEY)
+    return PRESET_PROMPTS.includes(v) ? v : 'on'
+  } catch {
+    return 'on'
+  }
+}
+export const savePresetPrompt = (storage, value) => {
+  if (!PRESET_PROMPTS.includes(value)) return
+  try {
+    storage.setItem(PRESET_PROMPT_KEY, value)
+  } catch { /* 覚えられなくてもよい */ }
+}
+
+// ---- 月の道の「使っていない日」の図形（群青の PC だけ。端末ごと。保存データ・書き出し・セーブには入れない）。初めの値は下線
+export const NO_SPEND_SHAPE_KEY = 'orenoyome-nospend-shape'
+export const NO_SPEND_SHAPES = ['none', 'underline', 'ring', 'bar', 'slash', 'cross', 'star', 'check'] // 出さない・下線・輪・柱・斜線・×・星・チェック
+export const NO_SPEND_SHAPE_LABELS = { none: 'nospend.shape.none', underline: 'nospend.shape.underline', ring: 'nospend.shape.ring', bar: 'nospend.shape.bar', slash: 'nospend.shape.slash', cross: 'nospend.shape.cross', star: 'nospend.shape.star', check: 'nospend.shape.check' } // 選択肢の文言（辞書のキー）
+export const DEFAULT_NO_SPEND_SHAPE = 'underline'
+export const readNoSpendShape = (storage) => {
+  try {
+    const v = storage.getItem(NO_SPEND_SHAPE_KEY)
+    return NO_SPEND_SHAPES.includes(v) ? v : DEFAULT_NO_SPEND_SHAPE
+  } catch {
+    return DEFAULT_NO_SPEND_SHAPE
+  }
+}
+export const saveNoSpendShape = (storage, value) => {
+  if (!NO_SPEND_SHAPES.includes(value)) return
+  try {
+    storage.setItem(NO_SPEND_SHAPE_KEY, value)
+  } catch { /* 覚えられなくてもよい */ }
+}
+
 // 画面から使う入口
 const browserStorage = () => {
   try {
@@ -74,3 +113,7 @@ const browserStorage = () => {
 }
 export const loadOpenMode = (side) => readOpenMode(browserStorage(), side)
 export const rememberOpenMode = (side, mode) => saveOpenMode(browserStorage(), side, mode)
+export const loadNoSpendShape = () => readNoSpendShape(browserStorage())
+export const rememberNoSpendShape = (value) => saveNoSpendShape(browserStorage(), value)
+export const loadPresetPrompt = () => readPresetPrompt(browserStorage())
+export const rememberPresetPrompt = (value) => savePresetPrompt(browserStorage(), value)

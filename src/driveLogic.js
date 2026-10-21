@@ -141,13 +141,15 @@ export function checkAfterUpload(revisions, mine, expectedPrev) {
   return { ok: false, reason: 'slipped', theirs: prev }
 }
 
-// 手元が初めの状態か（4.6）：仕訳・定期支払い・予算・スキル・お気に入りがなく、科目が初期科目（preset か key を持つもの）だけ
+// 手元が初めの状態か（4.6）：仕訳・定期支払い・予算・スキル・お気に入り・仕訳プリセット・「使っていない日」がなく、科目が初期科目（preset か key を持つもの）だけ
 export function isInitialData(data) {
   const fav = data?.settings?.favorites
   return Array.isArray(data?.entries) && data.entries.length === 0 &&
     Array.isArray(data.subscriptions) && data.subscriptions.length === 0 &&
     Array.isArray(data.budgets) && data.budgets.length === 0 &&
     Array.isArray(data.skills) && data.skills.length === 0 &&
+    (data.entryPresets === undefined || (Array.isArray(data.entryPresets) && data.entryPresets.length === 0)) &&
+    (data.noSpendDays === undefined || (Array.isArray(data.noSpendDays) && data.noSpendDays.length === 0)) &&
     Array.isArray(data.accounts) && data.accounts.every((a) => a.preset !== undefined || a.key !== undefined) &&
     (fav?.debit?.length ?? 0) === 0 && (fav?.credit?.length ?? 0) === 0
 }
@@ -174,11 +176,11 @@ export function serializeData(data, exportedAt) {
 }
 
 // ---- 食い違いの確認画面と、ドライブの控え（4.4。作業30(c)）
-// 確認画面に並べる、データの「最後に変えた日時」と「仕訳の件数」。最後に変えた日時は、科目・仕訳・定期支払い・予算・スキルの updatedAt のうち一番新しいもの（なければ null）。
+// 確認画面に並べる、データの「最後に変えた日時」と「仕訳の件数」。最後に変えた日時は、科目・仕訳・定期支払い・予算・スキル・仕訳プリセットの updatedAt のうち一番新しいもの（なければ null）。
 // データの形が違うとき（読めないファイル）は null
 export function dataSummary(data) {
   if (typeof data !== 'object' || data === null || !Array.isArray(data.entries)) return null
-  const stamps = ['accounts', 'entries', 'subscriptions', 'budgets', 'skills'].flatMap((k) => (Array.isArray(data[k]) ? data[k] : []).map((r) => r?.updatedAt).filter((v) => typeof v === 'string'))
+  const stamps = ['accounts', 'entries', 'subscriptions', 'budgets', 'skills', 'entryPresets'].flatMap((k) => (Array.isArray(data[k]) ? data[k] : []).map((r) => r?.updatedAt).filter((v) => typeof v === 'string'))
   return { changedAt: stamps.length ? stamps.reduce((a, b) => (a > b ? a : b)) : null, entries: data.entries.length }
 }
 

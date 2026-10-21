@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import './ledger.css'
 import {
   TYPES, TYPE_LABELS, ROLES, ROLE_LABELS, newAccount, changeType, validateAccountName,
-  isProtected, hasLivingMonth, hasFixed, canDeleteAccount, canChangeType, canChangeRole, hasBudget, removeAccountFromSettings,
+  isProtected, hasLivingMonth, hasFixed, canDeleteAccount, canChangeType, canChangeRole, hasBudget, removeAccountFromSettings, presetsUsingAccount, removeAccountFromPresets,
 } from '../ledgerLogic.js'
 import { t } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
@@ -30,7 +30,7 @@ function TypeSelect({ value, onChange, disabled }) {
 }
 
 // 1科目の編集の中身（名前の変更、種類、役割、使う／使わない、削除、変えられない理由）。PC は一覧の行、スマホは、行を押して開く欄の中に出す
-function AccountEditor({ account, accounts, entries, subscriptions, budgets, onChange, onDelete }) {
+function AccountEditor({ account, accounts, entries, subscriptions, budgets, entryPresets, onChange, onDelete }) {
   const [name, setName] = useState(account.name)
   const [error, setError] = useState('')
   const confirm = useConfirm()
@@ -51,7 +51,9 @@ function AccountEditor({ account, accounts, entries, subscriptions, budgets, onC
   }
 
   const remove = async () => {
-    if (await confirm({ message: t('ledger.deleteConfirm', { name: account.name }) })) onDelete()
+    const presets = presetsUsingAccount(entryPresets, account.id).length // この科目を使う仕訳プリセットは、一緒に消える（件数を、確認画面に出す）
+    const message = presets > 0 ? t('ledger.deleteConfirmPresets', { name: account.name, count: presets }) : t('ledger.deleteConfirm', { name: account.name })
+    if (await confirm({ message })) onDelete()
   }
 
   return (
@@ -135,15 +137,15 @@ function AddForm({ accounts, onAdd }) {
 }
 
 export default function Ledger({ data, update }) {
-  const { accounts, entries, subscriptions, budgets } = data
+  const { accounts, entries, subscriptions, budgets, entryPresets } = data
   const setAccounts = (next) => update({ ...data, accounts: next })
   const phone = usePhone()
   const gunjoPc = useGunjoPc()
   const bandHost = useBandHost()
   const typeEn = { asset: t('typeEn.asset'), liability: t('typeEn.liability'), revenue: t('typeEn.revenue'), expense: t('typeEn.expense'), equity: t('typeEn.equity') }
   const [openId, setOpenId] = useState(null) // スマホの幅で開いている科目（1つだけ）
-  // 科目を削除したときは、お気に入りからも外す（1回の update で。2回に分けると、古い data で上書きされる）
-  const deleteAccount = (id) => update({ ...data, accounts: accounts.filter((x) => x.id !== id), settings: removeAccountFromSettings(data.settings, id) })
+  // 科目を削除したときは、お気に入りからも外し、その科目を使う仕訳プリセットも消す（1回の update で。2回に分けると、古い data で上書きされる）
+  const deleteAccount = (id) => update({ ...data, accounts: accounts.filter((x) => x.id !== id), settings: removeAccountFromSettings(data.settings, id), entryPresets: removeAccountFromPresets(entryPresets, id) })
 
   // 群青の PC（見本 E-accounts）：画面の名前は帯のマス。帯に科目の件数。節の見出しは「資産 ASSETS」の形（見本は単数 ASSET。開始残高にそろえて複数）
   return (
@@ -162,6 +164,7 @@ export default function Ledger({ data, update }) {
                 entries,
                 subscriptions,
                 budgets,
+                entryPresets,
                 onChange: (next) => setAccounts(accounts.map((x) => (x.id === a.id ? next : x))),
                 onDelete: () => deleteAccount(a.id),
               }

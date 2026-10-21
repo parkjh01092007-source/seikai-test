@@ -85,3 +85,19 @@
   .entry-fab { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 8; display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 56px; height: 56px; min-height: 0; padding: 0; border: 0; border-radius: 50%; background: var(--color-accent); color: var(--color-on-accent); box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35); cursor: pointer; }
   .entry-fab .icon { width: 26px; height: 26px; }
 }
+
+/* 「前回と同じ入力」のボタン：縦に並ぶ入力（群青の札・スマホの入力画面）では、幅いっぱいに伸ばさず左に寄せる */
+.entries .g-slip > .copy-last, .entries .sheet-form > .copy-last, .entries .g-slip > .no-spend, .entries .sheet-form > .no-spend { align-self: flex-start; }
+
+/* プリセットのボタン（仕訳の入力の上。群青の札・基本の入力欄・「出さない」設定のときのスマホの入力画面）。間は 8px（群青の PC は 12px。gunjo-pc.css） */
+.entries .preset-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1 1 100%; min-width: 0; }
+.entries .preset-label { font-size: 0.85em; color: var(--color-muted); }
+/* スマホ：「＋」を押した最初の画面（プリセットを選ぶ）。1 件ずつ幅いっぱいのボタン。最後に「使わない」 */
+.sheet .preset-pick { display: flex; flex-direction: column; gap: 8px; }
+.sheet .preset-pick button { min-height: 48px; text-align: left; }
+.sheet .preset-pick-item { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 12px; }
+.sheet .preset-pick-item .pn { font-weight: bold; }
+.sheet .preset-pick-item .pl { font-size: 0.85em; color: var(--color-muted); overflow-wrap: anywhere; }
+.sheet .preset-pick .preset-skip { text-align: center; }
+
+.entries .preset-row .preset-chip { margin: 0; }

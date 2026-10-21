@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
 import './entries.css'
 import {
-  entryAccountOptions, validateEntryInput, livingAccount, defaultLiving, livingOnAccountChange, livingOptionLabel, newEntry, editEntry, lastCreditId, favoriteOptionGroups, accountLabelWithType,
+  entryAccountOptions, validateEntryInput, livingAccount, defaultLiving, livingOnAccountChange, livingOptionLabel, newEntry, editEntry, lastCreditId, lastNormalEntry, copyInputFromEntry, presetToFormValues, canMarkNoSpend, isNoSpendShown, markNoSpendDay, unmarkNoSpendDay, NO_SPEND_BACK_DAYS, favoriteOptionGroups, accountLabelWithType,
   entriesOfMonth, groupEntriesByDate, canEditEntry, formatMoney, formatYen, currencyUnit, roadDays,
 } from '../ledgerLogic.js'
 import { today } from '../today.js'
 import { t } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import { usePhone } from '../layout.js'
-import { loadOpenMode, initialOpenDates, isOpenDate, formatDayHead, formatDayLabel, entryChanged, weekdayName } from '../entryView.js'
+import { loadOpenMode, initialOpenDates, isOpenDate, formatDayHead, formatDayLabel, entryChanged, weekdayName, loadPresetPrompt, loadNoSpendShape } from '../entryView.js'
 import EntrySheet from './EntrySheet.jsx'
 import { AmountInput } from './Calculator.jsx'
 import { Icon, IconButton } from './Icon.jsx'
@@ -41,13 +41,40 @@ function Field({ label, className = '', children }) {
 // 入力・編集で共用。エラーのときは入力途中の内容を消さない。
 // currentIds は編集フォームだけが渡す（その仕訳が今使っている科目を選択肢に残す）。新規入力では渡さない。
 // variant='sheet'：下から出る編集画面の形（縦に並べ、メモは複数行、下に「やめる」「保存」）。onValues(f)：入力が変わるたびに呼ぶ（編集画面が、変えたかを知るため）
-export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus', onSubmit, onCancel, currentIds, favorites = { debit: [], credit: [] }, variant, onValues }) {
+// lastEntry：新しい仕訳の入力だけが渡す（直近の通常の仕訳。なければ null か渡さない）。渡すと「前回と同じ入力」のボタンが出る。編集フォームには渡さない
+// noSpend：{ days, entries, today, onToggle(date) }。新しい仕訳の入力だけが渡す。渡すと「今日は使っていない」のボタンが出る（日付の欄の日が対象）
+// presets：仕訳プリセットの一覧（渡すと、上に、プリセットのボタンが並ぶ。押すと、借方・貸方・金額・メモが入る）。なければ出さない
+// applyValues(values)：入力欄に、外から値を入れる（日付は変えない）。前回と同じ入力と、これからのプリセットが使う
+export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus', onSubmit, onCancel, currentIds, favorites = { debit: [], credit: [] }, variant, onValues, lastEntry, currency, presets, noSpend }) {
   const options = entryAccountOptions(accounts, currentIds)
   const [f, setF] = useState(initial)
   const [error, setError] = useState('')
   const set = (k) => (v) => setF((s) => ({ ...s, [k]: v }))
   // 借方・貸方を変えたら、生活費の月も整える（同じ科目のままなら選び方を残し、別の収益の科目なら、その科目の決まり。収益がなくなれば消す）
   const setAccount = (k) => (v) => setF((s) => { const next = { ...s, [k]: v }; return { ...next, living: livingOnAccountChange(accounts, s, next) } })
+  const applyValues = (values) => { setF((s) => ({ ...s, ...values })); setError('') }
+  const copyButton = lastEntry ? (
+    <button type="button" className="copy-last" title={t('entries.copyLastTitle', { date: lastEntry.date, debit: accounts.find((a) => a.id === lastEntry.debitId)?.name ?? '', credit: accounts.find((a) => a.id === lastEntry.creditId)?.name ?? '', amount: formatMoney(lastEntry.amount, currency) })} onClick={() => applyValues(copyInputFromEntry(lastEntry, accounts))}>{t('entries.copyLast')}</button>
+  ) : null
+  const presetRow = presets && presets.length > 0 ? (
+    <div className="preset-row" role="group" aria-label={t('presets.chooseLabel')}>
+      {/* ボタンは span で包む：群青の PC の「隣り合う部品は余白で 12px あける」規則に、折り返す行を巻き込まないため（間は行の gap） */}
+      <span className="preset-label">{t('presets.chooseLabel')}</span>
+      {presets.map((p) => <span key={p.id} className="preset-item"><button type="button" className="preset-chip" onClick={() => applyValues(presetToFormValues(p, accounts))}>{p.name}</button></span>)}
+    </div>
+  ) : null
+  let noSpendButton = null
+  if (noSpend) {
+    const shown = isNoSpendShown(noSpend.days, noSpend.entries, f.date)
+    const can = canMarkNoSpend(noSpend.entries, f.date, noSpend.today)
+    const label = f.date === noSpend.today ? t('entries.noSpendToday') : t('entries.noSpendDate', { md: f.date.slice(5).replace('-', '/') })
+    const why = { hasEntries: 'entries.noSpendHasEntries', future: 'entries.noSpendRange', old: 'entries.noSpendRange', invalid: 'entries.noSpendRange' }[can.reason]
+    noSpendButton = (
+      <button type="button" className={shown ? 'no-spend on' : 'no-spend'} aria-pressed={shown} disabled={!shown && !can.ok}
+        title={shown ? t('entries.noSpendUndoTitle') : can.ok ? t('entries.noSpendTitle') : t(why, { days: NO_SPEND_BACK_DAYS })}
+        onClick={() => noSpend.onToggle(f.date)}>{shown ? t('entries.noSpendDone', { label }) : label}</button>
+    )
+  }
   const showLiving = livingAccount(accounts, f.debitId, f.creditId) !== undefined // 収益の科目（調整益を除く）を選んだときだけ
   useEffect(() => { onValues?.(f) }, [f]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -78,6 +105,9 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
   if (variant === 'card') {
     return (
       <form className="g-slip" onSubmit={submit}>
+        {presetRow}
+        {copyButton}
+        {noSpendButton}
         {fields.date}
         {fields.debit}
         {fields.credit}
@@ -93,6 +123,9 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
   if (variant === 'sheet') {
     return (
       <form className="sheet-form" onSubmit={submit}>
+        {presetRow}
+        {copyButton}
+        {noSpendButton}
         {fields.date}
         {fields.amount}
         <div className="sheet-pair">{fields.debit}{fields.credit}</div>
@@ -115,10 +148,25 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
       {fields.credit}
       {fields.living}
       <input className="memo-input" placeholder={t('common.memo')} aria-label={t('common.memo')} value={f.memo} onChange={(e) => set('memo')(e.target.value)} />
+      {presetRow}
+      {copyButton}
+      {noSpendButton}
       <button><Icon name={submitIcon} />{submitLabel}</button>
       {onCancel && <button type="button" onClick={onCancel}><Icon name="close" />{t('entries.sheetClose')}</button>}
       {error && <span className="error">{error}</span>}
     </form>
+  )
+}
+
+// スマホ：「＋」を押した最初の画面の、プリセット 1 件分のボタン（名前と、借方・貸方・金額の 1 行）
+function PresetPickButton({ preset, accounts, currency, onPick }) {
+  const name = (id) => accounts.find((a) => a.id === id)?.name ?? ''
+  const amount = preset.amount === null ? t('presets.noAmount') : formatMoney(preset.amount, currency)
+  return (
+    <button type="button" className="preset-pick-item" onClick={onPick}>
+      <span className="pn">{preset.name}</span>
+      <span className="pl">{t('presets.line', { debit: name(preset.debitId), credit: name(preset.creditId), amount })}</span>
+    </button>
   )
 }
 
@@ -228,6 +276,8 @@ export default function Entries({ data, update }) {
   const [order, setOrder] = useState('asc') // 日付の枠の並び。画面の中だけで持ち、保存しない（画面を移る・再読み込みで古い順に戻る）
   const [openRowId, setOpenRowId] = useState(null) // 開いている行（スマホの幅のカード。1つだけ）。月を変える・その日を閉じると閉じる
   const [creating, setCreating] = useState(false) // スマホ：右下の「＋」から開く、新しい仕訳の入力画面
+  const [presetStep, setPresetStep] = useState(false) // スマホ：入力画面の前の、プリセットを選ぶ画面（プリセットがあり、設定が「出す」のときだけ）
+  const [fill, setFill] = useState(null) // 選んだプリセットの値（借方・貸方・金額・メモ）。入力画面の初めの値に重ねる
   const [toggled, setToggled] = useState({}) // 日付の枠を押して開閉した分（日付 → 開いているか）。月を変えると初めの状態に戻る。覚えない
   const phone = usePhone()
   const gunjoPc = useGunjoPc() // 群青の PC：月の欄と並べ替えのボタンの間の空白を描かない（間は 12px の余白だけ）
@@ -248,12 +298,17 @@ export default function Entries({ data, update }) {
     setMonth(input.date.slice(0, 7)) // 追加した仕訳が見える月に切り替える
     setCreating(false) // スマホの入力画面は、追加できたら閉じる
   }
+  const lastEntry = lastNormalEntry(entries, data.subscriptions) // 「前回と同じ入力」の元（定期支払いの自動記入は除く）
   const last = lastCreditId(entries)
   const creditId = entryAccountOptions(accounts).some((a) => a.id === last) ? last : '' // 選択肢にあるときだけ使う
   const newInitial = { date: today(), amount: '', debitId: '', creditId, memo: '', living: defaultLiving(accounts, '', creditId) }
+  const presets = data.entryPresets
+  // 「今日は使っていない」：日付の欄の日に印を付ける・外す（仕訳とは別の noSpendDays。残高・月次などには影響しない）
+  const noSpend = { days: data.noSpendDays, entries, today: today(), onToggle: (date) => update({ ...data, noSpendDays: data.noSpendDays.includes(date) ? unmarkNoSpendDay(data.noSpendDays, date) : markNoSpendDay(data.noSpendDays, date) }) }
+  const sheetInitial = fill ? { ...newInitial, ...fill } : newInitial // スマホの入力画面の初めの値（プリセットを選んだときは、その値）
   const changeMonth = (v) => { setMonth(v); setEditingId(null); setOpenRowId(null); setToggled({}) }
   const shiftMonth = (d) => { const [y, m] = month.split('-').map(Number); const x = new Date(y, m - 1 + d, 1); changeMonth(`${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}`) } // 前の月・次の月（群青の PC の帯）
-  const road = gunjoPc && month ? roadDays(accounts, entries, month, today()) : null // 月の道（群青の PC の帯 L）
+  const road = gunjoPc && month ? roadDays(accounts, entries, month, today(), data.noSpendDays) : null // 月の道（群青の PC の帯 L）
   const groups = month ? groupEntriesByDate(entriesOfMonth(entries, month), order) : []
   const initialOpen = initialOpenDates(groups, loadOpenMode(phone ? 'phone' : 'pc')) // 日付の枠の初めの状態（設定 → 仕訳。スマホの幅と PC の幅で別）
 
@@ -284,6 +339,7 @@ export default function Entries({ data, update }) {
   useEffect(() => { // スマホの入力画面を閉じたら、フォーカスを「＋」へ戻す（初めの描画では動かさない）
     if (wasCreating.current && !creating) fabRef.current?.focus({ preventScroll: true })
     wasCreating.current = creating
+    if (!creating) { setPresetStep(false); setFill(null) }
   }, [creating])
 
   const save = (entry) => (input, memo) => {
@@ -305,7 +361,7 @@ export default function Entries({ data, update }) {
   }
   // 外側（幕）を押したとき（新しい仕訳）：何も入力していなければ閉じる。入力していれば「変更を捨てますか」
   const outsideNew = async () => {
-    if (valuesRef.current && entryChanged(newInitial, valuesRef.current)) {
+    if (valuesRef.current && entryChanged(sheetInitial, valuesRef.current)) {
       if (!(await confirm({ message: t('entries.discardConfirm') }))) {
         document.querySelector('.sheet input[type="date"]')?.focus()
         return
@@ -412,7 +468,7 @@ export default function Entries({ data, update }) {
         <BandStat label={t('entries.heroSpend', { m: Number(month.slice(5)) })} value={signedYen(road.total, formatYen)} unit={currencyUnit(settings.currency)} />
         <BandStat label={t('entries.heroCount')} value={road.days.reduce((s, d) => s + d.count, 0)} unit={t('settings.countUnit')} />
       </>, bandHost)}
-      {bandRoad && road && createPortal(<MonthRoad road={road} currency={settings.currency} />, bandRoad)}
+      {bandRoad && road && createPortal(<MonthRoad road={road} currency={settings.currency} shape={loadNoSpendShape()} />, bandRoad)}
       {gunjoPc ? (
         // 群青の PC（見本 E-entries）：左に「新しい仕訳」の札（画面の上に貼り付く）、右に一覧（並べ替えのボタンと、日ごとの枠）。画面の名前は帯のマス
         <div className="g-entries-body">
@@ -423,6 +479,10 @@ export default function Entries({ data, update }) {
               accounts={accounts}
               favorites={settings.favorites}
               initial={newInitial}
+              lastEntry={lastEntry}
+              currency={settings.currency}
+              presets={presets}
+              noSpend={noSpend}
               submitLabel={t('common.add')}
               onSubmit={add}
             />
@@ -442,6 +502,10 @@ export default function Entries({ data, update }) {
           accounts={accounts}
           favorites={settings.favorites}
           initial={newInitial}
+          lastEntry={lastEntry}
+          currency={settings.currency}
+          presets={presets}
+          noSpend={noSpend}
           submitLabel={t('common.add')}
           onSubmit={add}
         />
@@ -454,15 +518,27 @@ export default function Entries({ data, update }) {
         </>
       )}
       {phone && !editing && !creating && (
-        <button ref={fabRef} type="button" className="entry-fab" aria-label={t('entries.fabLabel')} title={t('entries.fabLabel')} onClick={() => { valuesRef.current = null; setCreating(true) }}><Icon name="plus" /></button>
+        <button ref={fabRef} type="button" className="entry-fab" aria-label={t('entries.fabLabel')} title={t('entries.fabLabel')} onClick={() => { valuesRef.current = null; setPresetStep(presets.length > 0 && loadPresetPrompt() === 'on'); setCreating(true) }}><Icon name="plus" /></button>
       )}
-      {creating && (
+      {creating && presetStep && (
+        <EntrySheet title={t('presets.sheetTitle')} onClose={() => setCreating(false)} onOutside={() => setCreating(false)}>
+          <div className="preset-pick">
+            {presets.map((p) => <PresetPickButton key={p.id} preset={p} accounts={accounts} currency={settings.currency} onPick={() => { setFill(presetToFormValues(p, accounts)); setPresetStep(false) }} />)}
+            <button type="button" className="preset-skip" onClick={() => setPresetStep(false)}>{t('presets.skip')}</button>
+          </div>
+        </EntrySheet>
+      )}
+      {creating && !presetStep && (
         <EntrySheet title={t('entries.newSheetTitle')} onClose={() => setCreating(false)} onOutside={outsideNew}>
           <EntryForm
             variant="sheet"
             accounts={accounts}
             favorites={settings.favorites}
-            initial={newInitial}
+            initial={sheetInitial}
+            lastEntry={lastEntry}
+            currency={settings.currency}
+            presets={loadPresetPrompt() === 'off' ? presets : []}
+            noSpend={noSpend}
             submitLabel={t('common.add')}
             onSubmit={add}
             onCancel={() => setCreating(false)}

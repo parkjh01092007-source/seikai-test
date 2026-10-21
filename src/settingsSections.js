@@ -14,6 +14,7 @@ export const DEFAULT_TAB = 'record' // 初めに開くタブ（どのタブを�
 export const SETTINGS_SECTIONS = [
   { id: 'entries', en: 'settings.en.entries', group: 'record', title: 'settings.entriesHeading' },
   { id: 'favorites', en: 'settings.en.favorites', group: 'record', title: 'settings.favoritesHeading' },
+  { id: 'presets', en: 'settings.en.presets', group: 'record', title: 'settings.presetsHeading' },
   { id: 'balanceView', en: 'settings.en.balanceView', group: 'inquiry', title: 'balanceView.title' },
   { id: 'card', en: 'settings.en.card', group: 'inquiry', title: 'card.title' },
   { id: 'save', en: 'settings.en.save', group: 'data', title: 'save.title' },

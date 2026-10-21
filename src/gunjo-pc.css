@@ -186,6 +186,10 @@
   :root[data-theme='gunjo'] .subscriptions .g-form :is(input, select) { width: 100%; }
   :root[data-theme='gunjo'] .subscriptions .g-form input.day { width: 100%; text-align: right; }
   :root[data-theme='gunjo'] .subscriptions .g-form > .error { grid-column: 1 / -1; }
+  :root[data-theme='gunjo'] .settings .pset.g-form { display: grid; grid-template-columns: 1.1fr 1fr 1fr 0.9fr 1.3fr auto auto; gap: 10px 12px; align-items: end; margin: 10px 0 0; }
+  :root[data-theme='gunjo'] .settings .pset.g-form .fl { display: block; margin: 0; }
+  :root[data-theme='gunjo'] .settings .pset.g-form :is(input, select) { width: 100%; }
+  :root[data-theme='gunjo'] .settings .pset.g-form > .error { grid-column: 1 / -1; }
   :root[data-theme='gunjo'] button.sub-submit.large { height: var(--g-h-large); padding: 0 22px; font-size: 16px; }
   :root[data-theme='gunjo'] .subscriptions ul { margin: 0; padding: 0; }
   :root[data-theme='gunjo'] .subscriptions li { display: grid; grid-template-columns: 104px 1fr auto; gap: 0 18px; align-items: center; margin: 0 0 22px; padding: 14px 20px; background: #fff; border: 0; box-shadow: var(--g-tile-shadow); }
@@ -462,6 +466,27 @@
   :root[data-theme='gunjo'] .g-road .d.bt .ray { transform: translateX(calc(-50% - 5px)); }
   :root[data-theme='gunjo'] .g-road .d.bt .fx { transform: translateX(calc(-50% + 5px)); }
   /* 今日の ▼ と、一番大きい日の金額の札（光の先端の上） */
+  /* 使っていない日（.n。印があり、仕訳がない日）の図形。設定（端末ごと）で data-nospend に入る：underline（初期値）・ring・bar・slash・cross・star・check（none は印を出さない。.n が付かない）。
+     見本 E-road-nouse.html。色は #e4e3ff（今日は白）。細い線（slash・cross・check）は白・2px。どれも、ベースライン（入力なし）と小さい四角（仕訳のみ）と形が違う */
+  :root[data-theme='gunjo'] .g-road .d.n { --c: #e4e3ff; --w: #fff; }
+  :root[data-theme='gunjo'] .g-road .d.n.t { --c: #fff; }
+  :root[data-theme='gunjo'] .g-road[data-nospend='underline'] .d.n > span { color: #fff; font-size: 13px; font-weight: 500; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+  :root[data-theme='gunjo'] .g-road:not([data-nospend='underline']) .d.n::before { content: ''; position: absolute; left: 50%; bottom: 21px; background-color: transparent; }
+  :root[data-theme='gunjo'] .g-road[data-nospend='ring'] .d.n::before { width: 8px; height: 8px; margin-left: -4px; border: 1.5px solid var(--c); border-radius: 50%; box-sizing: border-box; }
+  :root[data-theme='gunjo'] .g-road[data-nospend='bar'] .d.n::before { left: 15%; right: 15%; bottom: 19px; height: 3px; background: var(--c); }
+  :root[data-theme='gunjo'] .g-road[data-nospend='slash'] .d.n::before { width: 9px; height: 12px; margin-left: -4.5px; background-image: linear-gradient(to top left, transparent 38%, var(--w) 38% 62%, transparent 62%); }
+  :root[data-theme='gunjo'] .g-road[data-nospend='cross'] .d.n::before { width: 9px; height: 9px; margin-left: -4.5px; background-image: linear-gradient(to top left, transparent 38%, var(--w) 38% 62%, transparent 62%), linear-gradient(to top right, transparent 38%, var(--w) 38% 62%, transparent 62%); }
+  :root[data-theme='gunjo'] .g-road[data-nospend='star'] .d.n::before { width: 11px; height: 11px; margin-left: -5.5px; background: var(--c); clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+  :root[data-theme='gunjo'] .g-road[data-nospend='check'] .d.n::before { width: 5px; height: 10px; margin-left: -2.5px; bottom: 20px; box-sizing: border-box; border: solid var(--w); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  /* 凡例の「使っていない日」の見本（図形と同じ形） */
+  :root[data-theme='gunjo'] .g-legend .lg-n { display: inline-block; flex: none; }
+  :root[data-theme='gunjo'] .g-legend[data-nospend='underline'] .lg-n { width: 14px; height: 0; border-bottom: 2px solid #fff; margin-top: 8px; }
+  :root[data-theme='gunjo'] .g-legend[data-nospend='ring'] .lg-n { width: 8px; height: 8px; border: 1.5px solid #e4e3ff; border-radius: 50%; }
+  :root[data-theme='gunjo'] .g-legend[data-nospend='bar'] .lg-n { width: 12px; height: 3px; background: #e4e3ff; }
+  :root[data-theme='gunjo'] .g-legend[data-nospend='slash'] .lg-n { width: 9px; height: 12px; background-image: linear-gradient(to top left, transparent 38%, #fff 38% 62%, transparent 62%); }
+  :root[data-theme='gunjo'] .g-legend[data-nospend='cross'] .lg-n { width: 9px; height: 9px; background-image: linear-gradient(to top left, transparent 38%, #fff 38% 62%, transparent 62%), linear-gradient(to top right, transparent 38%, #fff 38% 62%, transparent 62%); }
+  :root[data-theme='gunjo'] .g-legend[data-nospend='star'] .lg-n { width: 11px; height: 11px; background: #e4e3ff; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+  :root[data-theme='gunjo'] .g-legend[data-nospend='check'] .lg-n { width: 5px; height: 10px; box-sizing: border-box; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg) translate(-1px, -2px); margin: 0 3px 0 2px; }
   :root[data-theme='gunjo'] .g-road .d u { position: absolute; left: 50%; margin-left: -5px; bottom: calc(19px + max(8px, calc(var(--ray-max) * var(--k))) + 10px); width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 7px solid #fff; }
   :root[data-theme='gunjo'] .g-road .d .tag { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(19px + max(8px, calc(var(--ray-max) * var(--k))) + 12px); padding: 3px 6px; font-family: var(--font-mincho); font-size: 11px; font-style: normal; font-weight: 500; line-height: 1; white-space: nowrap; background: #fff; color: var(--color-accent); }
   :root[data-theme='gunjo'] .g-road .d .tag::after { content: ''; position: absolute; left: 50%; bottom: -4px; margin-left: -4px; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 4px solid #fff; }
@@ -479,6 +504,7 @@
   :root[data-theme='gunjo'] .g-slip-card .g-h { margin-bottom: 6px; }
   :root[data-theme='gunjo'] .entries .g-slip { display: flex; flex-direction: column; align-items: stretch; gap: 6px; margin: 0; }
   :root[data-theme='gunjo'] .entries .g-slip .field { display: block; margin: 0; }
+  :root[data-theme='gunjo'] .entries .g-slip .preset-row { gap: 12px; }
   :root[data-theme='gunjo'] .entries .g-slip .field-label { display: block; margin-bottom: 2px; font-family: var(--font-gothic); font-size: 11px; letter-spacing: 0.2em; color: var(--color-muted); }
   :root[data-theme='gunjo'] .g-slip :is(input, select) { width: 100%; }
   :root[data-theme='gunjo'] .g-slip .amount-input, :root[data-theme='gunjo'] .g-slip .calc-field { width: 100%; }

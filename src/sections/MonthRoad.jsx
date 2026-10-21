@@ -37,12 +37,14 @@ function useTagFit(ref) {
   })
 }
 
-export default function MonthRoad({ road, currency }) {
+// shape：「使っていない日」の図形（設定。none なら印を出さない＝入力していない日と同じに見える）
+export default function MonthRoad({ road, currency, shape = 'underline' }) {
   const roadRef = useRef(null)
   useTagFit(roadRef)
   const m = Number(road.month.slice(5))
   const label = (d) => {
     if (d.state === 'future') return t('entries.roadFuture', { day: d.day })
+    if (d.noSpend && shape !== 'none') return t('entries.roadNoSpend', { day: d.day })
     if (d.state === 'blank') return t('entries.roadBlank', { day: d.day })
     if (d.state === 'open') return t('entries.roadOpen', { day: d.day })
     if (d.fixedAmount > 0) return t('entries.roadFixed', { day: d.day, amount: formatMoney(d.amount, currency), fixed: formatMoney(d.fixedAmount, currency) })
@@ -53,15 +55,16 @@ export default function MonthRoad({ road, currency }) {
   const top = road.days.reduce((best, d) => (d.variableAmount > (best?.variableAmount ?? 0) ? d : best), null) // 変動費が一番大きい日（同じ額なら、早い日）
   return (
     <>
-      <div className="g-road" ref={roadRef} role="list" aria-label={t('entries.roadLabel', { m })} style={{ gridTemplateColumns: `repeat(${road.days.length}, minmax(0, 1fr))` }}>
+      <div className="g-road" ref={roadRef} data-nospend={shape} role="list" aria-label={t('entries.roadLabel', { m })} style={{ gridTemplateColumns: `repeat(${road.days.length}, minmax(0, 1fr))` }}>
         {road.days.map((d) => {
           const ray = d.variableAmount > 0
           const line = d.fixedAmount > 0
-          const dot = !ray && !line && (d.count > 0 || d.state === 'open') // 仕訳はあるが光も線も出ない日（と、まだ入力のない今日）
+          const mark = d.noSpend && shape !== 'none' // 使っていない日（印があり、仕訳がない。図形は CSS が data-nospend で描く）
+          const dot = !ray && !line && !mark && (d.count > 0 || d.state === 'open') // 仕訳はあるが光も線も出ない日（と、まだ入力のない今日）。使っていない日の今日は、点でなく図形
           const k = ray ? roadRatio(d.variableAmount, base) : 0
           const kf = line ? roadRatio(d.fixedAmount, fixedBase) : 0
           return (
-            <div key={d.day} role="listitem" className={`d${dot ? ' z' : ''}${d.isToday ? ' t' : ''}${ray && line ? ' bt' : ''}`} title={label(d)} aria-label={label(d)} style={{ '--k': k.toFixed(3), '--kf': kf.toFixed(3) }}>
+            <div key={d.day} role="listitem" className={`d${dot ? ' z' : ''}${mark ? ' n' : ''}${d.isToday ? ' t' : ''}${ray && line ? ' bt' : ''}`} title={label(d)} aria-label={label(d)} style={{ '--k': k.toFixed(3), '--kf': kf.toFixed(3) }}>
               {d.isToday && <u aria-hidden="true" />}
               {ray && <i className="ray" aria-hidden="true" />}
               {line && <b className="fx" aria-hidden="true" />}
@@ -71,11 +74,12 @@ export default function MonthRoad({ road, currency }) {
           )
         })}
       </div>
-      <div className="g-legend" aria-hidden="true">
+      <div className="g-legend" data-nospend={shape} aria-hidden="true">
         <span><i className="lg-s" />{t('entries.legendSpend')}</span>
         <span><i className="lg-x" />{t('entries.legendFixed')}</span>
         <span><i className="lg-e" />{t('entries.legendBlank')}</span>
         <span><i className="lg-t" />{t('entries.legendToday')}</span>
+        {shape !== 'none' && <span><i className="lg-n" />{t('entries.legendNoSpend')}</span>}
       </div>
     </>
   )

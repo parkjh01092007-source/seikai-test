@@ -108,6 +108,7 @@ export function applyRenames(accounts, ids, to, now = new Date().toISOString()) 
 
 // 計算で探す特別科目は、名前ではなく key で探す（改名しても壊れない）。削除・使わない設定・type変更は不可。
 export const SPECIAL_KEYS = ['opening', 'adjust-gain', 'adjust-loss', 'credit-card']
+export const ENTRY_PRESET_NAME_MAX = 30 // 仕訳プリセットの名前の長さの上限（文字数）
 export const ENTRY_HIDDEN_KEYS = ['opening', 'adjust-gain', 'adjust-loss'] // 入力の選択肢から除く。クレカ未払いは除かない
 export const LEGACY_KEY_BY_NAME = { 開始残高: 'opening', 調整益: 'adjust-gain', 調整損: 'adjust-loss', クレカ未払い: 'credit-card' } // v2からの移行専用
 
@@ -310,9 +311,26 @@ export const entriesOfMonth = (entries, month) =>
     .filter((e) => e.date.startsWith(month))
     .sort(byDateThenCreated)
 
-// 最後に作成した normal の仕訳の貸方。なければ ''
+// 最後に作成した normal の仕訳（createdAt が一番新しいもの。同じなら、並びの後ろのほう）。なければ null。開始残高・残高調整は対象外。
+// subscriptions を渡すと、定期支払いの自動記入でできた仕訳（名前＝メモ・借方・貸方・金額が、定期支払いの 1 件と同じ）は飛ばす（自分で入れた「前回」を元にするため）
+export const lastNormalEntry = (entries, subscriptions = []) =>
+  entries
+    .filter((e) => e.kind === 'normal' && !subscriptions.some((s) => s.name === e.memo && s.debitId === e.debitId && s.creditId === e.creditId && s.amount === e.amount))
+    .reduce((last, e) => (!last || e.createdAt >= last.createdAt ? e : last), null)
+
+// 最後に作成した normal の仕訳の貸方。なければ ''（定期支払いの自動記入も数える）
 export const lastCreditId = (entries) =>
   entries.filter((e) => e.kind === 'normal').reduce((last, e) => (!last || e.createdAt >= last.createdAt ? e : last), null)?.creditId ?? ''
+
+// 「前回と同じ入力」：入力欄に入れる値（日付は入れない）。今は選べない科目（使わない設定・なくなった）の側は ''。
+// 生活費の月は、元の選び方を、収益の科目がまだ使われているときだけ残す。なければ科目の決まり。金額は文字
+export function copyInputFromEntry(entry, accounts) {
+  const usable = new Set(entryAccountOptions(accounts).map((a) => a.id))
+  const debitId = usable.has(entry.debitId) ? entry.debitId : ''
+  const creditId = usable.has(entry.creditId) ? entry.creditId : ''
+  const keep = entry.living && livingAccount(accounts, debitId, creditId) !== undefined
+  return { debitId, creditId, amount: String(entry.amount), memo: entry.memo, living: keep ? entry.living : defaultLiving(accounts, debitId, creditId) }
+}
 
 export const formatYen = (n) => n.toLocaleString('ja-JP') // 表示専用。計算には使わない。数字の桁区切りだけ（通貨の文字は付けない）
 // 金額の後ろに通貨の文字を付ける（1,000円・1,000엔・1,000원）。数字は変わらない。通貨が分からないとき（古いデータ）は円
@@ -653,7 +671,8 @@ export const roadFloor = (currency) => ROAD_FLOOR[isCurrency(currency) ? currenc
 // 日ごとの費用を、固定費と変動費に分ける。判定は費用の科目の fixed だけ（前月との比較・日付の近さは見ない）。
 // dailyExpenses の日ごとの値に fixedAmount（fixed が true の費用の科目の、借方 − 貸方）と variableAmount（amount − fixedAmount）を足す。
 // fixedAmount + variableAmount = amount（月の合計も dailyExpenses の total と同じ）。dailyExpenses の返す値は変えない
-export function roadDays(accounts, entries, month, today) {
+// noSpendDays（「使っていない日」の印。仕訳とは別）を渡すと、日ごとに noSpend（印があり、その日に通常の仕訳がない）を足す。数え方（amount・fixedAmount・variableAmount・total）には入らない
+export function roadDays(accounts, entries, month, today, noSpendDays = []) {
   const road = dailyExpenses(accounts, entries, month, today)
   const fixedIds = new Set(accounts.filter((a) => hasFixed(a) && a.fixed === true).map((a) => a.id))
   const fixedByDay = road.days.map(() => 0)
@@ -661,7 +680,7 @@ export function roadDays(accounts, entries, month, today) {
     if (e.kind !== 'normal' || !e.date.startsWith(month)) continue
     fixedByDay[Number(e.date.slice(8, 10)) - 1] += (fixedIds.has(e.debitId) ? e.amount : 0) - (fixedIds.has(e.creditId) ? e.amount : 0)
   }
-  return { ...road, days: road.days.map((d, i) => ({ ...d, fixedAmount: fixedByDay[i], variableAmount: d.amount - fixedByDay[i] })) }
+  return { ...road, days: road.days.map((d, i) => ({ ...d, fixedAmount: fixedByDay[i], variableAmount: d.amount - fixedByDay[i], noSpend: isNoSpendShown(noSpendDays, entries, d.date) })) }
 }
 
 // 光の長さの基準：max(変動費の中央値 × 3, 床)。中央値は、変動費が 0 より大きい日だけで取る（偶数個なら真ん中 2 つの平均）。
@@ -958,6 +977,81 @@ export function validateFavoriteLimit(text, currentCount) {
 }
 
 export const setFavoriteLimit = (settings, side, limit) => ({ ...settings, favoriteLimits: { ...settings.favoriteLimits, [side]: limit } })
+
+// ---- 「使っていない日」（noSpendDays。v11。spec-ledger.md 5.18）----
+// 仕訳とは別の、日付だけの印。残高・月次・元帳・件数には入らない（計算の関数は noSpendDays を受け取らない）。
+export const NO_SPEND_BACK_DAYS = 7 // 押せるのは、今日と、過去この日数まで
+
+// 日付（YYYY-MM-DD）を日数だけずらす（UTC で数える）
+export function shiftDate(date, days) {
+  const d = new Date(`${date}T00:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + days)
+  return d.toISOString().slice(0, 10)
+}
+
+// その日に、「使っていない」を付けられるか。{ ok: true } か { ok: false, reason }。
+// reason：invalid（日付が正しくない）・future（未来）・old（過去 7 日より前）・hasEntries（その日に通常の仕訳がある）
+export function canMarkNoSpend(entries, date, today) {
+  if (!isDate(date)) return { ok: false, reason: 'invalid' }
+  if (date > today) return { ok: false, reason: 'future' }
+  if (date < shiftDate(today, -NO_SPEND_BACK_DAYS)) return { ok: false, reason: 'old' }
+  if (entries.some((e) => e.kind === 'normal' && e.date === date)) return { ok: false, reason: 'hasEntries' }
+  return { ok: true }
+}
+
+// 付ける・外す（昇順・重複なし。同じ配列は変えない）
+export const markNoSpendDay = (days, date) => (days.includes(date) ? days : [...days, date].sort())
+export const unmarkNoSpendDay = (days, date) => days.filter((d) => d !== date)
+
+// 表示で、その日が「使っていない日」か。印があっても、その日に通常の仕訳があれば、仕訳を優先して false（印は消さない）
+export const isNoSpendShown = (days, entries, date) => days.includes(date) && !entries.some((e) => e.kind === 'normal' && e.date === date)
+
+// ---- 仕訳プリセット（entryPresets。v11。docs は spec-ledger.md 5.18）----
+// 1 件：{ id, name, debitId, creditId, amount（null か 1 以上の整数）, memo, createdAt, updatedAt }。入力欄に、借方・貸方・金額・メモをまとめて入れる型
+
+// 入力の検証。借方・貸方は、仕訳の入力と同じ選択肢（3つの特別科目を除く）。currentIds は編集中のプリセットが今使っている科目。金額は空でもよい（null）
+export function validateEntryPresetInput({ name, debitId, creditId, amountText, memo }, accounts, currentIds = []) {
+  const n = typeof name === 'string' ? name.trim() : ''
+  if (!n) return { error: t('error.nameEmpty') }
+  if (n.length > ENTRY_PRESET_NAME_MAX) return { error: t('error.presetNameTooLong', { max: ENTRY_PRESET_NAME_MAX }) }
+  const text = typeof amountText === 'string' ? amountText.trim() : ''
+  let amount = null
+  if (text !== '') {
+    const a = parseAmount(text)
+    if (a.error) return a
+    amount = a.amount
+  }
+  const ids = new Set(entryAccountOptions(accounts, currentIds).map((x) => x.id))
+  if (!ids.has(debitId) || !ids.has(creditId)) return { error: t('error.chooseDebitCredit') }
+  if (debitId === creditId) return { error: t('error.sameDebitCredit') }
+  return { name: n, debitId, creditId, amount, memo: typeof memo === 'string' ? memo : '' }
+}
+
+export const newEntryPreset = (input, now = new Date().toISOString()) => ({ id: crypto.randomUUID(), ...input, createdAt: now, updatedAt: now })
+export const editEntryPreset = (preset, input, now = new Date().toISOString()) => ({ ...preset, ...input, updatedAt: now })
+
+// 上下に動かす。delta は -1（上へ）か +1（下へ）。端・ないものは、同じ配列を返す
+export function moveEntryPreset(list, id, delta) {
+  const i = list.findIndex((p) => p.id === id)
+  const j = i + delta
+  if (i < 0 || j < 0 || j >= list.length) return list
+  const next = [...list]
+  ;[next[i], next[j]] = [next[j], next[i]]
+  return next
+}
+
+// 科目を削除するとき：その科目を使っているプリセット（確認画面の件数用）と、それを除いた配列
+export const presetsUsingAccount = (list, accountId) => list.filter((p) => p.debitId === accountId || p.creditId === accountId)
+export const removeAccountFromPresets = (list, accountId) => list.filter((p) => p.debitId !== accountId && p.creditId !== accountId)
+
+// 入力欄に入れる値（applyValues に渡す。日付は入れない）。借方・貸方・金額・メモを、そのプリセットのものに置き換える（金額なしは空）。
+// 今は選べない科目（使わない設定にした・なくなった）の側は ''。生活費の月は、科目の決まり
+export function presetToFormValues(preset, accounts) {
+  const usable = new Set(entryAccountOptions(accounts).map((a) => a.id))
+  const debitId = usable.has(preset.debitId) ? preset.debitId : ''
+  const creditId = usable.has(preset.creditId) ? preset.creditId : ''
+  return { debitId, creditId, amount: preset.amount === null ? '' : String(preset.amount), memo: preset.memo, living: defaultLiving(accounts, debitId, creditId) }
+}
 
 // 科目を削除したとき、借方・貸方の両方のお気に入りから外す（並びは保つ）
 export const removeAccountFromSettings = (settings, accountId) => ({

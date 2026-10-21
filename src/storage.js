@@ -1,12 +1,12 @@
 // データの読み書きはこのファイルだけで行う。保存先を変えるときはここだけ直す。
 import { t, getLanguage } from './text.js'
-import { makeInitialAccounts, addKeys, addCardRoles, addPresets, addLiving, addFixed, hasFixed, applySubscriptions, emptySettings, sanitizeSettings, defaultCurrency, isCurrency, budgetKindAllows, isBudgetMonth, hasLivingMonth, livingAccount, TYPES, ROLES, LIABILITY_ROLES, PRESETS, KINDS, LIVING, SPECIAL_KEYS, isDate } from './ledgerLogic.js'
+import { ENTRY_PRESET_NAME_MAX, ENTRY_HIDDEN_KEYS, makeInitialAccounts, addKeys, addCardRoles, addPresets, addLiving, addFixed, hasFixed, applySubscriptions, emptySettings, sanitizeSettings, defaultCurrency, isCurrency, budgetKindAllows, isBudgetMonth, hasLivingMonth, livingAccount, TYPES, ROLES, LIABILITY_ROLES, PRESETS, KINDS, LIVING, SPECIAL_KEYS, isDate } from './ledgerLogic.js'
 
 const KEY = 'orenoyome'
-export const SCHEMA_VERSION = 10
+export const SCHEMA_VERSION = 11
 
 // 初めての起動と全体の初期化：初期科目はその時点の言語の名前で作り、通貨は言語に合わせる（韓国語ならウォン、それ以外は円）
-export const emptyData = (language = getLanguage()) => ({ schemaVersion: SCHEMA_VERSION, skills: [], accounts: makeInitialAccounts(undefined, language), entries: [], subscriptions: [], settings: { ...emptySettings(), currency: defaultCurrency(language) }, budgets: [] })
+export const emptyData = (language = getLanguage()) => ({ schemaVersion: SCHEMA_VERSION, skills: [], accounts: makeInitialAccounts(undefined, language), entries: [], subscriptions: [], settings: { ...emptySettings(), currency: defaultCurrency(language) }, budgets: [], entryPresets: [], noSpendDays: [] })
 
 // 保存されている版が古ければそのまま返す（移行は migrate を呼んだときだけ）
 export function loadData() {
@@ -25,15 +25,16 @@ export const needsMigration = (data) => data.schemaVersion < SCHEMA_VERSION
 // 定期支払いの記入・保存・オートセーブのどれも書かない（古い版の決まりで書き換えて壊さないため。spec-pwa.md 6章）
 export const isNewerData = (data) => Number.isInteger(data?.schemaVersion) && data.schemaVersion > SCHEMA_VERSION
 
-// v1（スキルのみ）・v2〜v9 → v10。スキルはそのまま引き継ぐ。成功: { data, warnings } / 失敗: { error }（渡したデータは変えない）
+// v1（スキルのみ）・v2〜v10 → v11。スキルはそのまま引き継ぐ。成功: { data, warnings } / 失敗: { error }（渡したデータは変えない）
 // v1：初期科目（language の名前）・仕訳なし。v2：key を付ける（欠けたら error）。v3：そのまま。v4：定期支払いもそのまま。v5：設定（お気に入り）もそのまま。v6：予算もそのまま。
 // 負債に role を付ける（v7。key が credit-card → card・締め日31・引き落とし日27、ほか → other）。
 // 科目に preset を付ける（v7 以前だけ。名前と区分が、ja・ko どちらかの初期名と同じ科目。key を持つ科目・同じ preset の2つ目には付けない）。
 // settings.currency：v8 はそのまま（正しい通貨でなければ error）、v7 以前は足す（language が韓国語ならウォン、それ以外は円）。
 // 生活費の月を付ける（v9。収益の科目（調整益を除く）と、それを使う通常の仕訳に same）。
 // 固定費の印を付ける（v10。費用の科目（調整損を除く）に fixed。preset が通信費なら true、ほかは false）。
+// 仕訳プリセット（entryPresets）と「使っていない日」（noSpendDays）を空で足す（v11）。
 // subscriptions（v4 より前は空）、settings（v5 より前は空の初期値）、budgets（v6 より前は空）を足す。
-// v7 以前のデータに preset、v8 以前のデータに livingMonth・living、v9 以前のデータに fixed があれば error（新しい版の項目なので）。組み立てた結果は、返す前に v10 の検証にかける。保存は、呼ぶ側が成功のときだけ行う。
+// v7 以前のデータに preset、v8 以前のデータに livingMonth・living、v9 以前のデータに fixed があれば error（新しい版の項目なので）。組み立てた結果は、返す前に v11 の検証にかける。保存は、呼ぶ側が成功のときだけ行う。
 // warnings：v5〜v8 の設定で、その項目だけ無視したときの警告の文（なければ空）
 export function migrate(data, language = getLanguage()) {
   let accounts = []
@@ -55,7 +56,7 @@ export function migrate(data, language = getLanguage()) {
   if (Array.isArray(accounts)) accounts = addCardRoles(accounts)
   const budgets = data.schemaVersion >= 6 ? data.budgets : []
   const v = data.schemaVersion
-  const error = checkLedger(accounts, entries, { requireKeys: true, v7: true, v8: v === 1 || v >= 8, v9: v === 1 || v >= 9, v10: v === 1 }) ?? checkSubscriptions(subscriptions, accounts) ?? checkBudgets(budgets, accounts)
+  const error = checkLedger(accounts, entries, { requireKeys: true, v7: true, v8: v === 1 || v >= 8, v9: v === 1 || v >= 9, v10: v === 1 || v >= 10 }) ?? checkSubscriptions(subscriptions, accounts) ?? checkBudgets(budgets, accounts)
   if (error) return { error }
   if (v < 8) accounts = addPresets(accounts) // v8 の科目には付け足さない
   ;({ accounts, entries } = addLiving(accounts, entries))
@@ -72,7 +73,7 @@ export function migrate(data, language = getLanguage()) {
     warnings = r.warnings
   }
   const currency = v >= 8 ? data.settings.currency : defaultCurrency(language)
-  return { data: { schemaVersion: SCHEMA_VERSION, skills: data.skills, accounts, entries, subscriptions, settings: { ...settings, currency }, budgets }, warnings }
+  return { data: { schemaVersion: SCHEMA_VERSION, skills: data.skills, accounts, entries, subscriptions, settings: { ...settings, currency }, budgets, entryPresets: [], noSpendDays: [] }, warnings }
 }
 
 // 定期支払いの自動記入（v4 以降のデータに対して）。今日と now は呼ぶ側から渡す。記入しないときは、同じ data を返す
@@ -116,7 +117,7 @@ export const loadBalanceView = () => readBalanceView(browserStorage())
 export const rememberBalanceView = (view) => saveBalanceView(browserStorage(), view)
 export const BALANCE_VIEW_LABELS = { actual: 'balance.viewActual', budget: 'balance.viewBudget' } // ボタン・選択肢の文言（辞書のキー）
 
-// 書き出し：schemaVersion を一番上に、書き出し日時を付ける。残りのデータ（skills, accounts, entries, subscriptions, settings, budgets）はそのまま入れる
+// 書き出し：schemaVersion を一番上に、書き出し日時を付ける。残りのデータ（skills, accounts, entries, subscriptions, settings, budgets, entryPresets, noSpendDays）はそのまま入れる
 export function exportJson() {
   const { schemaVersion, ...rest } = loadData()
   return JSON.stringify({ schemaVersion, exportedAt: new Date().toISOString(), ...rest }, null, 2)
@@ -244,6 +245,33 @@ function checkBudgets(budgets, accounts) {
   return null
 }
 
+function validEntryPreset(p, accountsById) {
+  const debit = isObj(p) ? accountsById.get(p.debitId) : undefined
+  const credit = isObj(p) ? accountsById.get(p.creditId) : undefined
+  return (
+    isObj(p) && isStr(p.id) && isStr(p.name) && p.name.trim() !== '' && p.name.length <= ENTRY_PRESET_NAME_MAX &&
+    debit !== undefined && credit !== undefined && debit.id !== credit.id &&
+    !ENTRY_HIDDEN_KEYS.includes(debit.key) && !ENTRY_HIDDEN_KEYS.includes(credit.key) &&
+    (p.amount === null || (isInt(p.amount) && p.amount >= 1)) && isStr(p.memo) && isStr(p.createdAt) && isStr(p.updatedAt)
+  )
+}
+
+// entryPresets の検証（v11）。エラー文を返す（問題なければ null）。借方・貸方は、存在する別々の科目（3つの特別科目を除く）。金額は null か 1 以上の整数
+function checkEntryPresets(entryPresets, accounts) {
+  if (!Array.isArray(entryPresets)) return t('import.presetsShape')
+  const byId = new Map(accounts.map((a) => [a.id, a]))
+  if (!entryPresets.every((p) => validEntryPreset(p, byId))) return t('import.presetsInvalid')
+  if (!unique(entryPresets.map((p) => p.id))) return t('import.presetIdDup')
+  return null
+}
+
+// noSpendDays の検証（v11）：実在する日付（YYYY-MM-DD）の配列。同じ日が 2 回あればエラー
+function checkNoSpendDays(days) {
+  if (!Array.isArray(days) || !days.every(isDate)) return t('import.noSpendInvalid')
+  if (!unique(days)) return t('import.noSpendDup')
+  return null
+}
+
 // 読み込みファイルの検証のみ。現在のデータには触れない。成功: { data, warnings } / 失敗: { error }
 // warnings：設定（お気に入り）で、その項目だけ無視したときの警告の文（なければ空）
 export function parseImport(text, language = getLanguage()) {
@@ -264,14 +292,16 @@ export function parseImport(text, language = getLanguage()) {
     const subError = checkSubscriptions(json.subscriptions, json.accounts)
     if (subError) return { error: subError }
   }
-  if (json.schemaVersion < 10) return migrate(json, language) // v2〜v9 → v10（migrate が v10 の検証をする。v5〜v8 の設定の警告も返る）
+  if (json.schemaVersion < 11) return migrate(json, language) // v2〜v10 → v11（migrate が v11 の検証をする。v5〜v8 の設定の警告も返る）
   const r = sanitizeSettings(json.settings, json.accounts)
   if (r.error) return { error: r.error }
   if (!isCurrency(json.settings.currency)) return { error: t('import.currencyInvalid') }
   const budgetError = checkBudgets(json.budgets, json.accounts)
   if (budgetError) return { error: budgetError }
+  const presetError = checkEntryPresets(json.entryPresets, json.accounts) ?? checkNoSpendDays(json.noSpendDays)
+  if (presetError) return { error: presetError }
   return {
-    data: { schemaVersion: SCHEMA_VERSION, skills: json.skills, accounts: json.accounts, entries: json.entries, subscriptions: json.subscriptions, settings: { ...r.settings, currency: json.settings.currency }, budgets: json.budgets },
+    data: { schemaVersion: SCHEMA_VERSION, skills: json.skills, accounts: json.accounts, entries: json.entries, subscriptions: json.subscriptions, settings: { ...r.settings, currency: json.settings.currency }, budgets: json.budgets, entryPresets: json.entryPresets, noSpendDays: json.noSpendDays },
     warnings: r.warnings,
   }
 }

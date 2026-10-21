@@ -45,3 +45,16 @@
   /* 書き出し・読み込み：間は 8px */
   .settings .backup-row { display: flex; flex-wrap: wrap; gap: var(--space); }
 }
+
+/* 記帳 → プリセット：一覧（名前・内容の 1 行・上下・編集・削除）と、作る・直す欄。間は 8px */
+.settings .pset { display: flex; flex-wrap: wrap; gap: var(--space); align-items: center; margin: var(--space) 0; }
+.settings .pset input[inputmode] { width: 9em; }
+.settings .pset .error { flex: 1 1 100%; color: var(--color-error); }
+.settings ol.presets { padding-left: 0; list-style-position: inside; }
+.settings ol.presets li:has(> form) { list-style: none; }
+.settings .pset-line { display: block; margin: 2px 0 var(--space); }
+@media screen and (max-width: 959.98px), screen and (pointer: coarse) and (hover: none) {
+  .settings .pset > input[aria-label], .settings .pset > select { flex: 1 1 100%; min-width: 0; }
+  .settings .pset > input[inputmode] { width: auto; }
+  .settings .pset > button { flex: 1 1 calc(50% - var(--space) / 2); min-width: 0; }
+}

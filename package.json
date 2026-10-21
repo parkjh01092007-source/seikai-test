@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "verify": "node scripts/verify.mjs basic",
+    "verify:browser": "node scripts/verify.mjs browser",
+    "verify:visual": "node scripts/verify.mjs visual",
+    "verify:full": "node scripts/verify.mjs full"
   },
   "dependencies": {
     "react": "^19.2.8",
