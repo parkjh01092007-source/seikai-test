@@ -91,6 +91,18 @@
   }
   :root[data-theme='gunjo'] dialog:is(.confirm, .saveload)::backdrop { background: rgba(5, 2, 58, 0.62); }
 
+  /* ---- 確認画面（ConfirmDialog・ConflictDialog。見本：design-ref/gunjo-pc/E-confirm.html。区切り13-a）----
+     幅 600px・余白 26px 30px 24px・本文 18px（行の高さ 1.8・ゴシック）・本文の下 22px。「はい」「いいえ」は 42px・明朝 16px・間 14px（見本の .btn）。
+     本文の中の「先にセーブする」などの小さいボタン（extra）は 34px のまま。文言・Esc・フォーカスは JSX のまま（変えない） */
+  :root[data-theme='gunjo'] dialog.confirm { box-sizing: border-box; width: 600px; max-width: calc(100% - 64px); padding: 26px 30px 24px; font-size: 15px; }
+  :root[data-theme='gunjo'] dialog.confirm .message { margin: 0 0 22px; font-family: var(--font-gothic); font-size: 18px; line-height: 1.8; }
+  :root[data-theme='gunjo'] dialog.confirm .extra { margin-bottom: 22px; }
+  :root[data-theme='gunjo'] dialog.confirm .typed { margin-bottom: 22px; }
+  :root[data-theme='gunjo'] dialog.confirm.conflict .note-line { margin-bottom: 22px; }
+  :root[data-theme='gunjo'] dialog.confirm .actions { gap: 0; }
+  :root[data-theme='gunjo'] dialog.confirm .actions > button { height: var(--g-h-large); padding: 0 22px; font-size: 16px; gap: 8px; }
+  :root[data-theme='gunjo'] dialog.confirm .actions > button + button { margin-inline-start: 14px; }
+
   /* ---- メニュー（縦タブ。SideTabs.jsx）：固定・閉じた形・マウスを乗せて開いた形。見本：design-ref/gunjo-pc の E-menuopen・E-menuclosed と、各画面の左のメニュー ----
      閉じた形＝細い紺の帯（☰ と「正解」の円）。乗せて開いた形＝パネルが中身の上に重なる（右に紺のずらし影。中身は動かない）。固定＝場所が広がる。
      斜めの面（14°）は、パネルの下の方。下の「セーブ」「ロード」「ホームへ」は、入りきらないとき「ホームへ」が次の行へ回る（nav.css の作業33 の直し。flex-wrap のまま） */
