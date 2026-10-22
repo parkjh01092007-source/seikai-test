@@ -516,16 +516,17 @@
 
   /* ---- 仕訳の入力の札（EntryForm の variant='card'。見本 E-entries）：左に幅 330px の札「新しい仕訳 NEW」。ラベルが上の縦の並び、金額は右そろい（欄は 34px。見本の 42px にはしない）、幅いっぱいの大きい「追加」。画面をスクロールしても、札は貼り付く（入力欄の固定）。右に一覧 ---- */
   :root[data-theme='gunjo'] .g-entries-body { display: grid; grid-template-columns: 330px minmax(0, 1fr); column-gap: 34px; align-items: start; }
-  :root[data-theme='gunjo'] .g-slip-card { position: sticky; top: 28vh; z-index: 5; max-height: calc(72vh - 24px); overflow-y: auto; padding: 14px 20px; } /* 貼り付く位置は、画面の高さの 28％（中ほど）。画面が低くても、札の下（追加）まで、札の中でスクロールして届く（札の高さは 画面の 72％ − 24px まで） */
+  :root[data-theme='gunjo'] .g-slip-col { position: sticky; top: 28vh; z-index: 5; max-height: calc(72vh - 24px); display: flex; flex-direction: column; } /* 貼り付く位置は、画面の高さの 28％（中ほど）。入れ物（札＋その下のボタンの行）の高さは 画面の 72％ − 24px まで。足りないときは、札だけが中でスクロールして（追加まで届く）、ボタンの行は見切れない */
+  :root[data-theme='gunjo'] .g-slip-card { flex: 0 1 auto; min-height: 0; overflow-y: auto; padding: 14px 20px; }
+  :root[data-theme='gunjo'] .g-slip-col > .quick-host { flex: none; margin: 14px 0 0; justify-content: flex-start; } /* 札の影（右下 8px）の下 */
   :root[data-theme='gunjo'] .g-slip-card .g-h { margin-bottom: 6px; }
-  :root[data-theme='gunjo'] .g-slip-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; margin-bottom: 6px; }
-  :root[data-theme='gunjo'] .g-slip-head .g-h { margin: 0; }
-  :root[data-theme='gunjo'] .entries .quick-host .quick-row { gap: 12px; }
+  :root[data-theme='gunjo'] .entries .quick-host .quick-row { gap: 12px; justify-content: flex-start; }
   :root[data-theme='gunjo'] .entries .g-slip { display: flex; flex-direction: column; align-items: stretch; gap: 6px; margin: 0; }
   :root[data-theme='gunjo'] .entries .g-slip .field { display: block; margin: 0; }
   :root[data-theme='gunjo'] .entries .g-slip .preset-row { gap: 12px; }
   :root[data-theme='gunjo'] .entries .g-slip .quick-row { gap: 12px; }
   :root[data-theme='gunjo'] .entries .preset-chip.on { background: var(--color-accent); color: #fff; }
+  :root[data-theme='gunjo'] .entries .preset-row .preset-add { border: 1px dashed var(--color-accent); background: transparent; color: var(--color-accent); }
   :root[data-theme='gunjo'] .entries .g-slip .field-label { display: block; margin-bottom: 2px; font-family: var(--font-gothic); font-size: 11px; letter-spacing: 0.2em; color: var(--color-muted); }
   :root[data-theme='gunjo'] .g-slip :is(input, select) { width: 100%; }
   :root[data-theme='gunjo'] .g-slip .amount-input, :root[data-theme='gunjo'] .g-slip .calc-field { width: 100%; }
@@ -589,7 +590,7 @@
     :root[data-theme='gunjo'] .main-col.has-band:has(.g-entries-body) main { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
     :root[data-theme='gunjo'] .main-col.has-band:has(.g-entries-body) .entries { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
     :root[data-theme='gunjo'] .g-entries-body { flex: 1 1 0; min-height: 0; align-items: stretch; }
-    :root[data-theme='gunjo'] .g-slip-card { position: static; align-self: start; margin-top: calc(var(--g-band-h) - var(--g-band-low)); max-height: calc(100% - var(--g-band-h) + var(--g-band-low)); } /* 札は、帯の下端について動く（大きい帯のときは、帯に隠れない位置） */
+    :root[data-theme='gunjo'] .g-slip-col { position: static; align-self: start; min-height: 0; margin-top: calc(var(--g-band-h) - var(--g-band-low)); max-height: calc(100% - var(--g-band-h) + var(--g-band-low)); } /* 札は、帯の下端について動く（大きい帯のときは、帯に隠れない位置） */
     :root[data-theme='gunjo'] .g-entries-list { min-height: 0; overflow-y: auto; padding: var(--g-band-diff) 8px 96px 0; scrollbar-gutter: stable; } /* 先頭の余白＝帯の差。下の余白は、電卓の帯が一番下の行で出ても届くように */
     :root[data-theme='gunjo'] .g-entries-list:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
   }

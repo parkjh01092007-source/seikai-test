@@ -2,7 +2,8 @@
 .entries form { display: flex; gap: var(--space); flex-wrap: wrap; align-items: center; margin-bottom: var(--space); }
 .entries .error { color: var(--color-error); }
 /* 入力欄の固定（PC の幅）：入力の行は、一覧をスクロールしても画面の上に貼り付く（地は各見た目の --color-bg の無地）。スマホの形は、この行を出さず、右下の「＋」ボタン（下の @media）。電卓の帯などは、行の中なので、行と一緒に一覧の上の層に出る */
-.entries > form { position: sticky; top: 0; z-index: 5; background: var(--color-bg); padding: var(--space) 0; margin: 0; border-bottom: 1px solid var(--color-border); }
+.entries > .entries-top { position: sticky; top: 0; z-index: 5; background: var(--color-bg); padding: var(--space) 0; margin: 0; border-bottom: 1px solid var(--color-border); } /* 入力の行と、その下のボタンの行（前回と同じ入力など）を、一緒に貼り付ける */
+.entries-top > form { margin: 0; }
 .entries .field { display: contents; } /* PC：入力欄のラベル（Field）は箱も文字も出さない */
 .entries .field-label { display: none; }
 
@@ -106,9 +107,11 @@
 .entries .quick-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1 1 100%; min-width: 0; }
 .entries .quick-row > span { display: inline-flex; }
 
-/* ボタンの置き場所（新しい仕訳の枠の外）：見出しの右端。入りきらなければ折り返して、右に寄せる。スマホは入力画面の上端（見出しの右。入りきらなければ次の行） */
-.entries .entries-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px var(--space); }
-.entries .entries-head h2 { margin: 0; }
-.entries .quick-host { display: inline-flex; margin-left: auto; min-width: 0; }
-.entries .quick-host .quick-row { flex: 0 1 auto; justify-content: flex-end; }
-@media screen and (max-width: 959.98px), screen and (pointer: coarse) and (hover: none) { .entries .sheet-head { flex-wrap: wrap; } .entries .sheet-head .quick-host { flex: 1 1 auto; justify-content: flex-end; } }
+/* ボタンの置き場所（新しい仕訳の枠の外）：枠（欄）の下。群青の札は札の下（gunjo-pc.css）、基本は入力の行の下、スマホは入力画面の一番下（「やめる／追加」の下）。入りきらなければ折り返す */
+.entries .quick-host { display: flex; flex-wrap: wrap; min-width: 0; margin: var(--space) 0 0; }
+.entries .quick-host .quick-row { flex: 0 1 auto; }
+.entries .sheet .quick-host { justify-content: center; margin: 12px 0 0; }
+
+/* 「プリセットに追加」（＋付きの星）：プリセットの行の最後。記号と同じ大きさで、縁を点線にして区別する（押した状態にはならない） */
+.entries .preset-row .preset-add { margin: 0; border-style: dashed; background: transparent; }
+.sheet .preset-pick-add { border-style: dashed; background: transparent; }
