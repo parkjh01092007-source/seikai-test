@@ -85,6 +85,7 @@ export default {
   'entries.copyLastTitle': '前回の仕訳（{date}　借方：{debit}　貸方：{credit}　{amount}）と同じ内容を入れます（日付は変えません）',
   'entries.newSheetTitle': '仕訳を追加',
   'nav.tabEn.entries': 'ENTRY',
+  'nav.tabEn.balance': 'BALANCE',
   'entries.heroSpend': '{m}月の費用',
   'entries.heroCount': '今月の仕訳',
   'entries.monthPrev': '前の月',
@@ -314,6 +315,15 @@ export default {
   'balance.unbalanced': '借方の合計と貸方の合計が合いません。存在しない科目を指す仕訳がないか、確認してください。',
   'balance.title': '残高',
   'balance.rowSub': '借方 {debit}　貸方 {credit}', // スマホの2行目
+  'balance.perDay': '1日あたり', // 群青の PC：自由に使える額 ÷ 今月の残りの日数
+  'balance.daysLeft': 'あと {n} 日',
+  'balance.assetsEn': 'ASSETS',
+  'balance.liabilitiesEn': 'LIABILITIES',
+  'balance.assetBar': '資産の内訳（残高が 0 より大きい科目の割合）',
+  'balance.liabilityBar': '負債の合計',
+  'balance.barNegative': '（負の残高）',
+  'balance.segTitle': '{name} {amount}（{share}%）',
+  'balance.gap': '資産 − 負債',
   'balance.debitTotal': '借方合計',
   'balance.creditTotal': '貸方合計',
   'balance.note': '残高：資産は「借方合計 − 貸方合計」、負債は「貸方合計 − 借方合計」です。',

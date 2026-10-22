@@ -120,6 +120,7 @@ export default {
   'entries.copyLastTitle': '이전 분개({date}　차변: {debit}　대변: {credit}　{amount})와 같은 내용을 넣습니다(날짜는 바꾸지 않습니다)',
   'entries.newSheetTitle': '분개 추가',
   'nav.tabEn.entries': 'ENTRY',
+  'nav.tabEn.balance': 'BALANCE',
   'entries.heroSpend': '{m}월 비용',
   'entries.heroCount': '이번 달 분개',
   'entries.monthPrev': '이전 달',
@@ -347,6 +348,15 @@ export default {
   'balance.unbalanced': '차변 합계와 대변 합계가 맞지 않습니다. 존재하지 않는 계정과목을 가리키는 분개가 없는지 확인해 주세요.',
   'balance.title': '잔액',
   'balance.rowSub': '차변 {debit}　대변 {credit}', // スマホの2行目
+  'balance.perDay': '1일당', // 群青の PC：自由に使える額 ÷ 今月の残りの日数
+  'balance.daysLeft': '앞으로 {n}일',
+  'balance.assetsEn': 'ASSETS',
+  'balance.liabilitiesEn': 'LIABILITIES',
+  'balance.assetBar': '자산 내역 (잔액이 있는 계정과목)',
+  'balance.liabilityBar': '부채 합계',
+  'balance.barNegative': '(음수 잔액)',
+  'balance.segTitle': '{name} {amount} ({share}%)',
+  'balance.gap': '자산 − 부채',
   'balance.debitTotal': '차변 합계',
   'balance.creditTotal': '대변 합계',
   'balance.note': '잔액: 자산은 \'차변 합계 − 대변 합계\', 부채는 \'대변 합계 − 차변 합계\'입니다.',

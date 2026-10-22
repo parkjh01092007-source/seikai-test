@@ -596,4 +596,41 @@
     :root[data-theme='gunjo'] .g-entries-list { min-height: 0; overflow-y: auto; padding: var(--g-band-diff) 8px 96px 0; scrollbar-gutter: stable; } /* 先頭の余白＝帯の差。下の余白は、電卓の帯が一番下の行で出ても届くように */
     :root[data-theme='gunjo'] .g-entries-list:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
   }
+
+  /* ---- 残高（Balance.jsx。見本 E-balance-p1。区切り11）：帯 L は仕訳の帯と同じ高さ（clamp(260px, 36vh, 380px)）・同じ光の基準（--ray-max）。月の選びはなく、月の道は今月。
+     帯の中：左に自由に使える額（大きな数字。帯の高さに合わせて 60〜88px）、右に 1日あたりの札と実際／予算反映のボタン、その下に内訳の 1 行。画面の高さが 833px 以下（帯が 300px 未満）のときは、月の道を下へ寄せて凡例を出さない（仕訳の小さい帯と同じ）。
+     中身：左に資産（積み上げ棒・凡例・表）、右に負債の札と「資産 − 負債」の札（紺）。表の見出し・合計の行は g-rep のまま、負債の合計の行だけ紺 ---- */
+  :root[data-theme='gunjo'] .main-col.has-band:has(.g-bal) { --g-band-h: clamp(260px, 36vh, 380px); --ray-max: calc(42px + (var(--g-band-h) - 260px) * 0.5); }
+  :root[data-theme='gunjo'] .main-col.has-band:has(.g-bal) .g-band.L .g-hero { flex-wrap: wrap; align-items: flex-end; gap: 0 26px; margin-top: 0; }
+  :root[data-theme='gunjo'] .g-free-num { margin-top: 2px; font-family: var(--font-num); font-size: clamp(60px, calc(var(--g-band-h) * 0.235), 88px); font-weight: 500; line-height: 1; font-variant-numeric: tabular-nums; }
+  :root[data-theme='gunjo'] .g-free-unit { margin-left: 6px; font-size: 26px; }
+  :root[data-theme='gunjo'] .g-perday { box-sizing: border-box; margin-bottom: 6px; padding: 6px 14px; background: #fff; color: var(--color-text); box-shadow: 6px 6px 0 var(--g-deep); }
+  :root[data-theme='gunjo'] .g-perday-lab { font-family: var(--font-mincho); font-size: 12px; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-perday-num { font-family: var(--font-num); font-size: 28px; font-weight: 500; line-height: 1.1; color: var(--color-accent); font-variant-numeric: tabular-nums; }
+  :root[data-theme='gunjo'] .g-perday-num.neg { color: var(--color-error); }
+  :root[data-theme='gunjo'] .g-perday-unit { margin-left: 3px; font-size: 14px; }
+  :root[data-theme='gunjo'] .g-band .g-toggle { display: flex; margin-bottom: 6px; }
+  :root[data-theme='gunjo'] .g-band .g-toggle button { background: var(--color-accent); color: #fff; border-color: rgba(255, 255, 255, 0.85); }
+  :root[data-theme='gunjo'] .g-band .g-toggle button[aria-pressed='true'] { background: #fff; color: var(--color-accent); border-color: var(--g-deep); }
+  :root[data-theme='gunjo'] .g-brk { flex: 0 0 100%; margin-top: 2px; font-family: var(--font-gothic); font-size: 12px; line-height: 1.3; color: var(--menu-muted); }
+  :root[data-theme='gunjo'] .main-col.has-band:has(.g-bal) .g-road .d .tag { display: none; } /* 金額の札は出さない（自由に使える額・1日あたりの札・ボタンに重なる。残高の帯は、金額が主役） */
+  @media (max-height: 833px) {
+    :root[data-theme='gunjo'] .main-col.has-band:has(.g-bal) .g-road { bottom: 8px; }
+    :root[data-theme='gunjo'] .main-col.has-band:has(.g-bal) .g-legend { display: none; }
+  }
+  :root[data-theme='gunjo'] .g-bal .error { margin: 0 0 12px; }
+  :root[data-theme='gunjo'] .g-bal-body { display: grid; grid-template-columns: minmax(0, 1fr) 340px; column-gap: 34px; align-items: start; }
+  :root[data-theme='gunjo'] .g-bal-body .g-h { margin-bottom: 12px; }
+  :root[data-theme='gunjo'] .g-stack { display: flex; height: 40px; margin: 6px 0 10px; box-shadow: 4px 4px 0 var(--g-shadow); }
+  :root[data-theme='gunjo'] .g-stack.low { height: 28px; }
+  :root[data-theme='gunjo'] .g-stack > div { display: flex; align-items: center; min-width: 0; padding-left: 8px; overflow: hidden; white-space: nowrap; font-family: var(--font-gothic); font-size: 12px; }
+  :root[data-theme='gunjo'] .g-leg { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0 0 10px; padding: 0; list-style: none; font-size: 13px; }
+  :root[data-theme='gunjo'] .g-leg i { display: inline-block; width: 10px; height: 10px; margin-right: 6px; }
+  :root[data-theme='gunjo'] .g-bal .g-card { padding: 16px 18px; }
+  :root[data-theme='gunjo'] .g-bal .g-card .g-h { margin-bottom: 12px; }
+  :root[data-theme='gunjo'] .g-bal tr.total.navy :is(td, th) { background: #12086e; }
+  :root[data-theme='gunjo'] .g-gap { margin-top: 22px; padding: 14px 18px; background: #12086e; color: #fff; box-shadow: 6px 6px 0 var(--g-shadow); }
+  :root[data-theme='gunjo'] .g-gap-lab { font-family: var(--font-gothic); font-size: 11px; letter-spacing: 0.2em; color: var(--menu-muted); }
+  :root[data-theme='gunjo'] .g-gap-num { font-family: var(--font-num); font-size: 26px; font-weight: 500; font-variant-numeric: tabular-nums; }
+  :root[data-theme='gunjo'] .g-gap-unit { margin-left: 4px; font-size: 14px; }
 }

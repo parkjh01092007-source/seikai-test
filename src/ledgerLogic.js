@@ -491,6 +491,21 @@ export function typeTotals(rows, type) {
   return { debit: sum(own, (r) => r.debit), credit: sum(own, (r) => r.credit), balance: sum(own, (r) => r.balance) }
 }
 
+// 資産の積み上げ棒（群青の PC の残高。spec-design.md 8.2）。rows は accountBalances の rows。画面に出る資産の科目（使っている、または使った）だけを見る
+// items：残高が 0 より大きい科目（棒に出す。share は合計に対する割合で、小数第 1 位まで四捨五入。足して 100.0 にならなくてもよい）
+// negatives：残高がマイナスの科目（棒に出さず、凡例にだけ出す）。残高 0 の科目はどちらにも入れない（表にだけ出る）
+// 棒に出す科目の合計（total）が 0 以下のときは、items を空にする（棒を出さない。月次の割合と同じ決まり）
+export function assetShares(rows) {
+  const own = rows.filter((r) => r.account.type === 'asset' && (r.account.active || r.used))
+  const total = sum(own.filter((r) => r.balance > 0), (r) => r.balance)
+  const pick = (r) => ({ id: r.account.id, name: r.account.name, balance: r.balance })
+  const items = total > 0 ? own.filter((r) => r.balance > 0).map((r) => ({ ...pick(r), share: Math.round((r.balance / total) * 1000) / 10 })) : []
+  return { total, items, negatives: own.filter((r) => r.balance < 0).map(pick) }
+}
+
+// 資産 − 負債（残高の画面の札。typeTotals の資産の残高合計 − 負債の残高合計。貸借対照表の純資産ではない）
+export const assetLiabilityGap = (rows) => typeTotals(rows, 'asset').balance - typeTotals(rows, 'liability').balance
+
 // 自由に使える額 ＝ role が cash の資産の残高合計 − 負債の残高合計（取り分け・その他の資産は含めない。使わない科目も含める）
 // items：画面に並べる内訳（現金類のうち残高が0でないもの。負債があるときは、最後に「負債」を負の値で足す）
 export function freeAmount(accounts, entries) {
