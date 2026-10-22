@@ -16,7 +16,7 @@ import {
 } from '../ledgerLogic.js'
 import { today } from '../today.js'
 import MonthRoad from './MonthRoad.jsx'
-import { OPEN_MODES, OPEN_MODE_LABELS, loadOpenMode, rememberOpenMode, NO_SPEND_SHAPES, NO_SPEND_SHAPE_LABELS, loadNoSpendShape, rememberNoSpendShape, TENS_BULLETS, TENS_BULLET_LABELS, loadTensBullet, rememberTensBullet, formatDayHead, PRESET_PROMPTS, PRESET_PROMPT_LABELS, loadPresetPrompt, rememberPresetPrompt } from '../entryView.js'
+import { OPEN_MODES, OPEN_MODE_LABELS, loadOpenMode, rememberOpenMode, NO_SPEND_SHAPES, NO_SPEND_SHAPE_LABELS, loadNoSpendShape, rememberNoSpendShape, TENS_BULLETS, TENS_BULLET_LABELS, loadTensBullet, rememberTensBullet, formatDayHead } from '../entryView.js'
 import { SETTINGS_GROUPS, SETTINGS_SECTIONS, tabDomId, panelDomId } from '../settingsSections.js'
 import Tabs from './Tabs.jsx'
 import { versionLabel, BUILT_AT, CURRENT_BUILD } from '../pwa.js'
@@ -79,26 +79,6 @@ function OpenModeSelect({ side, label }) {
           {OPEN_MODES.map((m) => <option key={m} value={m}>{t(OPEN_MODE_LABELS[m])}</option>)}
         </select>
       </label>
-    </div>
-  )
-}
-
-// スマホの「＋」を押したとき、最初にプリセットを選ぶ画面を出すか。ブラウザごとに覚える（保存データには入れない）。変えたらすぐ覚える。プリセットが 1 件もないときは、この設定にかかわらず出ない
-function PresetPromptSelect() {
-  const [value, setValue] = useState(loadPresetPrompt)
-  const change = (next) => {
-    rememberPresetPrompt(next)
-    setValue(next)
-  }
-  return (
-    <div>
-      <label className="open-mode">
-        {t('presets.promptLabel')}{' '}
-        <select value={value} onChange={(e) => change(e.target.value)}>
-          {PRESET_PROMPTS.map((v) => <option key={v} value={v}>{t(PRESET_PROMPT_LABELS[v])}</option>)}
-        </select>
-      </label>
-      <p className="note">{t('presets.promptNote')}</p>
     </div>
   )
 }
@@ -328,7 +308,6 @@ export default function Settings({ driveSync, data, update, openPanel, replaceDa
       <>
         <OpenModeSelect side="phone" label={t('entries.openModePhone')} />
         <OpenModeSelect side="pc" label={t('entries.openModePc')} />
-        <PresetPromptSelect />
         {gunjoPc && <NoSpendShapeSelect currency={data.settings.currency} />}
         {!gunjoPc && <TensBulletSelect />}
       </>

@@ -7,8 +7,7 @@ import { useModalLayer } from '../modalLayer.js'
 // 後ろのスクロール止め・Esc・Tab の輪は modalLayer.js（メニューと共通）。inert は付けない：確認画面（<dialog>）が同じ階層で、後ろの画面ごと inert にすると確認画面の中まで効くため。
 // aria-modal と幕で、後ろは操作できない。開いたとき、日付の入力欄にフォーカス
 // focus：開いたときにフォーカスを置く欄。'amount'＝金額の欄（プリセットを選んで開いたとき。金額が入っていれば全選択）。ふつうは日付の欄
-// quickHostRef：画面の一番下（「やめる／追加」の下）に、置き場所（span）を出し、その要素を渡す（新しい仕訳の入力画面が、「前回と同じ入力」などのボタンをここへ移す）
-export default function EntrySheet({ nth, title, onClose, onOutside, focus, quickHostRef, children }) {
+export default function EntrySheet({ nth, title, onClose, onOutside, focus, children }) {
   const ref = useRef(null)
   const layerRef = useRef(null)
   useModalLayer(ref, true, { onEscape: onClose, focusables: 'input, select, textarea, button' })
@@ -58,7 +57,6 @@ export default function EntrySheet({ nth, title, onClose, onOutside, focus, quic
           {nth && <span className="sheet-nth">{nth}</span>}
         </div>
         {children}
-        {quickHostRef && <span className="quick-host" ref={quickHostRef} />}
       </div>
     </div>
   )

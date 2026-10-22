@@ -1,15 +1,17 @@
 import { useState, useEffect, useRef } from 'react'
 import './entries.css'
 import {
-  entryAccountOptions, validateEntryInput, livingAccount, defaultLiving, livingOnAccountChange, livingOptionLabel, newEntry, editEntry, lastCreditId, lastNormalEntry, copyInputFromEntry, presetToFormValues, presetSummary, canMarkNoSpend, isNoSpendShown, validateEntryPresetInput, newEntryPreset, canAddEntryPreset, markNoSpendDay, unmarkNoSpendDay, NO_SPEND_BACK_DAYS, favoriteOptionGroups, accountLabelWithType,
+  entryAccountOptions, validateEntryInput, livingAccount, defaultLiving, livingOnAccountChange, livingOptionLabel, newEntry, editEntry, lastCreditId, lastNormalEntry, copyInputFromEntry, presetToFormValues, presetSummary, canMarkNoSpend, isNoSpendShown, noSpendPickerDays, applyNoSpendPick, validateEntryPresetInput, newEntryPreset, canAddEntryPreset, markNoSpendDay, unmarkNoSpendDay, NO_SPEND_BACK_DAYS, favoriteOptionGroups, accountLabelWithType,
   entriesOfMonth, groupEntriesByDate, groupByTens, canEditEntry, formatMoney, formatYen, currencyUnit, roadDays,
 } from '../ledgerLogic.js'
 import { today } from '../today.js'
 import { t } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import { usePhone } from '../layout.js'
-import { loadOpenMode, initialOpenDates, isOpenDate, formatDayHead, formatDayLabel, entryChanged, weekdayName, loadPresetPrompt, loadNoSpendShape, loadTensOpen, rememberTensOpen, loadTensBullet, isOpenTens, showTens, formatTensRange } from '../entryView.js'
+import { loadOpenMode, initialOpenDates, isOpenDate, formatDayHead, formatDayLabel, entryChanged, weekdayName, loadNoSpendShape, loadTensOpen, rememberTensOpen, loadTensBullet, isOpenTens, showTens, formatTensRange } from '../entryView.js'
 import EntrySheet from './EntrySheet.jsx'
+import PlusMenu from './PlusMenu.jsx'
+import NoSpendPicker from './NoSpendPicker.jsx'
 import { AmountInput } from './Calculator.jsx'
 import { Icon, IconButton } from './Icon.jsx'
 import { presetIconId, PRESET_ICON_PICKER } from '../icons.js'
@@ -232,17 +234,6 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
   )
 }
 
-// スマホ：「＋」を押した最初の画面の、プリセット 1 件分のボタン（記号が主役。下に小さい見出し：名前、なければ「借方→貸方」）。読み上げ・title も同じ文
-function PresetPickButton({ preset, accounts, currency, onPick }) {
-  const summary = presetSummary(preset, accounts, currency)
-  return (
-    <button type="button" className="preset-pick-item" aria-label={summary} title={summary} onClick={onPick}>
-      <Icon name={presetIconId(preset.icon)} />
-      <span className="pc" aria-hidden="true">{summary}</span>
-    </button>
-  )
-}
-
 // 読むたびに辞書から取る（読み込み時に固めない）。LedgerBook も同じ書き方で使う
 export const KIND_LABELS = {
   normal: '',
@@ -349,9 +340,10 @@ export default function Entries({ data, update }) {
   const [order, setOrder] = useState('asc') // 日付の枠の並び。画面の中だけで持ち、保存しない（画面を移る・再読み込みで古い順に戻る）
   const [openRowId, setOpenRowId] = useState(null) // 開いている行（スマホの幅のカード。1つだけ）。月を変える・その日を閉じると閉じる
   const [creating, setCreating] = useState(false) // スマホ：右下の「＋」から開く、新しい仕訳の入力画面
-  const [presetStep, setPresetStep] = useState(false) // スマホ：入力画面の前の、プリセットを選ぶ画面（プリセットがあり、設定が「出す」のときだけ）
-  const [startAdd, setStartAdd] = useState(false) // スマホの選ぶ画面の「プリセットに追加」から開いた入力画面は、初めから追加の状態
-  const [fill, setFill] = useState(null) // 選んだプリセットの値（借方・貸方・金額・メモ）。入力画面の初めの値に重ねる
+  const [menuOpen, setMenuOpen] = useState(false) // スマホ：「＋」の上に出るメニュー
+  const [picking, setPicking] = useState(false) // スマホ：「使っていない日」の日の選択（ポップアップ）
+  const [startAdd, setStartAdd] = useState(false) // メニューの「プリセット作成」から開いた入力画面は、初めから追加の状態
+  const [fill, setFill] = useState(null) // メニューの「前回と同じ入力」の値（借方・貸方・金額・メモ・生活費の月）。入力画面の初めの値に重ねる
   const bullet = loadTensBullet() // 展開したグループの中の、日の枠の頭の記号（端末ごと。群青の PC は日の大きな数字があるので CSS で出さない）
   const [tensToggled, setTensToggled] = useState(loadTensOpen) // 10 件ずつのグループを押して開閉した分（グループの最初の日 → 開いているか）。端末ごとに覚える
   const [toggled, setToggled] = useState({}) // 日付の枠を押して開閉した分（日付 → 開いているか）。月を変えると初めの状態に戻る。覚えない
@@ -385,6 +377,15 @@ export default function Entries({ data, update }) {
   const addPreset = { list: presets, onAdd: (input) => { const p = newEntryPreset(input); update({ ...data, entryPresets: [...presets, p] }); return p.id } } // 入力欄から、今の入力をプリセットに追加
   // 「今日は使っていない」：日付の欄の日に印を付ける・外す（仕訳とは別の noSpendDays。残高・月次などには影響しない）
   const noSpend = { days: data.noSpendDays, entries, today: today(), onToggle: (date) => update({ ...data, noSpendDays: data.noSpendDays.includes(date) ? unmarkNoSpendDay(data.noSpendDays, date) : markNoSpendDay(data.noSpendDays, date) }) }
+  // スマホの「＋」メニュー（上から）：仕訳入力・前回と同じ入力・プリセット作成・使っていない日
+  const openSheet = (opts = {}) => { valuesRef.current = null; setFill(opts.fill ?? null); setStartAdd(!!opts.startAdd); setMenuOpen(false); setCreating(true) }
+  const presetFull = canAddEntryPreset(presets)
+  const plusItems = [
+    { key: 'entry', icon: 'edit', label: t('plusMenu.entry'), onSelect: () => openSheet() },
+    { key: 'copy', icon: 'copy', label: t('plusMenu.copy'), disabledReason: lastEntry ? '' : t('plusMenu.copyNone'), onSelect: () => openSheet({ fill: copyInputFromEntry(lastEntry, accounts) }) },
+    { key: 'preset', icon: 'starPlus', label: t('plusMenu.preset'), disabledReason: presetFull.ok ? '' : presetFull.error, onSelect: () => openSheet({ startAdd: true }) },
+    { key: 'nospend', icon: 'circle', label: t('plusMenu.noSpend'), onSelect: () => { setMenuOpen(false); setPicking(true) } },
+  ]
   const sheetInitial = fill ? { ...newInitial, ...fill } : newInitial // スマホの入力画面の初めの値（プリセットを選んだときは、その値）
   const openTensOf = (all, date) => { // その日が入るグループ（追加後の仕訳で数える）を、開いた状態で覚える
     const m = date.slice(0, 7)
@@ -429,7 +430,7 @@ export default function Entries({ data, update }) {
   useEffect(() => { // スマホの入力画面を閉じたら、フォーカスを「＋」へ戻す（初めの描画では動かさない）
     if (wasCreating.current && !creating) fabRef.current?.focus({ preventScroll: true })
     wasCreating.current = creating
-    if (!creating) { setPresetStep(false); setFill(null); setStartAdd(false) }
+    if (!creating) { setFill(null); setStartAdd(false) }
   }, [creating])
 
   const save = (entry) => (input, memo) => {
@@ -638,30 +639,23 @@ export default function Entries({ data, update }) {
         </>
       )}
       {phone && !editing && !creating && (
-        <button ref={fabRef} type="button" className="entry-fab" aria-label={t('entries.fabLabel')} title={t('entries.fabLabel')} onClick={() => { valuesRef.current = null; setPresetStep(presets.length > 0 && loadPresetPrompt() === 'on'); setCreating(true) }}><Icon name="plus" /></button>
+        <PlusMenu open={menuOpen} fabRef={fabRef} onToggle={() => setMenuOpen((o) => !o)} onClose={() => setMenuOpen(false)} items={plusItems} />
       )}
-      {creating && presetStep && (
-        <EntrySheet title={t('presets.sheetTitle')} onClose={() => setCreating(false)} onOutside={() => setCreating(false)}>
-          <div className="preset-pick">
-            {presets.map((p) => <PresetPickButton key={p.id} preset={p} accounts={accounts} currency={settings.currency} onPick={() => { setFill(presetToFormValues(p, accounts)); setPresetStep(false) }} />)}
-            <button type="button" className="preset-pick-item preset-pick-add" disabled={!canAddEntryPreset(presets).ok} aria-label={t('presets.addFromForm')} title={canAddEntryPreset(presets).ok ? t('presets.addFromForm') : canAddEntryPreset(presets).error} onClick={() => { setStartAdd(true); setPresetStep(false) }}><Icon name="starPlus" /><span className="pc" aria-hidden="true">{t('presets.addShort')}</span></button>
-            <button type="button" className="preset-skip" onClick={() => setPresetStep(false)}>{t('presets.skip')}</button>
-          </div>
-        </EntrySheet>
+      {picking && (
+        <NoSpendPicker days={noSpendPickerDays(entries, data.noSpendDays, today())}
+          onClose={() => { setPicking(false); fabRef.current?.focus({ preventScroll: true }) }}
+          onConfirm={(result) => { update({ ...data, noSpendDays: applyNoSpendPick(data.noSpendDays, result) }); setPicking(false); fabRef.current?.focus({ preventScroll: true }) }} />
       )}
-      {creating && !presetStep && (
-        <EntrySheet title={t('entries.newSheetTitle')} onClose={() => setCreating(false)} onOutside={outsideNew} focus={fill ? 'amount' : undefined} quickHostRef={setQuickHost}>
+      {creating && (
+        <EntrySheet title={t('entries.newSheetTitle')} onClose={() => setCreating(false)} onOutside={outsideNew} focus={fill ? 'amount' : undefined}>
           <EntryForm
             variant="sheet"
             accounts={accounts}
             favorites={settings.favorites}
             initial={sheetInitial}
-            lastEntry={lastEntry}
             currency={settings.currency}
-            presets={loadPresetPrompt() === 'off' ? presets : []}
-            noSpend={noSpend}
+            presets={presets}
             addPreset={addPreset}
-            quickHost={quickHost}
             startAdding={startAdd}
             submitLabel={t('common.add')}
             onSubmit={add}

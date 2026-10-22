@@ -64,24 +64,7 @@ export function saveOpenMode(storage, side, mode) {
   } catch { /* 覚えられなくてもよい */ }
 }
 
-// ---- スマホの「＋」で、最初にプリセットを選ぶ画面を出すか（端末ごと。保存データ・書き出し・セーブには入れない）。初めの値は「出す」（プリセットが 0 件のときは、設定にかかわらず出さない）
-export const PRESET_PROMPT_KEY = 'orenoyome-preset-prompt'
-export const PRESET_PROMPTS = ['on', 'off']
-export const PRESET_PROMPT_LABELS = { on: 'presets.promptOn', off: 'presets.promptOff' } // 選択肢の文言（辞書のキー）
-export const readPresetPrompt = (storage) => {
-  try {
-    const v = storage.getItem(PRESET_PROMPT_KEY)
-    return PRESET_PROMPTS.includes(v) ? v : 'on'
-  } catch {
-    return 'on'
-  }
-}
-export const savePresetPrompt = (storage, value) => {
-  if (!PRESET_PROMPTS.includes(value)) return
-  try {
-    storage.setItem(PRESET_PROMPT_KEY, value)
-  } catch { /* 覚えられなくてもよい */ }
-}
+// 旧：スマホの「＋」で最初にプリセットを選ぶ画面を出すか（localStorage orenoyome-preset-prompt）。⑮で廃止。キーは端末に残るが、もう読まない
 
 // ---- 月の道の「使っていない日」の図形（群青の PC だけ。端末ごと。保存データ・書き出し・セーブには入れない）。
 // 日の数字の下線は、設定に関係なく常に出る。ここで選ぶのは、その上に重ねる図形。初めの値は「出さない」（下線だけ）
@@ -167,8 +150,6 @@ export const loadOpenMode = (side) => readOpenMode(browserStorage(), side)
 export const rememberOpenMode = (side, mode) => saveOpenMode(browserStorage(), side, mode)
 export const loadNoSpendShape = () => readNoSpendShape(browserStorage())
 export const rememberNoSpendShape = (value) => saveNoSpendShape(browserStorage(), value)
-export const loadPresetPrompt = () => readPresetPrompt(browserStorage())
-export const rememberPresetPrompt = (value) => savePresetPrompt(browserStorage(), value)
 export const loadTensOpen = () => readTensOpen(browserStorage())
 export const rememberTensOpen = (toggled) => saveTensOpen(browserStorage(), toggled)
 export const loadTensBullet = () => readTensBullet(browserStorage())

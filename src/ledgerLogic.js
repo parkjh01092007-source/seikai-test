@@ -1036,6 +1036,36 @@ export const unmarkNoSpendDay = (days, date) => days.filter((d) => d !== date)
 // 表示で、その日が「使っていない日」か。印があっても、その日に通常の仕訳があれば、仕訳を優先して false（印は消さない）
 export const isNoSpendShown = (days, entries, date) => days.includes(date) && !entries.some((e) => e.kind === 'normal' && e.date === date)
 
+// ---- 「使っていない日」の日の選択（スマホの「＋」メニューのポップアップ）----
+// 今日と過去 NO_SPEND_BACK_DAYS 日を、新しい日が先頭で並べる。state：blocked（通常の仕訳がある。選べない）・recorded（記録済み。選ぶと取り消し）・free（未記録。選ぶと記録）
+export function noSpendPickerDays(entries, noSpendDays, today) {
+  return Array.from({ length: NO_SPEND_BACK_DAYS + 1 }, (_, i) => {
+    const date = shiftDate(today, -i)
+    return { date, state: !canMarkNoSpend(entries, date, today).ok ? 'blocked' : noSpendDays.includes(date) ? 'recorded' : 'free' }
+  })
+}
+// 開いた時点の選択：今日が未記録なら今日だけ。今日に仕訳がある日は選べない。記録済みなら、押し間違いで取り消さないよう、選択なし
+export const initialNoSpendPick = (days) => (days[0]?.state === 'free' ? [days[0].date] : [])
+// 日を押す：選択のオン・オフ（複数可）。選べない日・一覧にない日は変えない
+export function toggleNoSpendPick(days, selected, date) {
+  const day = days.find((d) => d.date === date)
+  if (!day || day.state === 'blocked') return selected
+  return selected.includes(date) ? selected.filter((d) => d !== date) : [...selected, date]
+}
+// 「OK」で確定する結果：未記録の選択＝add（記録する日）、記録済みの選択＝remove（取り消す日）。どちらも昇順
+export function resolveNoSpendPick(days, selected) {
+  const of = (state) => days.filter((d) => d.state === state && selected.includes(d.date)).map((d) => d.date).sort()
+  return { add: of('free'), remove: of('recorded') }
+}
+// OK を押せるか：{ ok: true, kind: 'add' | 'remove' | 'mixed' } か { ok: false, reason: 'todayHasEntries'（今日に仕訳があり、何も選んでいない）| 'none'（何も選んでいない） }
+export function noSpendPickStatus(days, selected) {
+  const { add, remove } = resolveNoSpendPick(days, selected)
+  if (add.length === 0 && remove.length === 0) return { ok: false, reason: days[0]?.state === 'blocked' ? 'todayHasEntries' : 'none' }
+  return { ok: true, kind: remove.length === 0 ? 'add' : add.length === 0 ? 'remove' : 'mixed' }
+}
+// 確定結果を、保存する日の一覧に反映する（昇順・重複なし）
+export const applyNoSpendPick = (noSpendDays, { add, remove }) => remove.reduce(unmarkNoSpendDay, add.reduce(markNoSpendDay, noSpendDays))
+
 // ---- 仕訳プリセット（entryPresets。v11。docs は spec-ledger.md 5.18）----
 // 1 件：{ id, name, debitId, creditId, amount（null か 1 以上の整数）, memo, createdAt, updatedAt }。入力欄に、借方・貸方・金額・メモをまとめて入れる型
 

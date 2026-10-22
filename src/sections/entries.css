@@ -120,6 +120,31 @@
   .entries { padding-bottom: 88px; }
   .entry-fab { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 8; display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 56px; height: 56px; min-height: 0; padding: 0; border: 0; border-radius: 50%; background: var(--color-accent); color: var(--color-on-accent); box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35); cursor: pointer; }
   .entry-fab .icon { width: 26px; height: 26px; }
+
+  /* 「＋」メニュー（⑮）：押すと「＋」の上に縦に出る。幕（タップで閉じる）→ メニュー → 「＋」（×）の順に重ねる（z-index は同じ 8、あとの要素が上）。色は変数だけ */
+  .plus-layer { display: contents; }
+  .plus-scrim { position: fixed; inset: 0; z-index: 8; background: var(--color-backdrop); }
+  .plus-menu { position: fixed; right: 16px; bottom: calc(16px + 56px + 12px + env(safe-area-inset-bottom)); z-index: 8; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+  .plus-item { display: flex; align-items: center; gap: 10px; box-sizing: border-box; min-height: 48px; padding: 0 18px 0 14px; border: 1px solid var(--color-field-border, var(--color-text)); background: var(--color-bg); color: var(--color-text); font: inherit; white-space: nowrap; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25); cursor: pointer; }
+  .plus-item .icon { width: 22px; height: 22px; flex: none; }
+  .plus-item[aria-disabled='true'] { opacity: 0.5; cursor: default; }
+
+  /* 「使っていない日」の日の選択（⑮）：中央の小さなポップアップ。入力画面（20）と同じ高さ。2 列 × 4 行、新しい日が左上。選んだ日は文字色と地色を入れ替える */
+  .ns-layer { position: fixed; inset: 0; z-index: 20; }
+  .ns-scrim { position: absolute; inset: 0; background: var(--color-backdrop); }
+  .ns-pop { position: absolute; left: 16px; right: 16px; top: 50%; transform: translateY(-50%); box-sizing: border-box; max-height: calc(100% - 32px); overflow-y: auto; overscroll-behavior: contain; padding: 16px; border: 1px solid var(--color-field-border, var(--color-text)); border-radius: 12px; background: var(--color-bg); color: var(--color-text); font-size: var(--font-size); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35); }
+  .ns-pop h3 { margin: 0 0 4px; font-size: 1.125em; }
+  .ns-lead { margin: 0 0 10px; font-size: 13px; color: var(--color-muted); }
+  .ns-days { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .ns-day { display: flex; align-items: center; gap: 6px; box-sizing: border-box; min-height: 48px; padding: 0 10px; min-width: 0; text-align: left; font: inherit; border: 1px solid var(--color-field-border, var(--color-text)); background: var(--color-button-bg, var(--color-bg)); color: var(--color-text); cursor: pointer; }
+  .ns-day .ns-t { flex: 1; min-width: 0; font-size: 14px; }
+  .ns-day .ns-t i { display: block; min-height: 1.2em; font-style: normal; font-size: 11px; color: var(--color-muted); }
+  .ns-day .icon { flex: none; width: 22px; height: 22px; }
+  .ns-day.on { background: var(--color-text); color: var(--color-bg); }
+  .ns-day.on .ns-t i { color: inherit; }
+  .ns-day[aria-disabled='true'] { opacity: 0.5; cursor: default; }
+  .ns-summary { margin: 10px 0 0; min-height: 2.6em; font-size: 14px; }
+  .ns-pop .sheet-actions button[aria-disabled='true'] { opacity: 0.5; }
 }
 
 /* 「前回と同じ入力」のボタン：縦に並ぶ入力（群青の札・スマホの入力画面）では、幅いっぱいに伸ばさず左に寄せる */
@@ -128,12 +153,6 @@
 /* プリセットのボタン（仕訳の入力の上。群青の札・基本の入力欄・「出さない」設定のときのスマホの入力画面）。間は 8px（群青の PC は 12px。gunjo-pc.css） */
 .entries .preset-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1 1 100%; min-width: 0; }
 .entries .preset-label { font-size: 0.85em; color: var(--color-muted); }
-/* スマホ：「＋」を押した最初の画面（プリセットを選ぶ）。記号が主役の格子（4 列）。記号の下に、小さい見出し（名前、なければ借方→貸方。1 行で、はみ出しは省略）。最後に「使わない」 */
-.sheet .preset-pick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 8px; }
-.sheet .preset-pick-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 72px; padding: 8px 4px; min-width: 0; }
-.sheet .preset-pick-item .icon { width: 28px; height: 28px; }
-.sheet .preset-pick-item .pc { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; color: var(--color-muted); }
-.sheet .preset-pick .preset-skip { grid-column: 1 / -1; min-height: 48px; text-align: center; }
 .entries .preset-row .preset-chip { margin: 0; }
 /* 反映したプリセットの記号：反転（aria-pressed）。色は、見た目ごとの文字色・地の色の入れ替え */
 .entries .preset-chip.on, .entries .copy-last.on { background: var(--color-text); color: var(--color-bg); }
@@ -142,11 +161,9 @@
 .entries .quick-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1 1 100%; min-width: 0; }
 .entries .quick-row > span { display: inline-flex; }
 
-/* ボタンの置き場所（新しい仕訳の枠の外）：枠（欄）の下。群青の札は札の下（gunjo-pc.css）、基本は入力の行の下、スマホは入力画面の一番下（「やめる／追加」の下）。入りきらなければ折り返す */
+/* ボタンの置き場所（新しい仕訳の枠の外）：枠（欄）の下。群青の札は札の下（gunjo-pc.css）、基本は入力の行の下、スマホの入力画面にはない（⑮：「＋」メニューへ移した）。入りきらなければ折り返す */
 .entries .quick-host { display: flex; flex-wrap: wrap; min-width: 0; margin: var(--space) 0 0; }
 .entries .quick-host .quick-row { flex: 0 1 auto; }
-.entries .sheet .quick-host { justify-content: center; margin: 12px 0 0; }
 
 /* 「プリセットに追加」（＋付きの星）：プリセットの行の最後。記号と同じ大きさで、縁を点線にして区別する（押した状態にはならない） */
 .entries .preset-row .preset-add { margin: 0; border-style: dashed; background: transparent; }
-.sheet .preset-pick-add { border-style: dashed; background: transparent; }
