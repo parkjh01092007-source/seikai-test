@@ -191,8 +191,8 @@
   :root[data-theme='gunjo'] .settings .pset.g-form :is(input, select) { width: 100%; }
   :root[data-theme='gunjo'] .settings .pset.g-form > .error { grid-column: 1 / -1; }
   :root[data-theme='gunjo'] .settings .pset.g-form > .pset-pick-row { grid-column: 1 / -1; }
-  :root[data-theme='gunjo'] .settings .pset-icons { gap: 12px; }
-  :root[data-theme='gunjo'] .settings .pset-icon-opt.on { background: var(--color-accent); color: #fff; }
+  :root[data-theme='gunjo'] :is(.settings, .entries) .pset-icons { gap: 12px; }
+  :root[data-theme='gunjo'] :is(.settings, .entries) .pset-icon-opt.on { background: var(--color-accent); color: #fff; }
   :root[data-theme='gunjo'] button.sub-submit.large { height: var(--g-h-large); padding: 0 22px; font-size: 16px; }
   :root[data-theme='gunjo'] .subscriptions ul { margin: 0; padding: 0; }
   :root[data-theme='gunjo'] .subscriptions li { display: grid; grid-template-columns: 104px 1fr auto; gap: 0 18px; align-items: center; margin: 0 0 22px; padding: 14px 20px; background: #fff; border: 0; box-shadow: var(--g-tile-shadow); }
@@ -208,6 +208,15 @@
   /* 設定 → 記帳「日付の開き方」（Settings.jsx の OpenModeSelect）：ラベルの幅を固定して、2つの選択欄を同じ位置（左端がそろう）に置き、上下は 14px あける（行の高さ 34px＋14px＝48px は、倍率 125％・150％・175％ でも画素が割り切れる高さ。2つの選択欄の枠が、同じ画素に乗る）。
      以前は、ラベルの文字の幅（小数）に押されて、選択欄が小数の位置・上下にぴったり重なる形になり、画面の倍率が 125％・150％ のとき、片方の枠だけ薄く太く見えた */
   :root[data-theme='gunjo'] .settings .open-mode { display: grid; grid-template-columns: 18em auto; column-gap: 12px; align-items: center; justify-content: start; margin: 0 0 14px; }
+  /* 設定の「使っていない日の図形」：選択欄（左）と、月の道の見え方の例（右。青い帯と同じ部品）。例は高さ 62px の道（小さい帯と同じ） */
+  :root[data-theme='gunjo'] .g-nospend-set { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px 24px; }
+  :root[data-theme='gunjo'] .g-nospend-set-main { flex: 1 1 420px; min-width: 0; }
+  :root[data-theme='gunjo'] .g-nospend-ex-wrap { flex: none; }
+  :root[data-theme='gunjo'] .g-nospend-ex-cap { margin: 0 0 4px; font-family: var(--font-gothic); font-size: 12px; }
+  :root[data-theme='gunjo'] .g-nospend-ex { position: relative; width: 330px; max-width: 100%; height: 84px; overflow: hidden; background: #2a1bff; --ray-max: 42px; }
+  :root[data-theme='gunjo'] .g-nospend-ex .g-road { left: 14px; right: 14px; bottom: 8px; height: 62px; }
+  :root[data-theme='gunjo'] .g-nospend-ex .g-road .d { height: 62px; }
+  :root[data-theme='gunjo'] .g-nospend-ex :is(.g-legend, .tag) { display: none; }
 
   /* 固定（☰ を押す）：中身を右へずらさず、乗せて開いた形と同じく、パネルが中身の上に重なったまま開いておく（場所は閉じた帯の 64px のまま）。固定できるのは幅 1100px 以上だけ
      （layout.js の PIN_QUERY・SideTabs.jsx の useCanPin と同じ値。gunjoPc.check.js が確かめる） */
@@ -469,27 +478,31 @@
   :root[data-theme='gunjo'] .g-road .d.bt .ray { transform: translateX(calc(-50% - 5px)); }
   :root[data-theme='gunjo'] .g-road .d.bt .fx { transform: translateX(calc(-50% + 5px)); }
   /* 今日の ▼ と、一番大きい日の金額の札（光の先端の上） */
-  /* 使っていない日（.n。印があり、仕訳がない日）の図形。設定（端末ごと）で data-nospend に入る：underline（初期値）・ring・bar・slash・cross・star・check（none は印を出さない。.n が付かない）。
+  /* 使っていない日（.n。印があり、仕訳がない日）：日の数字の下線は、設定に関係なく、いつも出す（数字は白・13px・2px の下線）。
+     その上に重ねる図形は、設定（端末ごと）で data-nospend に入る：none（初めの値・図形なし）・ring・bar・slash・cross・star（★）・star4（四角の星）・check。
      見本 E-road-nouse.html。色は #e4e3ff（今日は白）。細い線（slash・cross・check）は白・2px。どれも、ベースライン（入力なし）と小さい四角（仕訳のみ）と形が違う */
   :root[data-theme='gunjo'] .g-road .d.n { --c: #e4e3ff; --w: #fff; }
   :root[data-theme='gunjo'] .g-road .d.n.t { --c: #fff; }
-  :root[data-theme='gunjo'] .g-road[data-nospend='underline'] .d.n > span { color: #fff; font-size: 13px; font-weight: 500; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
-  :root[data-theme='gunjo'] .g-road:not([data-nospend='underline']) .d.n::before { content: ''; position: absolute; left: 50%; bottom: 21px; background-color: transparent; }
+  :root[data-theme='gunjo'] .g-road .d.n > span { color: #fff; font-size: 13px; font-weight: 500; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+  :root[data-theme='gunjo'] .g-road:not([data-nospend='none']) .d.n::before { content: ''; position: absolute; left: 50%; bottom: 21px; background-color: transparent; }
   :root[data-theme='gunjo'] .g-road[data-nospend='ring'] .d.n::before { width: 8px; height: 8px; margin-left: -4px; border: 1.5px solid var(--c); border-radius: 50%; box-sizing: border-box; }
   :root[data-theme='gunjo'] .g-road[data-nospend='bar'] .d.n::before { left: 15%; right: 15%; bottom: 19px; height: 3px; background: var(--c); }
   :root[data-theme='gunjo'] .g-road[data-nospend='slash'] .d.n::before { width: 9px; height: 12px; margin-left: -4.5px; background-image: linear-gradient(to top left, transparent 38%, var(--w) 38% 62%, transparent 62%); }
   :root[data-theme='gunjo'] .g-road[data-nospend='cross'] .d.n::before { width: 9px; height: 9px; margin-left: -4.5px; background-image: linear-gradient(to top left, transparent 38%, var(--w) 38% 62%, transparent 62%), linear-gradient(to top right, transparent 38%, var(--w) 38% 62%, transparent 62%); }
   :root[data-theme='gunjo'] .g-road[data-nospend='star'] .d.n::before { width: 11px; height: 11px; margin-left: -5.5px; background: var(--c); clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+  :root[data-theme='gunjo'] .g-road[data-nospend='star4'] .d.n::before { width: 13px; height: 13px; margin-left: -6.5px; bottom: 20px; background: var(--c); clip-path: polygon(50% 0%, 64% 36%, 100% 50%, 64% 64%, 50% 100%, 36% 64%, 0% 50%, 36% 36%); }
   :root[data-theme='gunjo'] .g-road[data-nospend='check'] .d.n::before { width: 5px; height: 10px; margin-left: -2.5px; bottom: 20px; box-sizing: border-box; border: solid var(--w); border-width: 0 2px 2px 0; transform: rotate(45deg); }
-  /* 凡例の「使っていない日」の見本（図形と同じ形） */
-  :root[data-theme='gunjo'] .g-legend .lg-n { display: inline-block; flex: none; }
-  :root[data-theme='gunjo'] .g-legend[data-nospend='underline'] .lg-n { width: 14px; height: 0; border-bottom: 2px solid #fff; margin-top: 8px; }
-  :root[data-theme='gunjo'] .g-legend[data-nospend='ring'] .lg-n { width: 8px; height: 8px; border: 1.5px solid #e4e3ff; border-radius: 50%; }
-  :root[data-theme='gunjo'] .g-legend[data-nospend='bar'] .lg-n { width: 12px; height: 3px; background: #e4e3ff; }
-  :root[data-theme='gunjo'] .g-legend[data-nospend='slash'] .lg-n { width: 9px; height: 12px; background-image: linear-gradient(to top left, transparent 38%, #fff 38% 62%, transparent 62%); }
-  :root[data-theme='gunjo'] .g-legend[data-nospend='cross'] .lg-n { width: 9px; height: 9px; background-image: linear-gradient(to top left, transparent 38%, #fff 38% 62%, transparent 62%), linear-gradient(to top right, transparent 38%, #fff 38% 62%, transparent 62%); }
-  :root[data-theme='gunjo'] .g-legend[data-nospend='star'] .lg-n { width: 11px; height: 11px; background: #e4e3ff; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
-  :root[data-theme='gunjo'] .g-legend[data-nospend='check'] .lg-n { width: 5px; height: 10px; box-sizing: border-box; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg) translate(-1px, -2px); margin: 0 3px 0 2px; }
+  /* 凡例の「使っていない日」の見本：下線（いつも）と、その上の図形（::before。道と同じ形） */
+  :root[data-theme='gunjo'] .g-legend .lg-n { position: relative; display: inline-block; flex: none; width: 14px; height: 14px; }
+  :root[data-theme='gunjo'] .g-legend .lg-n::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; border-bottom: 2px solid #fff; }
+  :root[data-theme='gunjo'] .g-legend:not([data-nospend='none']) .lg-n::before { content: ''; position: absolute; left: 50%; bottom: 4px; box-sizing: border-box; background-color: transparent; }
+  :root[data-theme='gunjo'] .g-legend[data-nospend='ring'] .lg-n::before { width: 8px; height: 8px; margin-left: -4px; border: 1.5px solid #e4e3ff; border-radius: 50%; }
+  :root[data-theme='gunjo'] .g-legend[data-nospend='bar'] .lg-n::before { width: 12px; height: 3px; margin-left: -6px; background: #e4e3ff; }
+  :root[data-theme='gunjo'] .g-legend[data-nospend='slash'] .lg-n::before { width: 9px; height: 10px; margin-left: -4.5px; background-image: linear-gradient(to top left, transparent 38%, #fff 38% 62%, transparent 62%); }
+  :root[data-theme='gunjo'] .g-legend[data-nospend='cross'] .lg-n::before { width: 9px; height: 9px; margin-left: -4.5px; background-image: linear-gradient(to top left, transparent 38%, #fff 38% 62%, transparent 62%), linear-gradient(to top right, transparent 38%, #fff 38% 62%, transparent 62%); }
+  :root[data-theme='gunjo'] .g-legend[data-nospend='star'] .lg-n::before { width: 11px; height: 11px; margin-left: -5.5px; background: #e4e3ff; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+  :root[data-theme='gunjo'] .g-legend[data-nospend='star4'] .lg-n::before { width: 13px; height: 13px; margin-left: -6.5px; background: #e4e3ff; clip-path: polygon(50% 0%, 64% 36%, 100% 50%, 64% 64%, 50% 100%, 36% 64%, 0% 50%, 36% 36%); }
+  :root[data-theme='gunjo'] .g-legend[data-nospend='check'] .lg-n::before { width: 5px; height: 9px; margin-left: -2.5px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
   :root[data-theme='gunjo'] .g-road .d u { position: absolute; left: 50%; margin-left: -5px; bottom: calc(19px + max(8px, calc(var(--ray-max) * var(--k))) + 10px); width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 7px solid #fff; }
   :root[data-theme='gunjo'] .g-road .d .tag { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(19px + max(8px, calc(var(--ray-max) * var(--k))) + 12px); padding: 3px 6px; font-family: var(--font-mincho); font-size: 11px; font-style: normal; font-weight: 500; line-height: 1; white-space: nowrap; background: #fff; color: var(--color-accent); }
   :root[data-theme='gunjo'] .g-road .d .tag::after { content: ''; position: absolute; left: 50%; bottom: -4px; margin-left: -4px; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 4px solid #fff; }
@@ -505,6 +518,9 @@
   :root[data-theme='gunjo'] .g-entries-body { display: grid; grid-template-columns: 330px minmax(0, 1fr); column-gap: 34px; align-items: start; }
   :root[data-theme='gunjo'] .g-slip-card { position: sticky; top: 28vh; z-index: 5; max-height: calc(72vh - 24px); overflow-y: auto; padding: 14px 20px; } /* 貼り付く位置は、画面の高さの 28％（中ほど）。画面が低くても、札の下（追加）まで、札の中でスクロールして届く（札の高さは 画面の 72％ − 24px まで） */
   :root[data-theme='gunjo'] .g-slip-card .g-h { margin-bottom: 6px; }
+  :root[data-theme='gunjo'] .g-slip-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; margin-bottom: 6px; }
+  :root[data-theme='gunjo'] .g-slip-head .g-h { margin: 0; }
+  :root[data-theme='gunjo'] .entries .quick-host .quick-row { gap: 12px; }
   :root[data-theme='gunjo'] .entries .g-slip { display: flex; flex-direction: column; align-items: stretch; gap: 6px; margin: 0; }
   :root[data-theme='gunjo'] .entries .g-slip .field { display: block; margin: 0; }
   :root[data-theme='gunjo'] .entries .g-slip .preset-row { gap: 12px; }

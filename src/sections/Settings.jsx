@@ -15,6 +15,7 @@ import {
   validateFavoriteLimit, setFavoriteLimit, CURRENCIES, setCurrency, renameRows, applyRenames,
 } from '../ledgerLogic.js'
 import { today } from '../today.js'
+import MonthRoad from './MonthRoad.jsx'
 import { OPEN_MODES, OPEN_MODE_LABELS, loadOpenMode, rememberOpenMode, NO_SPEND_SHAPES, NO_SPEND_SHAPE_LABELS, loadNoSpendShape, rememberNoSpendShape, PRESET_PROMPTS, PRESET_PROMPT_LABELS, loadPresetPrompt, rememberPresetPrompt } from '../entryView.js'
 import { SETTINGS_GROUPS, SETTINGS_SECTIONS, tabDomId, panelDomId } from '../settingsSections.js'
 import Tabs from './Tabs.jsx'
@@ -102,22 +103,38 @@ function PresetPromptSelect() {
   )
 }
 
-// 月の道の「使っていない日」の図形（群青の PC だけ。見本 design-ref/gunjo-pc/E-road-nouse.html）。ブラウザごとに覚える（保存データには入れない）。変えたらすぐ覚える
-function NoSpendShapeSelect() {
+// 月の道の「使っていない日」の、下線の上に重ねる図形（群青の PC だけ。見本 design-ref/gunjo-pc/E-road-nouse.html）。ブラウザごとに覚える（保存データには入れない）。変えたらすぐ覚える
+// 選択欄の右に、実際の月の道と同じ部品（MonthRoad）で、見え方の例を出す（選ぶと変わる。仮のデータの 7 日。読み上げは飛ばす）
+const EXAMPLE_DAYS = [ // 22〜28 日。1 日目は入力なし、2 日目と 6 日目は光、4 日目は仕訳のみ、3・5・7 日目（今日）は使っていない日
+  { day: 22, state: 'blank', count: 0, amount: 0, variableAmount: 0, fixedAmount: 0 },
+  { day: 23, state: 'day', count: 1, amount: 900, variableAmount: 900, fixedAmount: 0 },
+  { day: 24, state: 'blank', count: 0, amount: 0, variableAmount: 0, fixedAmount: 0, noSpend: true },
+  { day: 25, state: 'day', count: 1, amount: 0, variableAmount: 0, fixedAmount: 0 },
+  { day: 26, state: 'blank', count: 0, amount: 0, variableAmount: 0, fixedAmount: 0, noSpend: true },
+  { day: 27, state: 'day', count: 1, amount: 2400, variableAmount: 2400, fixedAmount: 0 },
+  { day: 28, state: 'blank', count: 0, amount: 0, variableAmount: 0, fixedAmount: 0, noSpend: true, isToday: true },
+]
+function NoSpendShapeSelect({ currency }) {
   const [value, setValue] = useState(loadNoSpendShape)
   const change = (next) => {
     rememberNoSpendShape(next)
     setValue(next)
   }
   return (
-    <div>
-      <label className="open-mode">
-        {t('nospend.shapeLabel')}{' '}
-        <select value={value} onChange={(e) => change(e.target.value)}>
-          {NO_SPEND_SHAPES.map((v) => <option key={v} value={v}>{t(NO_SPEND_SHAPE_LABELS[v])}</option>)}
-        </select>
-      </label>
-      <p className="note">{t('nospend.shapeNote')}</p>
+    <div className="g-nospend-set">
+      <div className="g-nospend-set-main">
+        <label className="open-mode">
+          {t('nospend.shapeLabel')}{' '}
+          <select value={value} onChange={(e) => change(e.target.value)}>
+            {NO_SPEND_SHAPES.map((v) => <option key={v} value={v}>{t(NO_SPEND_SHAPE_LABELS[v])}</option>)}
+          </select>
+        </label>
+        <p className="note">{t('nospend.shapeNote')}</p>
+      </div>
+      <div className="g-nospend-ex-wrap" aria-hidden="true">
+        <p className="g-nospend-ex-cap">{t('nospend.exampleLabel')}</p>
+        <div className="g-nospend-ex"><MonthRoad road={{ month: '2000-01', days: EXAMPLE_DAYS }} currency={currency} shape={value} /></div>
+      </div>
     </div>
   )
 }
@@ -281,7 +298,7 @@ export default function Settings({ driveSync, data, update, openPanel, replaceDa
         <OpenModeSelect side="phone" label={t('entries.openModePhone')} />
         <OpenModeSelect side="pc" label={t('entries.openModePc')} />
         <PresetPromptSelect />
-        {gunjoPc && <NoSpendShapeSelect />}
+        {gunjoPc && <NoSpendShapeSelect currency={data.settings.currency} />}
       </>
     ),
     favorites: () => (

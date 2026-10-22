@@ -37,14 +37,14 @@ function useTagFit(ref) {
   })
 }
 
-// shape：「使っていない日」の図形（設定。none なら印を出さない＝入力していない日と同じに見える）
-export default function MonthRoad({ road, currency, shape = 'underline' }) {
+// shape：「使っていない日」の、下線の上に重ねる図形（設定。none なら下線だけ。下線は、使っていない日に、いつも出る）
+export default function MonthRoad({ road, currency, shape = 'none' }) {
   const roadRef = useRef(null)
   useTagFit(roadRef)
   const m = Number(road.month.slice(5))
   const label = (d) => {
     if (d.state === 'future') return t('entries.roadFuture', { day: d.day })
-    if (d.noSpend && shape !== 'none') return t('entries.roadNoSpend', { day: d.day })
+    if (d.noSpend) return t('entries.roadNoSpend', { day: d.day })
     if (d.state === 'blank') return t('entries.roadBlank', { day: d.day })
     if (d.state === 'open') return t('entries.roadOpen', { day: d.day })
     if (d.fixedAmount > 0) return t('entries.roadFixed', { day: d.day, amount: formatMoney(d.amount, currency), fixed: formatMoney(d.fixedAmount, currency) })
@@ -59,7 +59,7 @@ export default function MonthRoad({ road, currency, shape = 'underline' }) {
         {road.days.map((d) => {
           const ray = d.variableAmount > 0
           const line = d.fixedAmount > 0
-          const mark = d.noSpend && shape !== 'none' // 使っていない日（印があり、仕訳がない。図形は CSS が data-nospend で描く）
+          const mark = d.noSpend // 使っていない日（印があり、仕訳がない。下線は CSS がいつも描き、図形は data-nospend で重ねる）
           const dot = !ray && !line && !mark && (d.count > 0 || d.state === 'open') // 仕訳はあるが光も線も出ない日（と、まだ入力のない今日）。使っていない日の今日は、点でなく図形
           const k = ray ? roadRatio(d.variableAmount, base) : 0
           const kf = line ? roadRatio(d.fixedAmount, fixedBase) : 0
@@ -79,7 +79,7 @@ export default function MonthRoad({ road, currency, shape = 'underline' }) {
         <span><i className="lg-x" />{t('entries.legendFixed')}</span>
         <span><i className="lg-e" />{t('entries.legendBlank')}</span>
         <span><i className="lg-t" />{t('entries.legendToday')}</span>
-        {shape !== 'none' && <span><i className="lg-n" />{t('entries.legendNoSpend')}</span>}
+        <span><i className="lg-n" />{t('entries.legendNoSpend')}</span>
       </div>
     </>
   )

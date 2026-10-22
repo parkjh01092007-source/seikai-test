@@ -120,7 +120,8 @@ const answerLine = (expr, answer) => (answer && !answer.error && !answer.decimal
 // 金額の欄。value・onChange(文字)・label（読み上げの名前と、薄い文字）
 // スマホの形：欄の右に絵のボタン → キーパッド。PC の形：欄に入ると、欄の下に帯（上の行に式と答え、下の行に電卓の絵のボタン・＋ − × ÷・×1.1・×1.08）。絵のボタンか Alt+↓ で、大きなキーパッド。
 // PC の Enter：欄に記号があるときだけ、答えを欄に入れる（送信しない）。記号がなければ、今までどおり（送信）
-export function AmountInput({ value, onChange, label }) {
+// focusRequest：増えるたびに、欄へフォーカスを移す（金額が入っていれば全選択）。0 は何もしない。PC の電卓の帯は、打つまで出さない（下の部品を隠さない）
+export function AmountInput({ value, onChange, label, focusRequest = 0 }) {
   const phone = usePhone()
   const gunjoPc = useGunjoPc() // 群青の PC の帯には、税率のボタン（×1.1・×1.08）を出さない
   const [open, setOpen] = useState(false)
@@ -131,6 +132,12 @@ export function AmountInput({ value, onChange, label }) {
   const wrapRef = useRef(null)
   const bandRef = useRef(null)
   const wasOpen = useRef(false)
+  useEffect(() => {
+    if (!focusRequest || !inputRef.current) return
+    setDismissed(true)
+    inputRef.current.focus()
+    if (inputRef.current.value !== '') inputRef.current.select()
+  }, [focusRequest])
   // 閉じたあと、フォーカスは、スマホは絵のボタンに（キーボードを出さない）、PC は金額の欄に戻す。キーパッドが消えてから（モーダルの間は、後ろにフォーカスを置けない）
   useEffect(() => {
     if (wasOpen.current && !open) (phone ? buttonRef.current : inputRef.current)?.focus()

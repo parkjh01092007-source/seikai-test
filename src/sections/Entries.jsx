@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import './entries.css'
 import {
-  entryAccountOptions, validateEntryInput, livingAccount, defaultLiving, livingOnAccountChange, livingOptionLabel, newEntry, editEntry, lastCreditId, lastNormalEntry, copyInputFromEntry, presetToFormValues, presetSummary, canMarkNoSpend, isNoSpendShown, markNoSpendDay, unmarkNoSpendDay, NO_SPEND_BACK_DAYS, favoriteOptionGroups, accountLabelWithType,
+  entryAccountOptions, validateEntryInput, livingAccount, defaultLiving, livingOnAccountChange, livingOptionLabel, newEntry, editEntry, lastCreditId, lastNormalEntry, copyInputFromEntry, presetToFormValues, presetSummary, canMarkNoSpend, isNoSpendShown, validateEntryPresetInput, newEntryPreset, canAddEntryPreset, markNoSpendDay, unmarkNoSpendDay, NO_SPEND_BACK_DAYS, favoriteOptionGroups, accountLabelWithType,
   entriesOfMonth, groupEntriesByDate, canEditEntry, formatMoney, formatYen, currencyUnit, roadDays,
 } from '../ledgerLogic.js'
 import { today } from '../today.js'
@@ -12,7 +12,8 @@ import { loadOpenMode, initialOpenDates, isOpenDate, formatDayHead, formatDayLab
 import EntrySheet from './EntrySheet.jsx'
 import { AmountInput } from './Calculator.jsx'
 import { Icon, IconButton } from './Icon.jsx'
-import { presetIconId } from '../icons.js'
+import { presetIconId, PRESET_ICON_PICKER } from '../icons.js'
+import IconPicker from './PresetIconPicker.jsx'
 import { useGunjoPc, useFixedEntries } from '../gunjoPc.js'
 import { createPortal } from 'react-dom'
 import { useBandHost, useBandTop, useBandRoad } from './bandHost.js'
@@ -46,17 +47,35 @@ function Field({ label, className = '', children }) {
 // noSpend：{ days, entries, today, onToggle(date) }。新しい仕訳の入力だけが渡す。渡すと「今日は使っていない」のボタンが出る（日付の欄の日が対象）
 // presets：仕訳プリセットの一覧（渡すと、上に、プリセットのボタンが並ぶ。押すと、借方・貸方・金額・メモが入る）。なければ出さない
 // applyValues(values)：入力欄に、外から値を入れる（日付は変えない）。前回と同じ入力と、これからのプリセットが使う
-export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus', onSubmit, onCancel, currentIds, favorites = { debit: [], credit: [] }, variant, onValues, lastEntry, currency, presets, noSpend }) {
+// addPreset：{ list（今のプリセット）, onAdd(input) → 新しいプリセットの id }。新しい仕訳の入力だけが渡す。渡すと「プリセットに追加」の＋付きの星のボタンが出て、押すと入力欄が追加の状態になる（日付の欄は隠れ、記号・名前〔任意〕・保存／やめる。今の借方・貸方・金額・メモを引き継ぐ）
+export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus', onSubmit, onCancel, currentIds, favorites = { debit: [], credit: [] }, variant, onValues, lastEntry, currency, presets, noSpend, addPreset, quickHost }) {
   const options = entryAccountOptions(accounts, currentIds)
   const [f, setF] = useState(initial)
   const [error, setError] = useState('')
   const set = (k) => (v) => setF((s) => ({ ...s, [k]: v }))
   // 借方・貸方を変えたら、生活費の月も整える（同じ科目のままなら選び方を残し、別の収益の科目なら、その科目の決まり。収益がなくなれば消す）
   const setAccount = (k) => (v) => setF((s) => { const next = { ...s, [k]: v }; return { ...next, living: livingOnAccountChange(accounts, s, next) } })
-  const [appliedId, setAppliedId] = useState(null) // 最後に反映したプリセット（反転の表示用）
+  const formRef = useRef(null)
+  const [applied, setApplied] = useState(null) // 最後に反映したもの（プリセットの id か 'copy'＝前回と同じ入力）。反転の表示用
+  const [undo, setUndo] = useState(null) // 反映の取り消し用：{ key, before（押す直前の借方・貸方・金額・メモ・生活費の月）, beforeApplied }。反映を押すたびに、直前の 1 つ分だけ覚える
+  const [focusTick, setFocusTick] = useState(0) // プリセットを押したあと、金額の欄へフォーカスを移す合図（AmountInput の focusRequest。金額が入っていれば全選択。PC の電卓の帯は、打つまで出さない）
   const applyValues = (values) => { setF((s) => ({ ...s, ...values })); setError('') }
+  const sameValues = (values) => ['debitId', 'creditId', 'amount', 'memo'].every((k) => f[k] === values[k]) // 反映したあと、借方・貸方・金額・メモのどれかを変えるまで、反転
+  // 反映（プリセット・前回と同じ入力）。反転しているものをもう一度押すと、反映を取り消す（押す直前の値に戻す）。手で変えたあとは反転が消えているので、押すとふつうの反映（取り消し用の値は、そのときの値に更新）。返す値：反映したか
+  const press = (key, values) => {
+    if (applied === key && undo?.key === key && sameValues(values)) {
+      setF((s) => ({ ...s, ...undo.before })); setError(''); setApplied(undo.beforeApplied); setUndo(null)
+      return false
+    }
+    setUndo({ key, before: { debitId: f.debitId, creditId: f.creditId, amount: f.amount, memo: f.memo, living: f.living }, beforeApplied: applied })
+    applyValues(values); setApplied(key)
+    return true
+  }
+  const copyValues = lastEntry ? copyInputFromEntry(lastEntry, accounts) : null
+  const copyPressed = copyValues !== null && applied === 'copy' && sameValues(copyValues)
+  const copyTitle = lastEntry ? t('entries.copyLastTitle', { date: lastEntry.date, debit: accounts.find((a) => a.id === lastEntry.debitId)?.name ?? '', credit: accounts.find((a) => a.id === lastEntry.creditId)?.name ?? '', amount: formatMoney(lastEntry.amount, currency) }) : ''
   const copyButton = lastEntry ? (
-    <button type="button" className="copy-last icon-only" aria-label={t('entries.copyLast')} title={t('entries.copyLastTitle', { date: lastEntry.date, debit: accounts.find((a) => a.id === lastEntry.debitId)?.name ?? '', credit: accounts.find((a) => a.id === lastEntry.creditId)?.name ?? '', amount: formatMoney(lastEntry.amount, currency) })} onClick={() => applyValues(copyInputFromEntry(lastEntry, accounts))}><Icon name="copy" /></button>
+    <button type="button" className={copyPressed ? 'copy-last icon-only on' : 'copy-last icon-only'} aria-pressed={copyPressed} aria-label={t('entries.copyLast')} title={copyPressed ? t('entries.undoTitle', { text: copyTitle }) : copyTitle} onClick={() => press('copy', copyValues)}><Icon name="copy" /></button>
   ) : null
   const presetRow = presets && presets.length > 0 ? (
     <div className="preset-row" role="group" aria-label={t('presets.chooseLabel')}>
@@ -65,10 +84,10 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
       {presets.map((p) => {
         const values = presetToFormValues(p, accounts)
         const summary = presetSummary(p, accounts, currency)
-        const pressed = p.id === appliedId && ['debitId', 'creditId', 'amount', 'memo'].every((k) => f[k] === values[k]) // 反映したあと、借方・貸方・金額・メモのどれかを変えるまで、反転
+        const pressed = p.id === applied && sameValues(values)
         return (
           <span key={p.id} className="preset-item">
-            <button type="button" className={pressed ? 'preset-chip icon-only on' : 'preset-chip icon-only'} aria-pressed={pressed} aria-label={summary} title={summary} onClick={() => { applyValues(values); setAppliedId(p.id) }}><Icon name={presetIconId(p.icon)} /></button>
+            <button type="button" className={pressed ? 'preset-chip icon-only on' : 'preset-chip icon-only'} aria-pressed={pressed} aria-label={summary} title={pressed ? t('entries.undoTitle', { text: summary }) : summary} onClick={() => { if (press(p.id, values)) setFocusTick((n) => n + 1) }}><Icon name={presetIconId(p.icon)} /></button>
           </span>
         )
       })}
@@ -82,14 +101,24 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
     const why = { hasEntries: 'entries.noSpendHasEntries', future: 'entries.noSpendRange', old: 'entries.noSpendRange', invalid: 'entries.noSpendRange' }[can.reason]
     noSpendButton = (
       <button type="button" className={shown ? 'no-spend on' : 'no-spend'} aria-pressed={shown} disabled={!shown && !can.ok}
-        title={shown ? t('entries.noSpendUndoTitle') : can.ok ? t('entries.noSpendTitle') : t(why, { days: NO_SPEND_BACK_DAYS })}
-        onClick={() => noSpend.onToggle(f.date)}><Icon name={shown ? 'circleFill' : 'circle'} />{shown ? t('entries.noSpendDone', { label }) : label}</button>
+        aria-label={shown ? t('entries.noSpendDoneAria', { label }) : undefined}
+        title={shown ? t('entries.noSpendUndoTitle', { label }) : can.ok ? t('entries.noSpendTitle') : t(why, { days: NO_SPEND_BACK_DAYS })}
+        onClick={() => noSpend.onToggle(f.date)}><Icon name={shown ? 'circleScribble' : 'circle'} />{shown ? t('entries.noSpendDone') : label}</button>
     )
   }
-  // 前回と同じ入力（複製の絵）と今日は使っていない（円）を 1 行に。span で包むのは、群青の PC の「隣り合う部品は余白で 12px」規則に巻き込まないため（間は行の gap）
-  const quickRow = copyButton || noSpendButton ? (
-    <div className="quick-row">{copyButton && <span>{copyButton}</span>}{noSpendButton && <span>{noSpendButton}</span>}</div>
+  const [adding, setAdding] = useState(false) // プリセットの追加の状態（日付の欄は隠れる）
+  const [addDraft, setAddDraft] = useState({ icon: PRESET_ICON_PICKER[0], name: '' })
+  const [addError, setAddError] = useState('')
+  const addLimit = addPreset ? canAddEntryPreset(addPreset.list) : { ok: true } // 20 件まで（超えたら追加を止めて、理由を出す）
+  const addButton = addPreset ? (
+    <button type="button" className="preset-add icon-only" disabled={!addLimit.ok} aria-label={t('presets.addFromForm')} title={addLimit.ok ? t('presets.addFromForm') : addLimit.error} onClick={() => { setAddError(''); setAdding(true) }}><Icon name="starPlus" /></button>
   ) : null
+  // 前回と同じ入力（複製の絵）と今日は使っていない（円）を 1 行に。span で包むのは、群青の PC の「隣り合う部品は余白で 12px」規則に巻き込まないため（間は行の gap）
+  const quickRow = copyButton || noSpendButton || addButton ? (
+    <div className="quick-row">{copyButton && <span>{copyButton}</span>}{noSpendButton && <span>{noSpendButton}</span>}{addButton && <span>{addButton}</span>}</div>
+  ) : null
+  // 「前回と同じ入力」「今日は使っていない」「プリセットに追加」のボタン：新しい仕訳の枠（欄）の外、見出しの右端（群青の札・基本）／入力画面の上端（スマホ）に出す。quickHost（見出しの中の置き場所）があれば、そこへ移す。なければ、欄の中に出す
+  const placeQuick = quickRow && quickHost ? createPortal(quickRow, quickHost) : quickRow
   const showLiving = livingAccount(accounts, f.debitId, f.creditId) !== undefined // 収益の科目（調整益を除く）を選んだときだけ
   useEffect(() => { onValues?.(f) }, [f]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -104,7 +133,7 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
 
   const fields = {
     date: <Field label={t('common.date')}><input type="date" aria-label={t('common.date')} value={f.date} onChange={(e) => set('date')(e.target.value)} /></Field>,
-    amount: <Field label={t('common.amount')}><AmountInput label={t('common.amount')} value={f.amount} onChange={set('amount')} /></Field>,
+    amount: <Field label={t('common.amount')}><AmountInput label={t('common.amount')} value={f.amount} onChange={set('amount')} focusRequest={focusTick} /></Field>,
     debit: <Field label={t('common.debit')}><AccountSelect label={t('common.debit')} value={f.debitId} onChange={setAccount('debitId')} options={options} favoriteIds={favorites.debit} /></Field>,
     credit: <Field label={t('common.credit')}><AccountSelect label={t('common.credit')} value={f.creditId} onChange={setAccount('creditId')} options={options} favoriteIds={favorites.credit} /></Field>,
     living: showLiving && (
@@ -116,12 +145,41 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
     ),
   }
 
+  // プリセットの追加の状態：日付の欄は隠れ、記号の選択・名前（任意）・借方・貸方・金額・メモ（今の入力を引き継ぐ）・保存／やめる
+  if (adding && addPreset) {
+    const saveAdd = (e) => {
+      e.preventDefault()
+      if (!addLimit.ok) return setAddError(addLimit.error)
+      const r = validateEntryPresetInput({ name: addDraft.name, icon: addDraft.icon, debitId: f.debitId, creditId: f.creditId, amountText: f.amount, memo: f.memo }, accounts)
+      if (r.error) return setAddError(r.error)
+      const id = addPreset.onAdd(r)
+      setAddError(''); setAdding(false); setApplied(id); setUndo(null) // 入力はそのまま。追加したプリセットは反転（値が同じなので）
+    }
+    const used = new Set(addPreset.list.map((p) => presetIconId(p.icon)))
+    return (
+      <form className={`preset-add-form${variant === 'card' ? ' g-slip' : variant === 'sheet' ? ' sheet-form' : ''}`} ref={formRef} onSubmit={saveAdd}>
+        <span className="preset-add-title">{t('presets.addMode')}</span>
+        <div className="pset-pick-row"><IconPicker value={addDraft.icon} onChange={(icon) => setAddDraft((d) => ({ ...d, icon }))} used={used} /></div>
+        <Field label={t('presets.namePlaceholder')}><input aria-label={t('common.name')} placeholder={t('presets.namePlaceholder')} value={addDraft.name} onChange={(e) => setAddDraft((d) => ({ ...d, name: e.target.value }))} /></Field>
+        {fields.debit}
+        {fields.credit}
+        {fields.amount}
+        <Field label={t('common.memo')}><input className="memo-input" aria-label={t('common.memo')} value={f.memo} onChange={(e) => set('memo')(e.target.value)} /></Field>
+        {addError && <span className="error">{addError}</span>}
+        <div className="sheet-actions">
+          <button type="button" onClick={() => { setAdding(false); setAddError('') }}><Icon name="close" />{t('entries.sheetClose')}</button>
+          <button className="primary"><Icon name="check" />{t('common.save')}</button>
+        </div>
+      </form>
+    )
+  }
+
   // variant='card'：群青の PC の入力の札（見本 E-entries）。ラベルが上の縦の並び（日付・借方・貸方・金額・メモ）と、幅いっぱいの大きい「追加」
   if (variant === 'card') {
     return (
-      <form className="g-slip" onSubmit={submit}>
+      <form className="g-slip" ref={formRef} onSubmit={submit}>
         {presetRow}
-        {quickRow}
+        {placeQuick}
         {fields.date}
         {fields.debit}
         {fields.credit}
@@ -136,9 +194,9 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
 
   if (variant === 'sheet') {
     return (
-      <form className="sheet-form" onSubmit={submit}>
+      <form className="sheet-form" ref={formRef} onSubmit={submit}>
         {presetRow}
-        {quickRow}
+        {placeQuick}
         {fields.date}
         {fields.amount}
         <div className="sheet-pair">{fields.debit}{fields.credit}</div>
@@ -154,7 +212,7 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
   }
 
   return (
-    <form onSubmit={submit}>
+    <form ref={formRef} onSubmit={submit}>
       {fields.date}
       {fields.amount}
       {fields.debit}
@@ -162,7 +220,7 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
       {fields.living}
       <input className="memo-input" placeholder={t('common.memo')} aria-label={t('common.memo')} value={f.memo} onChange={(e) => set('memo')(e.target.value)} />
       {presetRow}
-      {quickRow}
+      {placeQuick}
       <button><Icon name={submitIcon} />{submitLabel}</button>
       {onCancel && <button type="button" onClick={onCancel}><Icon name="close" />{t('entries.sheetClose')}</button>}
       {error && <span className="error">{error}</span>}
@@ -313,7 +371,9 @@ export default function Entries({ data, update }) {
   const last = lastCreditId(entries)
   const creditId = entryAccountOptions(accounts).some((a) => a.id === last) ? last : '' // 選択肢にあるときだけ使う
   const newInitial = { date: today(), amount: '', debitId: '', creditId, memo: '', living: defaultLiving(accounts, '', creditId) }
+  const [quickHost, setQuickHost] = useState(null) // 見出しの右端（スマホは入力画面の上端）の、ボタンの置き場所
   const presets = data.entryPresets
+  const addPreset = { list: presets, onAdd: (input) => { const p = newEntryPreset(input); update({ ...data, entryPresets: [...presets, p] }); return p.id } } // 入力欄から、今の入力をプリセットに追加
   // 「今日は使っていない」：日付の欄の日に印を付ける・外す（仕訳とは別の noSpendDays。残高・月次などには影響しない）
   const noSpend = { days: data.noSpendDays, entries, today: today(), onToggle: (date) => update({ ...data, noSpendDays: data.noSpendDays.includes(date) ? unmarkNoSpendDay(data.noSpendDays, date) : markNoSpendDay(data.noSpendDays, date) }) }
   const sheetInitial = fill ? { ...newInitial, ...fill } : newInitial // スマホの入力画面の初めの値（プリセットを選んだときは、その値）
@@ -484,7 +544,10 @@ export default function Entries({ data, update }) {
         // 群青の PC（見本 E-entries）：左に「新しい仕訳」の札（画面の上に貼り付く）、右に一覧（並べ替えのボタンと、日ごとの枠）。画面の名前は帯のマス
         <div className="g-entries-body">
           <section className="g-card g-slip-card">
-            <h2 className="g-h">{t('entries.cardTitle')}<small lang="en">{t('entries.cardEn')}</small></h2>
+            <div className="g-slip-head">
+              <h2 className="g-h">{t('entries.cardTitle')}<small lang="en">{t('entries.cardEn')}</small></h2>
+              <span className="quick-host" ref={setQuickHost} />
+            </div>
             <EntryForm
               variant="card"
               accounts={accounts}
@@ -494,6 +557,8 @@ export default function Entries({ data, update }) {
               currency={settings.currency}
               presets={presets}
               noSpend={noSpend}
+              addPreset={addPreset}
+              quickHost={quickHost}
               submitLabel={t('common.add')}
               onSubmit={add}
             />
@@ -507,7 +572,7 @@ export default function Entries({ data, update }) {
       ) : (
         <>
       {/* 入力欄の固定：PC の幅は、入力の行が画面の上に貼り付く（entries.css）。スマホの形は、一覧の上に置かず、右下の「＋」から入力画面を出す */}
-      {!phone && <h2>{t('entries.inputTitle')}</h2>}
+      {!phone && <div className="entries-head"><h2>{t('entries.inputTitle')}</h2><span className="quick-host" ref={setQuickHost} /></div>}
       {!phone && (
         <EntryForm
           accounts={accounts}
@@ -517,6 +582,8 @@ export default function Entries({ data, update }) {
           currency={settings.currency}
           presets={presets}
           noSpend={noSpend}
+          addPreset={addPreset}
+          quickHost={quickHost}
           submitLabel={t('common.add')}
           onSubmit={add}
         />
@@ -540,7 +607,7 @@ export default function Entries({ data, update }) {
         </EntrySheet>
       )}
       {creating && !presetStep && (
-        <EntrySheet title={t('entries.newSheetTitle')} onClose={() => setCreating(false)} onOutside={outsideNew}>
+        <EntrySheet title={t('entries.newSheetTitle')} onClose={() => setCreating(false)} onOutside={outsideNew} focus={fill ? 'amount' : undefined} quickHostRef={setQuickHost}>
           <EntryForm
             variant="sheet"
             accounts={accounts}
@@ -550,6 +617,8 @@ export default function Entries({ data, update }) {
             currency={settings.currency}
             presets={loadPresetPrompt() === 'off' ? presets : []}
             noSpend={noSpend}
+            addPreset={addPreset}
+            quickHost={quickHost}
             submitLabel={t('common.add')}
             onSubmit={add}
             onCancel={() => setCreating(false)}

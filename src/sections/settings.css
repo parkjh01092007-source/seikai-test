@@ -61,11 +61,11 @@
 
 /* プリセットの記号の選択（radiogroup。6 列）。選んだものは反転。ほかのプリセットが使っている記号には、小さい点（選べはする） */
 .settings .pset-pick-row { flex: 1 1 100%; min-width: 0; }
-.settings .pset-icons { display: grid; grid-template-columns: repeat(6, max-content); gap: 8px; justify-content: start; }
-.settings .pset-icon-cell { display: inline-flex; }
-.settings .pset-icon-opt { position: relative; }
-.settings .pset-icon-opt.on { background: var(--color-text); color: var(--color-bg); }
-.settings .pset-dot { position: absolute; top: 3px; right: 3px; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+:is(.settings, .entries) .pset-icons { display: grid; grid-template-columns: repeat(6, max-content); gap: 8px; justify-content: start; }
+:is(.settings, .entries) .pset-icon-cell { display: inline-flex; }
+:is(.settings, .entries) .pset-icon-opt { position: relative; }
+:is(.settings, .entries) .pset-icon-opt.on { background: var(--color-text); color: var(--color-bg); }
+:is(.settings, .entries) .pset-dot { position: absolute; top: 3px; right: 3px; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
 .settings .pset-sym { display: inline-flex; vertical-align: middle; margin-right: 8px; }
 .settings .pset-sym .icon { width: 24px; height: 24px; }
 .settings .pset-full { color: var(--color-error); }

@@ -83,15 +83,21 @@ export const savePresetPrompt = (storage, value) => {
   } catch { /* 覚えられなくてもよい */ }
 }
 
-// ---- 月の道の「使っていない日」の図形（群青の PC だけ。端末ごと。保存データ・書き出し・セーブには入れない）。初めの値は下線
-export const NO_SPEND_SHAPE_KEY = 'orenoyome-nospend-shape'
-export const NO_SPEND_SHAPES = ['none', 'underline', 'ring', 'bar', 'slash', 'cross', 'star', 'check'] // 出さない・下線・輪・柱・斜線・×・星・チェック
-export const NO_SPEND_SHAPE_LABELS = { none: 'nospend.shape.none', underline: 'nospend.shape.underline', ring: 'nospend.shape.ring', bar: 'nospend.shape.bar', slash: 'nospend.shape.slash', cross: 'nospend.shape.cross', star: 'nospend.shape.star', check: 'nospend.shape.check' } // 選択肢の文言（辞書のキー）
-export const DEFAULT_NO_SPEND_SHAPE = 'underline'
+// ---- 月の道の「使っていない日」の図形（群青の PC だけ。端末ごと。保存データ・書き出し・セーブには入れない）。
+// 日の数字の下線は、設定に関係なく常に出る。ここで選ぶのは、その上に重ねる図形。初めの値は「出さない」（下線だけ）
+export const NO_SPEND_SHAPE_KEY = 'orenoyome-nospend-shape2'
+export const OLD_NO_SPEND_SHAPE_KEY = 'orenoyome-nospend-shape' // 旧：下線も図形の 1 つとして選んでいた。混ざらないよう、名前を変えた（読むときだけ読み替える）
+export const NO_SPEND_SHAPES = ['none', 'ring', 'bar', 'slash', 'cross', 'star', 'star4', 'check'] // 出さない・輪・柱・斜線・×・星★・星✦・チェック
+export const NO_SPEND_SHAPE_LABELS = { none: 'nospend.shape.none', ring: 'nospend.shape.ring', bar: 'nospend.shape.bar', slash: 'nospend.shape.slash', cross: 'nospend.shape.cross', star: 'nospend.shape.star', star4: 'nospend.shape.star4', check: 'nospend.shape.check' } // 選択肢の文言（辞書のキー）
+export const DEFAULT_NO_SPEND_SHAPE = 'none'
+// 旧の値 → 新の値（旧の下線は、いまは常に出るので「出さない」。ほかは同じ図形のまま）
+const OLD_SHAPE_TO_NEW = { none: 'none', underline: 'none', ring: 'ring', bar: 'bar', slash: 'slash', cross: 'cross', star: 'star', check: 'check' }
 export const readNoSpendShape = (storage) => {
   try {
     const v = storage.getItem(NO_SPEND_SHAPE_KEY)
-    return NO_SPEND_SHAPES.includes(v) ? v : DEFAULT_NO_SPEND_SHAPE
+    if (NO_SPEND_SHAPES.includes(v)) return v
+    const old = storage.getItem(OLD_NO_SPEND_SHAPE_KEY)
+    return Object.hasOwn(OLD_SHAPE_TO_NEW, old) ? OLD_SHAPE_TO_NEW[old] : DEFAULT_NO_SPEND_SHAPE
   } catch {
     return DEFAULT_NO_SPEND_SHAPE
   }

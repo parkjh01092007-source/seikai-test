@@ -100,8 +100,15 @@
 .sheet .preset-pick .preset-skip { grid-column: 1 / -1; min-height: 48px; text-align: center; }
 .entries .preset-row .preset-chip { margin: 0; }
 /* 反映したプリセットの記号：反転（aria-pressed）。色は、見た目ごとの文字色・地の色の入れ替え */
-.entries .preset-chip.on { background: var(--color-text); color: var(--color-bg); }
+.entries .preset-chip.on, .entries .copy-last.on { background: var(--color-text); color: var(--color-bg); }
 
 /* 前回と同じ入力（複製の絵）と今日は使っていない（円の絵＋文字）の 1 行 */
 .entries .quick-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1 1 100%; min-width: 0; }
 .entries .quick-row > span { display: inline-flex; }
+
+/* ボタンの置き場所（新しい仕訳の枠の外）：見出しの右端。入りきらなければ折り返して、右に寄せる。スマホは入力画面の上端（見出しの右。入りきらなければ次の行） */
+.entries .entries-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px var(--space); }
+.entries .entries-head h2 { margin: 0; }
+.entries .quick-host { display: inline-flex; margin-left: auto; min-width: 0; }
+.entries .quick-host .quick-row { flex: 0 1 auto; justify-content: flex-end; }
+@media screen and (max-width: 959.98px), screen and (pointer: coarse) and (hover: none) { .entries .sheet-head { flex-wrap: wrap; } .entries .sheet-head .quick-host { flex: 1 1 auto; justify-content: flex-end; } }
