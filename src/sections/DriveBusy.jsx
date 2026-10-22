@@ -16,13 +16,15 @@ export default function DriveBusy() {
   const phone = usePhone()
   const ref = useRef(null)
   const [want, setWant] = useState(null) // 今出したい形：'curtain'・'corner'・null
+  const [now, setNow] = useState(false) // 人が押した操作の最中（待たずに、すぐ出す）
   const [shown, setShown] = useState(null) // 実際に出している形
   const since = useRef(0)
 
   useEffect(() => {
     const read = () => {
       const b = getBusy()
-      setWant(phone ? (b.manual > 0 ? 'curtain' : null) : (b.manual + b.sync > 0 ? 'corner' : null))
+      setWant(phone ? (b.manual + b.op > 0 ? 'curtain' : null) : (b.manual + b.sync + b.op > 0 ? 'corner' : null))
+      setNow(b.op > 0)
     }
     read()
     window.addEventListener(BUSY_EVENT, read)
@@ -32,12 +34,12 @@ export default function DriveBusy() {
   useEffect(() => {
     if (want === shown) return
     if (want) {
-      const id = setTimeout(() => { since.current = Date.now(); setShown(want) }, shown ? 0 : SHOW_AFTER)
+      const id = setTimeout(() => { since.current = Date.now(); setShown(want) }, shown || now ? 0 : SHOW_AFTER)
       return () => clearTimeout(id)
     }
     const id = setTimeout(() => setShown(null), Math.max(0, SHOW_MIN - (Date.now() - since.current)))
     return () => clearTimeout(id)
-  }, [want, shown])
+  }, [want, shown, now])
 
   // 最前面の層に出し入れする。あとから開いた確認画面の下にならないよう、通信の数が変わるたびに出し直す（確認画面が開いているときだけ）
   useEffect(() => {

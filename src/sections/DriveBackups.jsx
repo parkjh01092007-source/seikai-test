@@ -3,7 +3,7 @@ import './saveload.css'
 import { t } from '../text.js'
 import { versionLabel } from '../pwa.js'
 import { useConfirm } from './ConfirmDialog.jsx'
-import { CHANGE_EVENT, getSync } from '../driveStore.js'
+import { CHANGE_EVENT, getSync, manualOp } from '../driveStore.js'
 
 // 設定 → データ → ドライブの控え（spec-drive.md 4.8）：控えの一覧（新しい順）と「この控えに戻す」。
 // 一覧と戻す動きは useDriveSync（driveSync.js の listBackupDetails・restoreBackup）。ここは、画面に出すだけ。
@@ -44,7 +44,7 @@ export default function DriveBackups({ driveSync }) {
     if (!ok) return
     setBusy(true)
     carried = { text: t('backups.restored'), error: false }
-    const r = await driveSync.restore(item.id)
+    const r = await manualOp(() => driveSync.restore(item.id))
     setBusy(false)
     if (r.kind === 'restored') { setMessage({ text: t('backups.restored'), error: false }); setTimeout(() => { carried = null }, 1000) } // 画面の作り直しは、この処理のあとに起きる（再描画が遅れる）ので、預けた知らせは、すぐには消さない
     else { carried = null; setMessage({ text: t({ blocked: 'backups.blocked', gone: 'backups.gone', unavailable: 'backups.unavailable' }[r.kind] ?? 'backups.error'), error: true }) }

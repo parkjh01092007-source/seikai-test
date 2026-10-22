@@ -121,8 +121,19 @@ const UPLOAD = 'https://www.googleapis.com/upload/drive/v3'
 const FILE_FIELDS = 'id,headRevisionId'
 // 通信中の数（画面の「LOADING」の表示用。DriveBusy.jsx が読む）。kind：'manual'（セーブ・ロード・控え・競合解決のように、人が押した操作）／'sync'（バックグラウンドの同期・オートセーブ）
 export const BUSY_EVENT = 'orenoyome-drive-busy'
-const inflight = { manual: 0, sync: 0 }
-export const getBusy = () => ({ manual: inflight.manual, sync: inflight.sync })
+const inflight = { manual: 0, sync: 0, op: 0 }
+export const getBusy = () => ({ manual: inflight.manual, sync: inflight.sync, op: inflight.op })
+// 人が押した操作の全体（保存・読み込み・削除・控えから戻す・競合の解決）を数える。押した瞬間から終わるまで（通信の間・同期の列待ちも含む）。この間は、待たずにすぐ出す。確認画面の返事待ちは包まない
+export async function manualOp(fn) {
+  inflight.op += 1
+  window.dispatchEvent(new Event(BUSY_EVENT))
+  try {
+    return await fn()
+  } finally {
+    inflight.op -= 1
+    window.dispatchEvent(new Event(BUSY_EVENT))
+  }
+}
 const busyStart = (kind) => { inflight[kind] += 1; window.dispatchEvent(new Event(BUSY_EVENT)) }
 const busyEnd = (kind) => { inflight[kind] -= 1; window.dispatchEvent(new Event(BUSY_EVENT)) }
 async function callRaw(url, init = {}, kind = 'sync') {

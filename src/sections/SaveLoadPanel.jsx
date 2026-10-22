@@ -4,7 +4,7 @@ import { t } from '../text.js'
 import { toHash } from '../route.js'
 import { nowLocal } from '../today.js'
 import { SLOTS, SAVE_ERRORS, slotView, lastSaveText, validateMemo, buildSaveFile, checkSaveFile, storeErrorText, errName } from '../saveLogic.js'
-import { startLogin } from '../driveStore.js'
+import { startLogin, manualOp } from '../driveStore.js'
 import { slotStore } from '../slotStore.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import { usePhone } from '../layout.js'
@@ -92,9 +92,11 @@ export default function SaveLoadPanel({ mode, data, loadBlocked = false, onClose
     setMemoError('')
     if (!(await ensurePermission())) return
     if (slot.view.status !== 'empty' && !(await confirm({ message: t('save.overwriteConfirm', { label: slot.label }) }))) return
-    const file = buildSaveFile(data, { kind: 'manual', savedAt: nowLocal(), memo: m.memo })
-    await store.writeSlot(slot.file, JSON.stringify(file, null, 2))
-    await refresh()
+    await manualOp(async () => {
+      const file = buildSaveFile(data, { kind: 'manual', savedAt: nowLocal(), memo: m.memo })
+      await store.writeSlot(slot.file, JSON.stringify(file, null, 2))
+      await refresh()
+    })
     setSelected(null)
     setMessage(t('save.saved', { label: slot.label }))
   })
@@ -104,14 +106,14 @@ export default function SaveLoadPanel({ mode, data, loadBlocked = false, onClose
     if (loadBlocked) return setError(t('save.loadBlocked'))
     if (!(await confirm({ message: `${t('save.loadHead', { label: slot.label })}\n${t('save.loadConfirm')}` }))) return
     if (!(await ensurePermission())) return
-    const text = await store.readSlot(slot.file)
+    const text = await manualOp(() => store.readSlot(slot.file))
     if (text === null) {
-      await refresh()
+      await manualOp(refresh)
       return setError(t('save.gone'))
     }
     const r = checkSaveFile(text)
     if (r.error) {
-      await refresh()
+      await manualOp(refresh)
       return setError(r.error)
     }
     onLoad(r)
@@ -120,12 +122,14 @@ export default function SaveLoadPanel({ mode, data, loadBlocked = false, onClose
   const remove = (slot) => run(async () => {
     if (!(await confirm({ message: t('save.deleteConfirm', { label: slot.label }) }))) return
     if (!(await ensurePermission())) return
-    try {
-      await store.deleteSlot(slot.file)
-    } catch (e) {
-      if (errName(e) !== 'NotFoundError') throw e // もうなければ、削除できたのと同じ
-    }
-    await refresh()
+    await manualOp(async () => {
+      try {
+        await store.deleteSlot(slot.file)
+      } catch (e) {
+        if (errName(e) !== 'NotFoundError') throw e // もうなければ、削除できたのと同じ
+      }
+      await refresh()
+    })
     if (selected === slot.file) setSelected(null)
     setMessage(t('save.deleted', { label: slot.label }))
   })

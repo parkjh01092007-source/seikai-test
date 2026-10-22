@@ -3,6 +3,7 @@ import './confirm.css'
 import { t } from '../text.js'
 import { versionLabel } from '../pwa.js'
 import { Icon } from './Icon.jsx'
+import { manualOp } from '../driveStore.js'
 
 // 食い違いの確認画面（spec-drive.md 4.4）。この端末のデータと、ドライブのデータについて、最後に変えた日時と仕訳の件数を並べて出し、どちらを残すか選ばせる。
 // 残さなかった方は消さず、ドライブの控え（別のファイル）に残る。選ぶまで、データは変わらない。「あとで決める」・Esc は、何も変えずに閉じる（帯から開き直せる）。
@@ -35,7 +36,7 @@ export default function ConflictDialog({ kind, describe, resolve, onClose, onLog
   const choose = async (choice) => {
     setBusy(true)
     setError('')
-    const r = await resolve(choice)
+    const r = await manualOp(() => resolve(choice))
     setBusy(false)
     if (r.kind === 'resolved') return onClose()
     if (r.kind === 'unavailable') setError(t('conflict.unavailable'))
