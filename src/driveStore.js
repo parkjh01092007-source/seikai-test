@@ -119,16 +119,24 @@ export const DATA_FILE = 'orenoyome-data.json'
 const API = 'https://www.googleapis.com/drive/v3'
 const UPLOAD = 'https://www.googleapis.com/upload/drive/v3'
 const FILE_FIELDS = 'id,headRevisionId'
-async function call(url, init = {}) {
+// 通信中の数（画面の「LOADING」の表示用。DriveBusy.jsx が読む）。kind：'manual'（セーブ・ロード・控え・競合解決のように、人が押した操作）／'sync'（バックグラウンドの同期・オートセーブ）
+export const BUSY_EVENT = 'orenoyome-drive-busy'
+const inflight = { manual: 0, sync: 0 }
+export const getBusy = () => ({ manual: inflight.manual, sync: inflight.sync })
+const busyStart = (kind) => { inflight[kind] += 1; window.dispatchEvent(new Event(BUSY_EVENT)) }
+const busyEnd = (kind) => { inflight[kind] -= 1; window.dispatchEvent(new Event(BUSY_EVENT)) }
+async function callRaw(url, init = {}, kind = 'sync') {
   const token = getToken()
   if (!token) throw new DriveError('login', 'no token')
   let res
   const t0 = Date.now()
+  busyStart(kind)
   try {
     res = await fetch(url, { ...init, headers: { ...init.headers, Authorization: `Bearer ${token}` } })
   } catch (e) {
     throw new DriveError('offline', e.message)
   } finally {
+    busyEnd(kind)
     if (import.meta.env.DEV) console.info(`[drive] ${init.method ?? 'GET'} ${new URL(url).pathname.replace(/\/[^/]{20,}/g, '/…')} ${Date.now() - t0}ms`) // 開発のときだけ。1つの問い合わせにかかった時間（鍵・ファイルの中身は出さない）
   }
   if (res.status === 401) {
@@ -146,71 +154,78 @@ function multipart(meta, text) {
   const body = [`--${boundary}`, 'Content-Type: application/json; charset=UTF-8', '', JSON.stringify(meta), `--${boundary}`, 'Content-Type: application/json', '', text, `--${boundary}--`].join(CRLF)
   return { headers: { 'Content-Type': `multipart/related; boundary=${boundary}` }, body }
 }
-// appDataFolder に、名前つきで新しいファイルを作る（データのファイルも、控えも、セーブのスロットも）。properties：appProperties に入れる文字（スロットのセーブした日時）
-async function createFile(name, text, properties = null) {
-  const res = await call(`${UPLOAD}/files?uploadType=multipart&fields=${FILE_FIELDS}`, { method: 'POST', ...multipart({ name, parents: ['appDataFolder'], ...(properties ? { appProperties: properties } : {}) }, text) })
-  return res.json()
-}
-export const drive = {
-  // 同じ名前のファイルが2つあるとき（2台が同時に初めてつないだ）は、先にできた方
-  async find() {
-    const q = encodeURIComponent(`name='${DATA_FILE}' and trashed=false`)
-    const res = await call(`${API}/files?spaces=appDataFolder&q=${q}&orderBy=createdTime&pageSize=10&fields=files(${FILE_FIELDS})`)
-    const file = (await res.json()).files?.[0]
-    return file ? { id: file.id, headRevisionId: file.headRevisionId } : null
-  },
-  async read(id) {
-    return (await call(`${API}/files/${id}?alt=media`)).text()
-  },
-  create(text) {
-    return createFile(DATA_FILE, text)
-  },
-  // 食い違いの確認（作業30(c)）：ある版の中身。控え（別のファイル）の作成・一覧・削除
-  async readRevision(fileId, revId) {
-    return (await call(`${API}/files/${fileId}/revisions/${encodeURIComponent(revId)}?alt=media`)).text()
-  },
-  async createBackup(name, text, properties = null) {
-    return createFile(name, text, properties)
-  },
-  // セーブのスロット（作業31）：名前つきで作る。appProperties に、セーブした日時を入れる
-  createNamed(name, text, properties) {
-    return createFile(name, text, properties)
-  },
-  // appDataFolder の中のファイルを全部読んで（先にできた順）、呼ぶ側が名前で選ぶ（ドライブの「name contains」は、ハイフンつきの名前の前の部分では、思ったとおりに当たらないことがあるため）。
-  // スロットの「最後のセーブ」は、読まずに、ここの appProperties と更新日時から出す（問い合わせは1回）
-  async listFiles() {
-    const out = []
-    let page = ''
-    do {
-      const res = await call(`${API}/files?spaces=appDataFolder&q=${encodeURIComponent('trashed=false')}&orderBy=createdTime&pageSize=100&fields=nextPageToken,files(id,name,modifiedTime,appProperties)${page}`)
-      const json = await res.json()
-      out.push(...(json.files ?? []).filter((f) => typeof f.name === 'string'))
-      page = json.nextPageToken ? `&pageToken=${encodeURIComponent(json.nextPageToken)}` : ''
-    } while (page)
-    return out
-  },
-  async listBackups() {
-    return (await drive.listFiles()).filter((f) => f.name.startsWith(BACKUP_PREFIX))
-  },
-  async remove(id) {
-    await call(`${API}/files/${id}`, { method: 'DELETE' })
-  },
-  // properties があるとき（スロット）は、中身とメタデータ（appProperties）を一緒に送る multipart。問い合わせは1回のまま
-  async update(id, text, properties = null) {
-    const init = properties ? multipart({ appProperties: properties }, text) : { headers: { 'Content-Type': 'application/json' }, body: text }
-    const res = await call(`${UPLOAD}/files/${id}?uploadType=${properties ? 'multipart' : 'media'}&fields=${FILE_FIELDS}`, { method: 'PATCH', ...init })
+// kind ごとに 1 つ（'sync'：同期・オートセーブ、'manual'：人が押した操作）。中身は同じで、通信中の数を数える先だけが違う
+function makeDrive(kind) {
+  const call = (url, init) => callRaw(url, init, kind)
+  // appDataFolder に、名前つきで新しいファイルを作る（データのファイルも、控えも、セーブのスロットも）。properties：appProperties に入れる文字（スロットのセーブした日時）
+  async function createFile(name, text, properties = null) {
+    const res = await call(`${UPLOAD}/files?uploadType=multipart&fields=${FILE_FIELDS}`, { method: 'POST', ...multipart({ name, parents: ['appDataFolder'], ...(properties ? { appProperties: properties } : {}) }, text) })
     return res.json()
-  },
-  // 版の履歴。古い順（更新の日時で並べ、同じ日時なら、ドライブが返した順のまま）
-  async revisions(id) {
-    const out = []
-    let page = ''
-    do {
-      const res = await call(`${API}/files/${id}/revisions?pageSize=200&fields=nextPageToken,revisions(id,modifiedTime)${page}`)
-      const json = await res.json()
-      out.push(...(json.revisions ?? []))
-      page = json.nextPageToken ? `&pageToken=${encodeURIComponent(json.nextPageToken)}` : ''
-    } while (page)
-    return out.map((r, i) => ({ r, i })).sort((a, b) => (a.r.modifiedTime < b.r.modifiedTime ? -1 : a.r.modifiedTime > b.r.modifiedTime ? 1 : a.i - b.i)).map(({ r }) => ({ id: r.id }))
-  },
+  }
+  const api = {
+    // 同じ名前のファイルが2つあるとき（2台が同時に初めてつないだ）は、先にできた方
+    async find() {
+      const q = encodeURIComponent(`name='${DATA_FILE}' and trashed=false`)
+      const res = await call(`${API}/files?spaces=appDataFolder&q=${q}&orderBy=createdTime&pageSize=10&fields=files(${FILE_FIELDS})`)
+      const file = (await res.json()).files?.[0]
+      return file ? { id: file.id, headRevisionId: file.headRevisionId } : null
+    },
+    async read(id) {
+      return (await call(`${API}/files/${id}?alt=media`)).text()
+    },
+    create(text) {
+      return createFile(DATA_FILE, text)
+    },
+    // 食い違いの確認（作業30(c)）：ある版の中身。控え（別のファイル）の作成・一覧・削除
+    async readRevision(fileId, revId) {
+      return (await call(`${API}/files/${fileId}/revisions/${encodeURIComponent(revId)}?alt=media`)).text()
+    },
+    async createBackup(name, text, properties = null) {
+      return createFile(name, text, properties)
+    },
+    // セーブのスロット（作業31）：名前つきで作る。appProperties に、セーブした日時を入れる
+    createNamed(name, text, properties) {
+      return createFile(name, text, properties)
+    },
+    // appDataFolder の中のファイルを全部読んで（先にできた順）、呼ぶ側が名前で選ぶ（ドライブの「name contains」は、ハイフンつきの名前の前の部分では、思ったとおりに当たらないことがあるため）。
+    // スロットの「最後のセーブ」は、読まずに、ここの appProperties と更新日時から出す（問い合わせは1回）
+    async listFiles() {
+      const out = []
+      let page = ''
+      do {
+        const res = await call(`${API}/files?spaces=appDataFolder&q=${encodeURIComponent('trashed=false')}&orderBy=createdTime&pageSize=100&fields=nextPageToken,files(id,name,modifiedTime,appProperties)${page}`)
+        const json = await res.json()
+        out.push(...(json.files ?? []).filter((f) => typeof f.name === 'string'))
+        page = json.nextPageToken ? `&pageToken=${encodeURIComponent(json.nextPageToken)}` : ''
+      } while (page)
+      return out
+    },
+    async listBackups() {
+      return (await api.listFiles()).filter((f) => f.name.startsWith(BACKUP_PREFIX))
+    },
+    async remove(id) {
+      await call(`${API}/files/${id}`, { method: 'DELETE' })
+    },
+    // properties があるとき（スロット）は、中身とメタデータ（appProperties）を一緒に送る multipart。問い合わせは1回のまま
+    async update(id, text, properties = null) {
+      const init = properties ? multipart({ appProperties: properties }, text) : { headers: { 'Content-Type': 'application/json' }, body: text }
+      const res = await call(`${UPLOAD}/files/${id}?uploadType=${properties ? 'multipart' : 'media'}&fields=${FILE_FIELDS}`, { method: 'PATCH', ...init })
+      return res.json()
+    },
+    // 版の履歴。古い順（更新の日時で並べ、同じ日時なら、ドライブが返した順のまま）
+    async revisions(id) {
+      const out = []
+      let page = ''
+      do {
+        const res = await call(`${API}/files/${id}/revisions?pageSize=200&fields=nextPageToken,revisions(id,modifiedTime)${page}`)
+        const json = await res.json()
+        out.push(...(json.revisions ?? []))
+        page = json.nextPageToken ? `&pageToken=${encodeURIComponent(json.nextPageToken)}` : ''
+      } while (page)
+      return out.map((r, i) => ({ r, i })).sort((a, b) => (a.r.modifiedTime < b.r.modifiedTime ? -1 : a.r.modifiedTime > b.r.modifiedTime ? 1 : a.i - b.i)).map(({ r }) => ({ id: r.id }))
+    },
+  }
+  return api
 }
+export const drive = makeDrive('sync')
+export const manualDrive = makeDrive('manual')

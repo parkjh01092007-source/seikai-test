@@ -2,7 +2,7 @@
 // 形：{ kind, status({request}), readSlots(), readSlot(file), writeSlot(file, text), deleteSlot(file), savedAts() }
 // Google ドライブにつないでいるとき（つなぐのを切るまで）はドライブ、つないでいないときはセーブフォルダー。つないでいるときに、ログインが切れていても電波がなくても、フォルダには切り替えない（13.5）
 import { isSupported, folderStatus, readSlots, readSlot, writeSlot, deleteSlot } from './saveStore.js'
-import { drive, getSync, getToken } from './driveStore.js'
+import { drive, manualDrive, getSync, getToken } from './driveStore.js'
 import { makeDriveSlots } from './driveSlots.js'
 import { slotView } from './saveLogic.js'
 
@@ -25,8 +25,9 @@ const driveStatus = async () => {
   return { state: 'granted', name: null }
 }
 const driveStore = { kind: 'drive', status: driveStatus, ...makeDriveSlots(drive) }
+const manualStore = { kind: 'drive', status: driveStatus, ...makeDriveSlots(manualDrive) } // 人が押した操作（セーブ・ロード画面）。通信中の表示で、同期と区別するため
 
-export const slotStore = () => (getSync().connected ? driveStore : folder)
+export const slotStore = ({ manual = false } = {}) => (getSync().connected ? (manual ? manualStore : driveStore) : folder)
 export const slotsAvailable = () => getSync().connected || isSupported()
 
 // 13.4：フォルダのセーブをドライブへ写すときに使う。今つないでいるかに関係なく、ドライブのスロットとフォルダを、それぞれ直接使う

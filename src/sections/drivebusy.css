@@ -1,0 +1,24 @@
+/* ドライブと通信中の表示（DriveBusy.jsx）。色は既存の変数だけ。popover="manual"（最前面の層）なので、ブラウザの既定の枠・余白を打ち消す */
+.drive-busy { position: fixed; margin: 0; padding: 0; border: 0; overflow: visible; color: var(--color-text); font-size: 13px; font-weight: bold; letter-spacing: 0.14em; }
+.drive-busy:not(:popover-open) { display: none; }
+.drive-busy .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.drive-busy .db-box { display: inline-flex; align-items: center; gap: 10px; }
+
+/* スマホ：画面全体の薄い幕。操作をふさぐ（二重押し防止）。中央に、四角が跳ねる絵と LOADING */
+.drive-busy.curtain { inset: 0; width: auto; height: auto; max-width: none; max-height: none; display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--color-bg) 70%, transparent); }
+.drive-busy.curtain .db-box { flex-direction: column; gap: 8px; }
+.db-hop { display: inline-flex; gap: 4px; align-items: flex-end; height: 18px; }
+.db-hop i { width: 6px; height: 6px; background: var(--color-accent); animation: db-hop 0.9s ease-in-out infinite; }
+.db-hop i:nth-child(2) { animation-delay: 0.15s; }
+.db-hop i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes db-hop { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+/* PC：右下に小さく。操作はふさがない */
+.drive-busy.corner { inset: auto 16px calc(16px + env(safe-area-inset-bottom)) auto; width: auto; height: auto; pointer-events: none; padding: 6px 10px; background: var(--color-bg); border: 1px solid var(--color-field-border, var(--color-border)); }
+.db-dots i { display: inline-block; width: 6px; height: 6px; margin-left: 4px; background: var(--color-accent); animation: db-blink 1.2s steps(1) infinite; }
+.db-dots i:nth-child(2) { animation-delay: 0.2s; }
+.db-dots i:nth-child(3) { animation-delay: 0.4s; }
+@keyframes db-blink { 0% { opacity: 0.15; } 33% { opacity: 1; } 66%, 100% { opacity: 0.15; } }
+
+/* 動きを止める設定のとき：絵を消して、文字だけ */
+@media (prefers-reduced-motion: reduce) { .db-hop, .db-dots { display: none; } }

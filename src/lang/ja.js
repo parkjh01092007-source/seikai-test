@@ -857,6 +857,7 @@ export default {
   'drive.banner.failed': 'ドライブに保存できません', // 上の帯。ログインが切れた・電波がない・ドライブの失敗（押すと、ログインかやり直し。title に理由）
   'drive.banner.conflict': 'ドライブ：ほかの端末で変わっています',
   'drive.banner.newer': 'ドライブのデータは新しい版です',
+  'drive.busy': 'ドライブと通信中…',
   'drive.bannerTitle.login': 'ログインが切れています。押すと、もう一度ログインします。',
   'drive.bannerTitle.offline': '電波がないか、ドライブにつながりません。押すと、やり直します。',
   'drive.bannerTitle.failed': 'ドライブの失敗です。押すと、やり直します。',

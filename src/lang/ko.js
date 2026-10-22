@@ -855,6 +855,7 @@ export default {
   'drive.banner.failed': '드라이브에 저장할 수 없습니다',
   'drive.banner.conflict': '드라이브: 다른 기기에서 바뀌었습니다',
   'drive.banner.newer': '드라이브의 데이터는 새 버전입니다',
+  'drive.busy': '드라이브와 통신 중…',
   'drive.bannerTitle.login': '로그인이 만료되었습니다. 누르면 다시 로그인합니다.',
   'drive.bannerTitle.offline': '네트워크가 없거나 드라이브에 연결할 수 없습니다. 누르면 다시 시도합니다.',
   'drive.bannerTitle.failed': '드라이브 오류입니다. 누르면 다시 시도합니다.',

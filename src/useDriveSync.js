@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { syncOnce, describeConflict, resolveConflict, listBackupDetails, restoreBackup } from './driveSync.js'
 import { serializeData, isInitialData, bannerKind } from './driveLogic.js'
-import { drive, syncState, getSync, getStatus, setStatus, getToken, modalOpen, CHANGE_EVENT } from './driveStore.js'
+import { drive, manualDrive, syncState, getSync, getStatus, setStatus, getToken, modalOpen, CHANGE_EVENT } from './driveStore.js'
 import { needsMigration, isNewerData, parseImport } from './storage.js'
 
 // Google ドライブの同期を、アプリにつなぐ React の hook（spec-drive.md 4章）。同期の流れは driveSync.js、ドライブとのやりとりは driveStore.js。
@@ -38,8 +38,8 @@ export function useDriveSync({ data, skip, apply, restore }) {
     if (r.error) return { kind: 'broken' }
     return { kind: 'ok', apply: () => applyRef.current(r), replace: () => restoreRef.current(r) }
   }
-  const env = () => ({
-    drive,
+  const env = (manual = false) => ({
+    drive: manual ? manualDrive : drive,
     state: syncState,
     local: {
       syncable: () => !(needsMigration(latest.current) || isNewerData(latest.current)),
@@ -125,9 +125,9 @@ export function useDriveSync({ data, skip, apply, restore }) {
     chain.current = done.catch(() => {})
     return done
   }
-  const describe = () => enqueue(() => describeConflict(env()))
+  const describe = () => enqueue(() => describeConflict(env(true)))
   const resolve = (choice) => enqueue(async () => {
-    const result = await resolveConflict(env(), choice)
+    const result = await resolveConflict(env(true), choice)
     if (result.kind === 'resolved') {
       setStatus({ problem: null, newer: false })
       schedule(0) // そのあと、いつもの同期（置き換えた分・上げ直した分を確かめる）
@@ -136,9 +136,9 @@ export function useDriveSync({ data, skip, apply, restore }) {
   })
 
   // 控えの一覧と、控えから戻す（設定 → データ → ドライブの控え）。どちらも、同期と同じつなぎに並べる
-  const listBackups = () => enqueue(() => listBackupDetails(env()))
+  const listBackups = () => enqueue(() => listBackupDetails(env(true)))
   const restoreFrom = (id) => enqueue(async () => {
-    const result = await restoreBackup(env(), id)
+    const result = await restoreBackup(env(true), id)
     if (result.kind === 'error') setStatus({ problem: result.reason, newer: false })
     return result
   })

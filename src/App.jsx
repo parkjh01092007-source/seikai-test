@@ -18,6 +18,7 @@ import { useGunjoPc } from './gunjoPc.js'
 import { ConfirmContext, ConfirmDialog } from './sections/ConfirmDialog.jsx'
 import SaveLoadPanel from './sections/SaveLoadPanel.jsx'
 import ConflictDialog from './sections/ConflictDialog.jsx'
+import DriveBusy from './sections/DriveBusy.jsx'
 import './nav.css'
 import { loadData, saveData, exportJson, parseImport, needsMigration, isNewerData, migrate, autoRecord } from './storage.js'
 import { checkForNewBuild } from './pwa.js'
@@ -398,6 +399,7 @@ export default function App() {
       </BandHostContext.Provider>
       {panel && <SaveLoadPanel key={panel} mode={panel} data={data} loadBlocked={Boolean(driveSync.conflict)} onClose={() => setPanel(null)} onToSettings={setSettingsTab} onLoad={async (r) => { await applyImported(r); setPanel(null) }} />}
       {request && <ConfirmDialog key={request.id} request={request} onAnswer={answer} />}
+      <DriveBusy />
       {conflictOpen && driveSync.conflict && <ConflictDialog key={conflictKey} kind={driveSync.conflict.kind} describe={driveSync.describe} resolve={driveSync.resolve} onClose={() => setConflictOpen(false)} onLogin={() => startLogin(onSettingsScreen ? settingsTab : null)} />}
     </div>
     </ConfirmContext.Provider>

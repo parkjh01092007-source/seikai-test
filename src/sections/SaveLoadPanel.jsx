@@ -16,7 +16,7 @@ const SETTINGS_HASH = toHash({ entry: 'ledger', tab: 'settings', detailId: null 
 // スロットの読み書きは slotStore（フォルダ・ドライブ）、判定と整形は saveLogic。ここは出すだけ
 export default function SaveLoadPanel({ mode, data, loadBlocked = false, onClose, onLoad, onToSettings }) {
   const confirm = useConfirm()
-  const store = slotStore()
+  const store = slotStore({ manual: true })
   const phone = usePhone()
   const dialogRef = useRef(null)
   const [status, setStatus] = useState(null) // { state, name }。確かめるまでは null
