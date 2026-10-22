@@ -16,6 +16,7 @@
   .sidetabs,
   header { display: none; }
   .frame { display: block; }
+  .main-col:has(.print-view) .g-band { display: none; } /* 群青の PC の月次：印刷用表示のとき、帯（画面の飾り）は刷らない。印刷の見た目は、帯のなかった今までと同じ */
   .content { max-width: none; margin: 0; padding: 0; }
 
   /* 印刷用表示のときだけ、ボタン・入力欄を隠す */

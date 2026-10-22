@@ -503,6 +503,19 @@ export function assetShares(rows) {
   return { total, items, negatives: own.filter((r) => r.balance < 0).map(pick) }
 }
 
+// 月次（群青の PC）の費用の内訳：monthReport の expense（多い順）のうち、金額が 0 より大きい科目だけを見る。
+// 上位 5 科目と、残り全部を足した「その他」（other: true。6 科目以上のときだけ）。share は、見る科目の合計に対する割合（小数第 1 位）。bar は、一番大きい行を 100 とした棒の長さ（%）
+// 合計が 0 以下（費用なし・返品だけなど）のときは items を空にする
+export function expenseBreakdown(expense, top = 5) {
+  const own = expense.filter((r) => r.amount > 0)
+  const total = sum(own, (r) => r.amount)
+  if (total <= 0) return { total: 0, items: [] }
+  const rows = own.slice(0, top).map((r) => ({ id: r.account.id, name: r.account.name, amount: r.amount }))
+  if (own.length > top) rows.push({ id: 'other', name: null, amount: sum(own.slice(top), (r) => r.amount), other: true })
+  const max = Math.max(...rows.map((r) => r.amount))
+  return { total, items: rows.map((r) => ({ ...r, share: Math.round((r.amount / total) * 1000) / 10, bar: Math.round((r.amount / max) * 1000) / 10 })) }
+}
+
 // 資産 − 負債（残高の画面の札。typeTotals の資産の残高合計 − 負債の残高合計。貸借対照表の純資産ではない）
 export const assetLiabilityGap = (rows) => typeTotals(rows, 'asset').balance - typeTotals(rows, 'liability').balance
 

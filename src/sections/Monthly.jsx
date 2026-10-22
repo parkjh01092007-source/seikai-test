@@ -1,11 +1,17 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import './balance.css'
 import '../print.css'
-import { monthReport, livingBalance, balanceSheet, balanceSheetColumns, profitLossRows, previousMonth, issuedLabel, formatYen, formatMoney, currencyUnit } from '../ledgerLogic.js'
+import { monthReport, livingBalance, balanceSheet, balanceSheetColumns, profitLossRows, previousMonth, issuedLabel, formatYen, formatMoney, currencyUnit, roadDays, expenseBreakdown } from '../ledgerLogic.js'
 import { today } from '../today.js'
 import { t } from '../text.js'
 import { usePhone } from '../layout.js'
-import { Icon } from './Icon.jsx'
+import { useGunjoPc } from '../gunjoPc.js'
+import { useBandHost, useBandTop, useBandRoad } from './bandHost.js'
+import { signedYen } from './PageBand.jsx'
+import { loadNoSpendShape } from '../entryView.js'
+import MonthRoad from './MonthRoad.jsx'
+import { Icon, IconButton } from './Icon.jsx'
 
 const cls = (n) => (n < 0 ? 'neg' : '')
 
@@ -129,6 +135,78 @@ function LivingList({ living, currency }) {
   )
 }
 
+// 群青の PC（見本 design-ref/gunjo-pc/E-monthly-p2.html。spec-design.md 8.2）の本文：左に費用の内訳（上位 5 科目＋その他）と収益の部、右に月の集計と生活費のやりくり、
+// 下に P/L・B/S の閉じた札（押すと開く。B/S が合わないときの印は、閉じていても見える）。計算は今までと同じ（monthReport・livingBalance・balanceSheet）
+function GunjoBody({ month, report, living, sheet, currency }) {
+  const adj = report.adjustment
+  const shares = expenseBreakdown(report.expense)
+  const maxRevenue = Math.max(0, ...report.revenue.map((r) => r.amount))
+  const row = (key, name, amount, bar, pct, navy) => (
+    <div className="g-brow" key={key}>
+      <span className="name">{name}</span>
+      <div className="g-brow-bar"><i className={navy ? 'navy' : ''} style={{ width: `${bar}%` }} /></div>
+      <span className="value">{formatYen(amount)}</span>
+      <span className="pct">{pct}</span>
+    </div>
+  )
+  const day = (date) => date.slice(5).replace('-', '/')
+  const paid = (l) => t(l === 'next' ? 'living.prevPaid' : 'living.thisPaid')
+  return (
+    <div className="g-mon-body">
+      <div className="g-mon-main">
+        <h2 className="g-h">{t('monthly.expenseTitle')}<small lang="en">{t('monthly.expenseEn')}</small></h2>
+        {shares.items.length === 0 ? <p className="note">{t('monthly.expenseNone')}</p> : shares.items.map((it) => row(it.id, it.other ? t('monthly.others') : <span className="user-text">{it.name}</span>, it.amount, it.bar, `${it.share.toFixed(1)}%`))}
+        {report.revenue.length > 0 && <>
+          <h2 className="g-h g-h2">{t('monthly.revenueTitle')}<small lang="en">{t('monthly.revenueEn')}</small></h2>
+          {report.revenue.map((r) => row(r.account.id, <span className="user-text">{r.account.name}</span>, r.amount, maxRevenue > 0 ? Math.max(0, Math.round((r.amount / maxRevenue) * 1000) / 10) : 0, '', true))}
+        </>}
+      </div>
+      <div className="g-mon-side">
+        <section className="g-card">
+          <h2 className="g-h">{t('monthly.summaryTitle', { month })}<small lang="en">{t('monthly.summaryEn')}</small></h2>
+          <table><tbody>
+            <Line name={t('monthly.revenueTotal')} amount={report.revenueTotal} currency={currency} />
+            <Line name={t('monthly.expenseTotal')} amount={report.expenseTotal} currency={currency} />
+            {(adj.gain !== 0 || adj.loss !== 0) && <Line name={t('monthly.adjustmentLine')} amount={adj.net} currency={currency} />}
+            <tr className="sum"><td>{t('monthly.result')}</td><td className={cls(report.result)}>{formatMoney(report.result, currency)}</td></tr>
+          </tbody></table>
+          <p className="note">{t('monthly.noteSummary')}</p>
+          <h2 className="g-h g-h2">{t('monthly.livingTitle')}<small lang="en">{t('monthly.livingEn')}</small></h2>
+          <p className="note">{t('monthly.livingNote')}</p>
+          {living.items.length === 0 && <p className="note">{t('monthly.livingNone')}</p>}
+          <table><tbody>
+            {living.items.map((i, n) => (
+              <tr key={n}>
+                <td className="wrap">{day(i.date)} <span className="user-text">{i.account.name}</span> <span className="note">{paid(i.living)}</span></td>
+                <td className={cls(i.amount)}>{formatMoney(i.amount, currency)}</td>
+              </tr>
+            ))}
+            <Line name={t('monthly.livingIncomeTotal')} amount={living.incomeTotal} currency={currency} />
+            <Line name={t('monthly.livingExpenseTotal')} amount={living.expenseTotal} currency={currency} />
+            <tr className="sum"><td>{t('monthly.livingTitle')}</td><td className={living.result < 0 ? 'neg' : 'accent'}>{formatMoney(living.result, currency)}</td></tr>
+          </tbody></table>
+        </section>
+      </div>
+      <div className="g-mon-more">
+        <div className="g-fold">
+          <Section title={t('monthly.plTitle', { month })} extra={<small lang="en">{t('monthly.plEn')}</small>}>
+            <p className="note">{t('monthly.unit', { unit: currencyUnit(currency) })}</p>
+            <ProfitLossTable report={report} />
+          </Section>
+        </div>
+        <div className="g-fold">
+          <Section title={t('monthly.bsTitle', { month })} extra={<><small lang="en">{t('monthly.bsEn')}</small>{!sheet.balanced && <span className="value error">{t('monthly.bsUnbalancedBadge')}</span>}</>}>
+            <p className="note">{t('monthly.unit', { unit: currencyUnit(currency) })}</p>
+            <BalanceSheetTable sheet={sheet} />
+            {sheet.balanced ? <p className="note">{t('monthly.bsBalanced')}</p> : <p className="error">{t('monthly.bsUnbalanced')}</p>}
+            <p className="note">{t('monthly.bsNote')}</p>
+          </Section>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Monthly({ data }) {
   const { accounts, entries } = data
   const currency = data.settings.currency
@@ -139,6 +217,45 @@ export default function Monthly({ data }) {
   const sheet = month ? balanceSheet(accounts, entries, month) : null
   const adj = report?.adjustment
   const living = month ? livingBalance(entries, accounts, month) : null
+  const gunjoPc = useGunjoPc()
+  const bandHost = useBandHost()
+  const bandTop = useBandTop()
+  const bandRoad = useBandRoad()
+
+  // 群青の PC の通常表示（印刷用表示は、今のまま）。月が未選択のときは、月の道も札も出さず、「月を選んでください」の一行だけ
+  if (gunjoPc && !printView) {
+    const shift = (d) => { const [y, m] = month.split('-').map(Number); const x = new Date(y, m - 1 + d, 1); setMonth(`${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}`) }
+    const unit = currencyUnit(currency)
+    const m = month ? Number(month.slice(5)) : 0
+    const road = month ? roadDays(accounts, entries, month, today(), data.noSpendDays) : null
+    return (
+      <div className="report g-rep g-mon">
+        {bandTop && createPortal(
+          <div className="g-month">
+            <IconButton icon="chevRight" className="g-prev" label={t('entries.monthPrev')} disabled={!month} onClick={() => shift(-1)} />
+            <input type="month" aria-label={t('common.month')} value={month} onChange={(e) => setMonth(e.target.value)} />
+            <IconButton icon="chevRight" label={t('entries.monthNext')} disabled={!month} onClick={() => shift(1)} />
+          </div>, bandTop)}
+        {bandHost && createPortal(<>
+          {month && <div className="g-mnum" aria-hidden="true">{m}<span>{t('monthly.monthUnit')}</span></div>}
+          {month && (
+            <div className="g-res">
+              <div className="g-res-lab">{t('monthly.heroResult', { m })}</div>
+              <div className={`g-res-num${report.result < 0 ? ' neg' : ''}`}>{signedYen(report.result, formatYen)}<span className="g-res-unit">{unit}</span></div>
+              <div className="g-res-sub"><span>{t('monthly.revenueTotal')} <b>{formatYen(report.revenueTotal)}</b></span><span>{t('monthly.expenseTotal')} <b>{formatYen(report.expenseTotal)}</b></span></div>
+            </div>
+          )}
+          <div className="g-mact">
+            <button type="button" onClick={() => setMonth(today().slice(0, 7))}>{t('common.thisMonth')}</button>
+            <button type="button" onClick={() => setMonth(previousMonth(today()))}>{t('common.lastMonth')}</button>
+            <button type="button" onClick={() => setPrintView(true)}>{t('monthly.printView')}</button>
+          </div>
+        </>, bandHost)}
+        {bandRoad && road && createPortal(<MonthRoad road={road} currency={currency} shape={loadNoSpendShape()} />, bandRoad)}
+        {!month ? <p className="note">{t('common.chooseMonth')}</p> : <GunjoBody month={month} report={report} living={living} sheet={sheet} currency={currency} />}
+      </div>
+    )
+  }
 
   return (
     <div className={`report${printView ? ' print-view' : ''}`}>

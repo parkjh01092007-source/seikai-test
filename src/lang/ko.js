@@ -379,6 +379,19 @@ export default {
   'savings.note': '차변에 들어간 분개는 \'따로 모아 둠(+)\', 대변에 들어간 분개는 \'꺼내 씀(−)\'입니다.',
 
   // 月次（Monthly）
+  'nav.tabEn.monthly': 'MONTHLY',
+  'monthly.monthUnit': '월',
+  'monthly.heroResult': '{m}월 손익',
+  'monthly.expenseTitle': '비용 내역',
+  'monthly.expenseEn': 'EXPENSE',
+  'monthly.expenseNone': '이달 비용이 없습니다',
+  'monthly.others': '기타',
+  'monthly.revenueTitle': '수익',
+  'monthly.revenueEn': 'INCOME',
+  'monthly.summaryEn': 'SUMMARY',
+  'monthly.livingEn': 'LIVING',
+  'monthly.plEn': 'PROFIT & LOSS',
+  'monthly.bsEn': 'BALANCE SHEET',
   'monthly.title': '월별 보고',
   'monthly.printTitle': '월별 보고', // 後ろに「(2026-09)」が付く。「보고」が重ならないよう、title と同じ形
   'monthly.inMonth': '({month})',
