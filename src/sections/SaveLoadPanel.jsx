@@ -4,7 +4,7 @@ import { t } from '../text.js'
 import { toHash } from '../route.js'
 import { nowLocal } from '../today.js'
 import { SLOTS, SAVE_ERRORS, DASH, slotView, lastSaveText, validateMemo, buildSaveFile, checkSaveFile, storeErrorText, errName } from '../saveLogic.js'
-import { moonFraction, scalePosition, spreadPositions, MOON_DAYS } from '../saveMoon.js'
+import { moonFraction, scalePosition, spreadPositions, labelClear, MOON_DAYS } from '../saveMoon.js'
 import { startLogin, manualOp } from '../driveStore.js'
 import { slotStore } from '../slotStore.js'
 import { useConfirm } from './ConfirmDialog.jsx'
@@ -17,6 +17,10 @@ const SETTINGS_HASH = toHash({ entry: 'ledger', tab: 'settings', detailId: null 
 // ---- 群青の PC の「月の暦」（見本：design-ref/gunjo-pc/E-save.html・E-load.html）。形と月の計算は saveMoon.js ----
 const SCALE_PX = 930 // 目盛りの長さ（見本の幅）。実際の長さを測れるまでの値
 const MOON_PX = 44 // 玉の大きさ。近いセーブは、この間隔までずらして並べる
+const MOON_TOP = 6 // 玉の上の位置（選んだ玉は 0＝6px 持ち上げる）
+const LABEL_TOP = 54 // 名前の上の位置（玉の下端 50 より下。選んだ名前もほかと同じ高さ）
+const LABEL_H = 13 // 名前の高さ
+const LABEL_EM = 11 // 名前の 1 文字の幅（11px の全角。重なりを調べるときの見込み）
 const LABEL_PX = 70 // 名前を出す間隔の目安
 
 // 月の絵。kind：'moon'（明るい部分 fraction）・'new'（日付なし。外枠だけ）・'dotted'（データなし・読めないファイル。点線の円）
@@ -199,6 +203,16 @@ export default function SaveLoadPanel({ mode, data, loadBlocked = false, onClose
     })
   }
 
+  // 十字キーと同じ「選ぶだけ」（保存・ロード・削除はしない）。目盛りの玉・名前を押したとき。選んだ行にフォーカスを移すので、押したあとも十字キーが使える
+  const pickFromScale = (file) => {
+    pick(file)
+    requestAnimationFrame(() => {
+      const row = dialogRef.current?.querySelector('.slot-pick[aria-current="true"]')
+      row?.focus({ preventScroll: true })
+      row?.scrollIntoView({ block: 'nearest' })
+    })
+  }
+
   const gunjoBody = () => {
     const rows = visible.map((def) => {
       const slot = slots.find((s) => s.file === def.file)
@@ -216,9 +230,11 @@ export default function SaveLoadPanel({ mode, data, loadBlocked = false, onClose
     const dated = rows.filter((r) => r.fraction !== null).map((r) => ({ ...r, pos: scalePosition(r.view.savedAt, now) }))
     const xs = spreadPositions(dated.map((r) => r.pos), MOON_PX / axisW)
     const marks = dated.map((r, i) => ({ ...r, x: xs[i] }))
+    const moonBox = (m) => { const t = m.slot.file === slot.file ? 0 : MOON_TOP; return { l: m.x * axisW - MOON_PX / 2, r: m.x * axisW + MOON_PX / 2, t, b: t + MOON_PX } }
+    const labelBox = (m) => { const w = [...m.slot.label].length * LABEL_EM; return { l: m.x * axisW - w / 2, r: m.x * axisW + w / 2, t: LABEL_TOP, b: LABEL_TOP + LABEL_H } }
     const shown = []
     for (const m of marks.slice().sort((a, b) => (b.slot.file === slot.file) - (a.slot.file === slot.file) || b.pos - a.pos)) {
-      if (m.slot.file === slot.file || shown.every((x) => Math.abs(x.x - m.x) * axisW >= LABEL_PX)) shown.push(m)
+      if (m.slot.file === slot.file || (shown.every((x) => Math.abs(x.x - m.x) * axisW >= LABEL_PX) && labelClear(labelBox(m), marks.filter((o) => o !== m).map(moonBox)))) shown.push(m)
     }
     const detailMain = view.main.filter((c) => c.key !== 'free')
     const unreadable = view.status === 'newer' || view.status === 'broken' // 読めないスロットには、上書きしない（先に削除する）
@@ -228,17 +244,8 @@ export default function SaveLoadPanel({ mode, data, loadBlocked = false, onClose
           <div className="axis" ref={axisRef}>
             <div className="line" />
             {Array.from({ length: MOON_DAYS + 1 }, (_, k) => <i key={k} className={k % 5 === 0 ? 'long' : ''} style={{ left: `${(k / MOON_DAYS) * 100}%` }} />)}
-            {/* ずらした玉は、日付どおりの位置（目盛りの上の点）と細い線でつなぐ */}
-            <svg className="links" width="100%" height="104">
-              {marks.filter((m) => Math.abs(m.x - m.pos) * axisW > 0.5).map((m) => (
-                <g key={m.slot.file}>
-                  <line x1={`${m.pos * 100}%`} y1="40" x2={`${m.x * 100}%`} y2={m.slot.file === slot.file ? 22 : 28} />
-                  <circle cx={`${m.pos * 100}%`} cy="40" r="2.5" />
-                </g>
-              ))}
-            </svg>
             {marks.map((m) => (
-              <div key={m.slot.file} className={`mark${m.slot.file === slot.file ? ' on' : ''}${shown.includes(m) ? ' named' : ''}${m.x * axisW < 35 ? ' edge' : ''}`} style={{ left: `${m.x * 100}%` }}>
+              <div key={m.slot.file} className={`mark${m.slot.file === slot.file ? ' on' : ''}${shown.includes(m) ? ' named' : ''}${m.x * axisW < 35 ? ' edge' : ''}`} style={{ left: `${m.x * 100}%` }} onClick={() => pickFromScale(m.slot.file)}>
                 <Moon kind="moon" fraction={m.fraction} size={44} />
                 <span className="name">{m.slot.label}</span>
               </div>

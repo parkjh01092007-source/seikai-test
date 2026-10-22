@@ -124,14 +124,13 @@
   :root[data-theme='gunjo'] .sl-scale .line { position: absolute; left: 0; right: 0; top: 40px; border-top: 1px dotted var(--color-muted); }
   :root[data-theme='gunjo'] .sl-scale i { position: absolute; top: 37px; height: 6px; border-left: 1px solid var(--color-muted); }
   :root[data-theme='gunjo'] .sl-scale i.long { top: 34px; height: 12px; }
-  :root[data-theme='gunjo'] .sl-scale .links { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; } /* ずらした玉と、日付どおりの位置をつなぐ細い線と点 */
-  :root[data-theme='gunjo'] .sl-scale .links line { stroke: var(--color-accent); stroke-width: 1; }
-  :root[data-theme='gunjo'] .sl-scale .links circle { fill: var(--color-accent); }
   :root[data-theme='gunjo'] .sl-scale .mark { position: absolute; top: 6px; width: 44px; margin-left: -22px; z-index: 1; }
+  :root[data-theme='gunjo'] .sl-scale .mark { cursor: pointer; } /* 玉と、その下の名前を押すと、そのスロットを選ぶ（選ぶだけ） */
+  :root[data-theme='gunjo'] .sl-scale .mark:not(.named) .name { pointer-events: none; } /* マウスを乗せたときだけ出る名前は、押せない（隣の玉・名前のクリックをじゃましない） */
   :root[data-theme='gunjo'] .sl-scale .mark.on { top: 0; z-index: 2; }
   :root[data-theme='gunjo'] .sl-scale .mark:hover { z-index: 3; }
   :root[data-theme='gunjo'] .sl-scale .mark .name { display: none; position: absolute; top: 48px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 11px; line-height: 13px; color: var(--color-muted); background: #fff; }
-  :root[data-theme='gunjo'] .sl-scale .mark.on .name { top: 46px; color: var(--color-accent); font-weight: 700; }
+  :root[data-theme='gunjo'] .sl-scale .mark.on .name { top: 54px; color: var(--color-accent); font-weight: 700; }
   :root[data-theme='gunjo'] .sl-scale .mark.edge .name { left: 0; transform: none; } /* 左端（30 日前）のラベルは、枠の外へ出さない */
   :root[data-theme='gunjo'] .sl-scale .mark.named .name, :root[data-theme='gunjo'] .sl-scale .mark:hover .name { display: block; }
   :root[data-theme='gunjo'] .sl-scale .old, :root[data-theme='gunjo'] .sl-scale .today { position: absolute; top: 84px; font-size: 11px; color: var(--color-muted); }

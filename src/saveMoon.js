@@ -56,3 +56,9 @@ export function spreadPositions(positions, gap) {
   for (const c of clusters) c.idx.forEach((i, j) => { out[i] = left(c) + j * gap })
   return out
 }
+
+// 名前の四角が、ほかの玉の四角に重ならないか。四角は { l, r, t, b }（左・右・上・下。同じ座標）。ふれるだけ（辺が同じ位置）は、重なりに数えない。
+// 目盛りで、名前を出すかどうかの条件に使う（名前どうしの間隔のほかに、隣の玉に重ならないことも見る）
+export function labelClear(label, moons) {
+  return moons.every((m) => !(label.l < m.r && m.l < label.r && label.t < m.b && m.t < label.b))
+}
