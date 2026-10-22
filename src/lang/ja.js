@@ -825,6 +825,9 @@ export default {
   'save.minutesAgo': '{count}分前',
   'save.hoursAgo': '{count}時間前',
   'save.daysAgo': '{count}日前',
+  'save.scaleOld': '30日前', // 月の暦（群青の PC）の目盛りの左端
+  'save.scaleToday': '今日', // 右端（「▼ 」は画面で付ける）
+  'save.noOverwrite': '読めないファイルには上書きできません。先に削除してください。', // 月の暦（群青の PC）：新しい版・壊れたスロットの「ここにセーブ」が押せない理由
   'save.errNotAllowed': 'フォルダの使用が許可されていません。「許可する」を押してから、もう一度行ってください',
   'save.errNotFound': 'セーブフォルダーが見つかりません（消されたか、移されました）。設定で選び直してください',
   'save.errQuota': '空き容量が足りないため、セーブできませんでした',

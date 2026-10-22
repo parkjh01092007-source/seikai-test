@@ -823,6 +823,9 @@ export default {
   'save.minutesAgo': '{count}분 전',
   'save.hoursAgo': '{count}시간 전',
   'save.daysAgo': '{count}일 전',
+  'save.scaleOld': '30일 전', // 月の暦（群青の PC）の目盛りの左端
+  'save.scaleToday': '오늘', // 右端（「▼ 」は画面で付ける）
+  'save.noOverwrite': '읽을 수 없는 파일에는 덮어쓸 수 없습니다. 먼저 삭제해 주세요.', // 月の暦（群青の PC）：新しい版・壊れたスロットの「ここにセーブ」が押せない理由
   'save.errNotAllowed': '폴더 사용이 허용되어 있지 않습니다. \'허용\'을 누른 다음, 다시 시도해 주세요',
   'save.errNotFound': '저장 폴더를 찾을 수 없습니다(삭제되었거나 이동되었습니다). 설정에서 다시 선택해 주세요',
   'save.errQuota': '저장 공간이 부족하여 저장할 수 없었습니다',

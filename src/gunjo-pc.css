@@ -23,7 +23,7 @@
 
   /* ---- ボタン：文字・絵と文字・絵だけ ----
      ボタンのように見せない「開閉の見出し・タブ・メニュー・電卓のキー・知らせ」は、ここに入れない（それぞれの区切りで作る） */
-  :root[data-theme='gunjo'] button:not(.day-toggle, .tens-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .key, .toggle, [role='tab'], .sidetabs *) {
+  :root[data-theme='gunjo'] button:not(.day-toggle, .tens-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .key, .slot-pick, .toggle, [role='tab'], .sidetabs *) {
     box-sizing: border-box; height: var(--g-h); min-height: 0; padding: 0 12px;
     display: inline-flex; align-items: center; justify-content: center; gap: 6px;
     font-family: var(--font-mincho); font-size: 14px; font-weight: 400; line-height: 1;
@@ -31,7 +31,7 @@
     box-shadow: var(--g-btn-shadow); cursor: pointer;
   }
   /* 決定のボタン（青）：送信ボタン。ほかのボタンは白 */
-  :root[data-theme='gunjo'] button:is([type='submit'], .primary, .sub-submit):not(.day-toggle, .tens-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .key, .toggle, [role='tab'], .sidetabs *) {
+  :root[data-theme='gunjo'] button:is([type='submit'], .primary, .sub-submit):not(.day-toggle, .tens-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .key, .slot-pick, .toggle, [role='tab'], .sidetabs *) {
     background: var(--color-accent); color: var(--color-on-accent); border-color: var(--g-deep);
   }
   /* 絵だけの四角：34px の正方形（絵は icon.css で 18px） */
@@ -48,8 +48,8 @@
      あけ方は1つだけ：2つ目からの左の余白 12px。flex・grid で並べる行は、今までの gap（列の間）を 0 にして、二重にしない（行の間 row-gap は残す）。
      余白の規則は特異度 0（:where）。行が自分で余白を決めたいときは、その行の規則が勝つ。
      並べる行の中に、空白の文字（JSX の {' '}）があると、その分だけ広がる。群青の PC では、その空白を描かない（Entries.jsx・Ledger.jsx）。 */
-  :where(:root[data-theme='gunjo']) :where(:is(button:not(.day-toggle, .tens-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .key, .toggle, [role='tab'], .sidetabs *), input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden']), select) + :is(button:not(.day-toggle, .tens-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .key, .toggle, [role='tab'], .sidetabs *), input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden']), select)) { margin-inline-start: var(--g-gap-controls); }
-  :root[data-theme='gunjo'] :has(> :is(button:not(.day-toggle, .tens-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .key, .toggle, [role='tab'], .sidetabs *), input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden']), select) + :is(button:not(.day-toggle, .tens-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .key, .toggle, [role='tab'], .sidetabs *), input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden']), select)):not(:has(> .field)) { column-gap: 0; }
+  :where(:root[data-theme='gunjo']) :where(:is(button:not(.day-toggle, .tens-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .key, .slot-pick, .toggle, [role='tab'], .sidetabs *), input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden']), select) + :is(button:not(.day-toggle, .tens-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .key, .slot-pick, .toggle, [role='tab'], .sidetabs *), input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden']), select)) { margin-inline-start: var(--g-gap-controls); }
+  :root[data-theme='gunjo'] :has(> :is(button:not(.day-toggle, .tens-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .key, .slot-pick, .toggle, [role='tab'], .sidetabs *), input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden']), select) + :is(button:not(.day-toggle, .tens-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .key, .slot-pick, .toggle, [role='tab'], .sidetabs *), input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden']), select)):not(:has(> .field)) { column-gap: 0; }
   :root[data-theme='gunjo'] { --g-gap-controls: 12px; }
   /* 仕訳の入力の行（Entries.jsx の EntryForm）：入力欄は <label class="field">（display: contents＝箱がない）の中にあり、隣り合う部品と見なされないので、上の余白の規則は届かない。
      ここは余白でなく、行の gap（12px）であける（上の column-gap: 0 から外し、メモと「追加」の間の余白も 0 にして、二重にしない） */
@@ -99,6 +99,80 @@
   :root[data-theme='gunjo'] dialog.confirm .extra { margin-bottom: 22px; }
   :root[data-theme='gunjo'] dialog.confirm .typed { margin-bottom: 22px; }
   :root[data-theme='gunjo'] dialog.confirm.conflict .note-line { margin-bottom: 22px; }
+
+  /* ---- セーブ・ロード画面（月の暦。SaveLoadPanel.jsx の dialog.g-sl。見本：E-save.html・E-load.html。区切り13-b）----
+     幅 1010px・上に 30 日の目盛り（右端が今日。古いものは左端に寄せる）・左に一覧・右に選んだ 1 つの詳細。一覧と詳細は、はみ出したら、それぞれ中でスクロール。
+     選んだ行は青い面で、右端が 14° に切れる。一覧の行（.slot-pick）は、ふつうのボタンの規則から外してある（上の 4 か所の除外リスト）。新しい色なし */
+  :root[data-theme='gunjo'] dialog.g-sl { box-sizing: border-box; width: 1010px; max-width: calc(100% - 64px); max-height: calc(100vh - 48px); padding: 16px 24px 18px; overflow: hidden; }
+  :root[data-theme='gunjo'] dialog.g-sl[open] { display: flex; flex-direction: column; }
+  :root[data-theme='gunjo'] dialog.g-sl > :not(.sl-cols) { flex: none; }
+  :root[data-theme='gunjo'] dialog.g-sl .head h2 { font-family: var(--font-mincho); font-weight: 400; font-size: 24px; }
+  :root[data-theme='gunjo'] dialog.g-sl > .note { margin: 4px 0 0; font-size: 13px; }
+
+  /* 月の絵 */
+  :root[data-theme='gunjo'] .sl-moon { display: block; flex: none; }
+  :root[data-theme='gunjo'] .sl-moon .ring { fill: #fff; stroke: var(--color-accent); stroke-width: 1.5; }
+  :root[data-theme='gunjo'] .sl-moon .ring.full, :root[data-theme='gunjo'] .sl-moon .lit { fill: var(--color-accent); }
+  :root[data-theme='gunjo'] .sl-moon.dotted .ring { fill: none; stroke-dasharray: 3 3; }
+  :root[data-theme='gunjo'] .slot-pick[aria-current='true'] .sl-moon .ring { fill: var(--color-accent); stroke: #fff; }
+  :root[data-theme='gunjo'] .slot-pick[aria-current='true'] .sl-moon .ring.full, :root[data-theme='gunjo'] .slot-pick[aria-current='true'] .sl-moon .lit { fill: #fff; }
+  :root[data-theme='gunjo'] .slot-pick[aria-current='true'] .sl-moon.dotted .ring { fill: none; }
+
+  /* 目盛り（30 日。左端＝30 日前、右端＝今日） */
+  :root[data-theme='gunjo'] .sl-scale { position: relative; height: 104px; margin: 14px 0 4px; }
+  :root[data-theme='gunjo'] .sl-scale .axis { position: absolute; inset: 0 32px 0 0; }
+  :root[data-theme='gunjo'] .sl-scale .line { position: absolute; left: 0; right: 0; top: 40px; border-top: 1px dotted var(--color-muted); }
+  :root[data-theme='gunjo'] .sl-scale i { position: absolute; top: 37px; height: 6px; border-left: 1px solid var(--color-muted); }
+  :root[data-theme='gunjo'] .sl-scale i.long { top: 34px; height: 12px; }
+  :root[data-theme='gunjo'] .sl-scale .links { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; } /* ずらした玉と、日付どおりの位置をつなぐ細い線と点 */
+  :root[data-theme='gunjo'] .sl-scale .links line { stroke: var(--color-accent); stroke-width: 1; }
+  :root[data-theme='gunjo'] .sl-scale .links circle { fill: var(--color-accent); }
+  :root[data-theme='gunjo'] .sl-scale .mark { position: absolute; top: 6px; width: 44px; margin-left: -22px; z-index: 1; }
+  :root[data-theme='gunjo'] .sl-scale .mark.on { top: 0; z-index: 2; }
+  :root[data-theme='gunjo'] .sl-scale .mark:hover { z-index: 3; }
+  :root[data-theme='gunjo'] .sl-scale .mark .name { display: none; position: absolute; top: 48px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 11px; line-height: 13px; color: var(--color-muted); background: #fff; }
+  :root[data-theme='gunjo'] .sl-scale .mark.on .name { top: 46px; color: var(--color-accent); font-weight: 700; }
+  :root[data-theme='gunjo'] .sl-scale .mark.edge .name { left: 0; transform: none; } /* 左端（30 日前）のラベルは、枠の外へ出さない */
+  :root[data-theme='gunjo'] .sl-scale .mark.named .name, :root[data-theme='gunjo'] .sl-scale .mark:hover .name { display: block; }
+  :root[data-theme='gunjo'] .sl-scale .old, :root[data-theme='gunjo'] .sl-scale .today { position: absolute; top: 84px; font-size: 11px; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .sl-scale .old { left: 0; }
+  :root[data-theme='gunjo'] .sl-scale .today { right: 0; }
+
+  /* 左の一覧・右の詳細 */
+  :root[data-theme='gunjo'] .sl-cols { display: grid; grid-template-columns: 400px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 30px; margin-top: 2px; flex: 1 1 auto; min-height: 0; }
+  :root[data-theme='gunjo'] .sl-list { list-style: none; margin: 0; padding: 0 2px 0 0; overflow-y: auto; min-height: 0; }
+  :root[data-theme='gunjo'] .sl-list li { margin: 0 0 8px; }
+  :root[data-theme='gunjo'] .slot-pick { box-sizing: border-box; display: flex; align-items: center; gap: 14px; width: calc(100% - 17px); height: 68px; margin: 0; padding: 0 24px 0 16px; background: #fff; color: var(--color-text); border: 1px solid var(--color-border); border-radius: 0; box-shadow: none; text-align: left; font: inherit; cursor: pointer; }
+  :root[data-theme='gunjo'] .slot-pick:focus-visible { outline: 2px solid var(--g-deep); outline-offset: -4px; }
+  :root[data-theme='gunjo'] .slot-pick[aria-current='true'] { width: 100%; background: var(--color-accent); color: #fff; border-color: var(--color-accent); clip-path: polygon(0 0, 100% 0, calc(100% - 17px) 100%, 0 100%); }
+  :root[data-theme='gunjo'] .slot-pick[aria-current='true']:focus-visible { outline-color: #fff; }
+  :root[data-theme='gunjo'] .slot-pick .text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  :root[data-theme='gunjo'] .slot-pick .name { font-family: var(--font-mincho); font-size: 19px; line-height: 1.3; }
+  :root[data-theme='gunjo'] .slot-pick .note { margin: 0; font-size: 12px; line-height: 1.3; color: var(--color-muted); overflow-wrap: anywhere; }
+  :root[data-theme='gunjo'] .slot-pick .note.error { color: var(--color-error); }
+  :root[data-theme='gunjo'] .slot-pick[aria-current='true'] .note { color: #d6d5ff; }
+  :root[data-theme='gunjo'] .slot-pick[aria-current='true'] .note.error { color: #fff; }
+  :root[data-theme='gunjo'] .slot-pick .nw { white-space: nowrap; } /* 「○日前」と日時は、折り返すなら間で */
+  :root[data-theme='gunjo'] .slot-pick .free { font-family: var(--font-num); font-weight: 500; font-size: 24px; white-space: nowrap; }
+
+  :root[data-theme='gunjo'] .sl-detail { min-width: 0; min-height: 0; overflow-y: auto; padding: 0 4px 0 6px; }
+  :root[data-theme='gunjo'] .sl-detail .head-row { display: flex; align-items: flex-end; gap: 14px; }
+  :root[data-theme='gunjo'] .sl-detail .name { font-family: var(--font-mincho); font-size: 22px; }
+  :root[data-theme='gunjo'] .sl-detail .name .rel { margin-left: 12px; font-family: var(--font-gothic); font-size: 15px; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .sl-detail .note { margin: 2px 0 0; font-size: 13px; }
+  :root[data-theme='gunjo'] .sl-detail .error { margin: 12px 0 0; }
+  :root[data-theme='gunjo'] .sl-detail .lab { margin-top: 14px; font-size: 11px; letter-spacing: 0.2em; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .sl-detail .big { margin-bottom: 8px; font-family: var(--font-num); font-weight: 500; font-size: 40px; line-height: 1.1; color: var(--color-accent); }
+  :root[data-theme='gunjo'] .sl-detail .kv { display: flex; justify-content: space-between; gap: 16px; padding: 5px 0; border-bottom: 1px solid var(--color-border); font-size: 13px; }
+  :root[data-theme='gunjo'] .sl-detail .kv > :first-child { color: var(--color-muted); }
+  :root[data-theme='gunjo'] .sl-detail .kv > :last-child { font-family: var(--font-num); font-weight: 500; font-size: 15px; text-align: right; overflow-wrap: anywhere; }
+  :root[data-theme='gunjo'] .sl-detail .kv > .user-text { font-family: var(--font-gothic); }
+  :root[data-theme='gunjo'] .sl-detail .actions { display: flex; flex-wrap: wrap; margin-top: 12px; }
+  :root[data-theme='gunjo'] .sl-detail form { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--color-border); }
+  :root[data-theme='gunjo'] .sl-detail form .note { margin: 0 0 6px; }
+  :root[data-theme='gunjo'] .sl-detail form label { display: flex; align-items: center; gap: 12px; font-size: 13px; }
+  :root[data-theme='gunjo'] .sl-detail form input { width: 210px; }
+  :root[data-theme='gunjo'] .sl-detail form .actions { margin-top: 8px; }
   :root[data-theme='gunjo'] dialog.confirm .actions { gap: 0; }
   :root[data-theme='gunjo'] dialog.confirm .actions > button { height: var(--g-h-large); padding: 0 22px; font-size: 16px; gap: 8px; }
   :root[data-theme='gunjo'] dialog.confirm .actions > button + button { margin-inline-start: 14px; }
