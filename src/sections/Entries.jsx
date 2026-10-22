@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import './entries.css'
 import {
-  entryAccountOptions, validateEntryInput, livingAccount, defaultLiving, livingOnAccountChange, livingOptionLabel, newEntry, editEntry, lastCreditId, lastNormalEntry, copyInputFromEntry, presetToFormValues, canMarkNoSpend, isNoSpendShown, markNoSpendDay, unmarkNoSpendDay, NO_SPEND_BACK_DAYS, favoriteOptionGroups, accountLabelWithType,
+  entryAccountOptions, validateEntryInput, livingAccount, defaultLiving, livingOnAccountChange, livingOptionLabel, newEntry, editEntry, lastCreditId, lastNormalEntry, copyInputFromEntry, presetToFormValues, presetSummary, canMarkNoSpend, isNoSpendShown, markNoSpendDay, unmarkNoSpendDay, NO_SPEND_BACK_DAYS, favoriteOptionGroups, accountLabelWithType,
   entriesOfMonth, groupEntriesByDate, canEditEntry, formatMoney, formatYen, currencyUnit, roadDays,
 } from '../ledgerLogic.js'
 import { today } from '../today.js'
@@ -12,6 +12,7 @@ import { loadOpenMode, initialOpenDates, isOpenDate, formatDayHead, formatDayLab
 import EntrySheet from './EntrySheet.jsx'
 import { AmountInput } from './Calculator.jsx'
 import { Icon, IconButton } from './Icon.jsx'
+import { presetIconId } from '../icons.js'
 import { useGunjoPc, useFixedEntries } from '../gunjoPc.js'
 import { createPortal } from 'react-dom'
 import { useBandHost, useBandTop, useBandRoad } from './bandHost.js'
@@ -52,15 +53,25 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
   const set = (k) => (v) => setF((s) => ({ ...s, [k]: v }))
   // 借方・貸方を変えたら、生活費の月も整える（同じ科目のままなら選び方を残し、別の収益の科目なら、その科目の決まり。収益がなくなれば消す）
   const setAccount = (k) => (v) => setF((s) => { const next = { ...s, [k]: v }; return { ...next, living: livingOnAccountChange(accounts, s, next) } })
+  const [appliedId, setAppliedId] = useState(null) // 最後に反映したプリセット（反転の表示用）
   const applyValues = (values) => { setF((s) => ({ ...s, ...values })); setError('') }
   const copyButton = lastEntry ? (
-    <button type="button" className="copy-last" title={t('entries.copyLastTitle', { date: lastEntry.date, debit: accounts.find((a) => a.id === lastEntry.debitId)?.name ?? '', credit: accounts.find((a) => a.id === lastEntry.creditId)?.name ?? '', amount: formatMoney(lastEntry.amount, currency) })} onClick={() => applyValues(copyInputFromEntry(lastEntry, accounts))}>{t('entries.copyLast')}</button>
+    <button type="button" className="copy-last icon-only" aria-label={t('entries.copyLast')} title={t('entries.copyLastTitle', { date: lastEntry.date, debit: accounts.find((a) => a.id === lastEntry.debitId)?.name ?? '', credit: accounts.find((a) => a.id === lastEntry.creditId)?.name ?? '', amount: formatMoney(lastEntry.amount, currency) })} onClick={() => applyValues(copyInputFromEntry(lastEntry, accounts))}><Icon name="copy" /></button>
   ) : null
   const presetRow = presets && presets.length > 0 ? (
     <div className="preset-row" role="group" aria-label={t('presets.chooseLabel')}>
       {/* ボタンは span で包む：群青の PC の「隣り合う部品は余白で 12px あける」規則に、折り返す行を巻き込まないため（間は行の gap） */}
       <span className="preset-label">{t('presets.chooseLabel')}</span>
-      {presets.map((p) => <span key={p.id} className="preset-item"><button type="button" className="preset-chip" onClick={() => applyValues(presetToFormValues(p, accounts))}>{p.name}</button></span>)}
+      {presets.map((p) => {
+        const values = presetToFormValues(p, accounts)
+        const summary = presetSummary(p, accounts, currency)
+        const pressed = p.id === appliedId && ['debitId', 'creditId', 'amount', 'memo'].every((k) => f[k] === values[k]) // 反映したあと、借方・貸方・金額・メモのどれかを変えるまで、反転
+        return (
+          <span key={p.id} className="preset-item">
+            <button type="button" className={pressed ? 'preset-chip icon-only on' : 'preset-chip icon-only'} aria-pressed={pressed} aria-label={summary} title={summary} onClick={() => { applyValues(values); setAppliedId(p.id) }}><Icon name={presetIconId(p.icon)} /></button>
+          </span>
+        )
+      })}
     </div>
   ) : null
   let noSpendButton = null
@@ -72,9 +83,13 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
     noSpendButton = (
       <button type="button" className={shown ? 'no-spend on' : 'no-spend'} aria-pressed={shown} disabled={!shown && !can.ok}
         title={shown ? t('entries.noSpendUndoTitle') : can.ok ? t('entries.noSpendTitle') : t(why, { days: NO_SPEND_BACK_DAYS })}
-        onClick={() => noSpend.onToggle(f.date)}>{shown ? t('entries.noSpendDone', { label }) : label}</button>
+        onClick={() => noSpend.onToggle(f.date)}><Icon name={shown ? 'circleFill' : 'circle'} />{shown ? t('entries.noSpendDone', { label }) : label}</button>
     )
   }
+  // 前回と同じ入力（複製の絵）と今日は使っていない（円）を 1 行に。span で包むのは、群青の PC の「隣り合う部品は余白で 12px」規則に巻き込まないため（間は行の gap）
+  const quickRow = copyButton || noSpendButton ? (
+    <div className="quick-row">{copyButton && <span>{copyButton}</span>}{noSpendButton && <span>{noSpendButton}</span>}</div>
+  ) : null
   const showLiving = livingAccount(accounts, f.debitId, f.creditId) !== undefined // 収益の科目（調整益を除く）を選んだときだけ
   useEffect(() => { onValues?.(f) }, [f]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -106,8 +121,7 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
     return (
       <form className="g-slip" onSubmit={submit}>
         {presetRow}
-        {copyButton}
-        {noSpendButton}
+        {quickRow}
         {fields.date}
         {fields.debit}
         {fields.credit}
@@ -124,8 +138,7 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
     return (
       <form className="sheet-form" onSubmit={submit}>
         {presetRow}
-        {copyButton}
-        {noSpendButton}
+        {quickRow}
         {fields.date}
         {fields.amount}
         <div className="sheet-pair">{fields.debit}{fields.credit}</div>
@@ -149,8 +162,7 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
       {fields.living}
       <input className="memo-input" placeholder={t('common.memo')} aria-label={t('common.memo')} value={f.memo} onChange={(e) => set('memo')(e.target.value)} />
       {presetRow}
-      {copyButton}
-      {noSpendButton}
+      {quickRow}
       <button><Icon name={submitIcon} />{submitLabel}</button>
       {onCancel && <button type="button" onClick={onCancel}><Icon name="close" />{t('entries.sheetClose')}</button>}
       {error && <span className="error">{error}</span>}
@@ -158,14 +170,13 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
   )
 }
 
-// スマホ：「＋」を押した最初の画面の、プリセット 1 件分のボタン（名前と、借方・貸方・金額の 1 行）
+// スマホ：「＋」を押した最初の画面の、プリセット 1 件分のボタン（記号が主役。下に小さい見出し：名前、なければ「借方→貸方」）。読み上げ・title も同じ文
 function PresetPickButton({ preset, accounts, currency, onPick }) {
-  const name = (id) => accounts.find((a) => a.id === id)?.name ?? ''
-  const amount = preset.amount === null ? t('presets.noAmount') : formatMoney(preset.amount, currency)
+  const summary = presetSummary(preset, accounts, currency)
   return (
-    <button type="button" className="preset-pick-item" onClick={onPick}>
-      <span className="pn">{preset.name}</span>
-      <span className="pl">{t('presets.line', { debit: name(preset.debitId), credit: name(preset.creditId), amount })}</span>
+    <button type="button" className="preset-pick-item" aria-label={summary} title={summary} onClick={onPick}>
+      <Icon name={presetIconId(preset.icon)} />
+      <span className="pc" aria-hidden="true">{summary}</span>
     </button>
   )
 }

@@ -24,4 +24,48 @@ export const ICONS = {
   reset: [['p', 'M4.5 12a7.5 7.5 0 102.2-5.3M4.5 5v4.5H9']],
   chevDown: [['p', 'M6 9l6 6 6-6']],
   chevRight: [['p', 'M9 6l6 6-6 6']],
+  copy: [['r', 8, 8, 12, 12, 2], ['p', 'M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2']], // 前回と同じ入力（重なった 2 枚）
+  circle: [['p', 'M12 3.5a8.5 8.5 0 100 17 8.5 8.5 0 100-17z']], // 今日は使っていない（未記録の空の円）
+  circleFill: [['c', 12, 12, 8.5]], // 記録済み（塗りの円）
+  starPlus: [['p', 'M10.5 2.7L12.6 7.7L17.9 8.1L13.8 11.6L15.1 16.8L10.5 14.0L5.9 16.8L7.2 11.6L3.1 8.1L8.4 7.7z'], ['p', 'M19 15.8v6M16 18.8h6']], // プリセットの追加（＋付きの星）
 }
+
+// ---- 仕訳プリセットの記号（spec-ledger.md 5.18。見本 design-ref/gunjo-pc/E-preset-icons.html）。書き方は ICONS と同じ（24×24・線 1.75・色は currentColor）。
+// 書体に頼らない形だけ。絵の名前は、辞書の presetIcon.<id>（作る画面の読み上げ用）。ボタンの絵（ICONS）とは別に持つ：id で選ぶので、「使っているか」の確かめの対象にしない
+export const PRESET_ICONS = {
+  meal: [['p', 'M7 3v5a2.5 2.5 0 005 0V3M9.5 3v18M17 21V3c-2.2 1.4-3 4-3 7h3']], // 食事
+  coffee: [['p', 'M5 9h11v6a4 4 0 01-4 4H9a4 4 0 01-4-4zM16 10.5h1.5a2.5 2.5 0 010 5H16M8.5 3.5v2.5M12 3.5v2.5']], // コーヒー
+  bowl: [['p', 'M4 11h16a8 8 0 01-16 0zM9 20.5h6M9 4.5c-1 1 1 2 0 3.5M13 4.5c-1 1 1 2 0 3.5']], // ごはん
+  cake: [['p', 'M4 12h16v8H4zM4 15.5c2 1.5 3.5 1.5 4 0 1 1.5 3 1.5 4 0 1 1.5 3 1.5 4 0 .5 1.5 2 1.5 4 0M12 12V9M12 4.2c1 1 1 2 0 3-1-1-1-2 0-3z']], // おかし
+  cart: [['p', 'M3 4h2.5l2.2 10.5h9.6L19.5 8H6.5'],['c', 9, 19, 1.3],['c', 17, 19, 1.3]], // 買い物
+  bag: [['p', 'M5 8h14l-1 12H6zM9 8V6.5a3 3 0 016 0V8']], // ふくろ
+  shirt: [['p', 'M8.5 4l-5 3 2 4 2.5-1V20h9V10l2.5 1 2-4-5-3a3.5 3.5 0 01-7 0z']], // 服
+  gift: [['p', 'M4 9h16v4H4zM5 13v7h14v-7M12 9v11M12 9c-1-3-5-3.5-5-1.2C7 9 12 9 12 9zM12 9c1-3 5-3.5 5-1.2C17 9 12 9 12 9z']], // プレゼント
+  train: [['p', 'M7 3h10a2 2 0 012 2v11a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2zM8 6.5h8v5H8zM8 21l2-3M16 21l-2-3'],['c', 9, 14.8, .9],['c', 15, 14.8, .9]], // 電車
+  bus: [['p', 'M5.5 4h13A1.5 1.5 0 0120 5.5V17H4V5.5A1.5 1.5 0 015.5 4zM4 11h16M7 17v3M17 17v3'],['c', 8, 14, .9],['c', 16, 14, .9]], // バス
+  car: [['p', 'M3.5 16.5v-4l2-5.5h13l2 5.5v4M3.5 12.5h17M3.5 16.5h17'],['c', 7.5, 16.5, 1.3],['c', 16.5, 16.5, 1.3]], // 車
+  bike: [['p', 'M2.5 16a3.5 3.5 0 107 0 3.5 3.5 0 10-7 0zM14.5 16a3.5 3.5 0 107 0 3.5 3.5 0 10-7 0zM6 16l3.2-7h5.3M9.2 9L12 16h6M12 16l2.5-7M14.5 6.5H17']], // 自転車
+  plane: [['p', 'M21 3L3 10.5l7 2.5 2.5 7zM10 13L21 3']], // 旅行
+  home: [['p', 'M4 11l8-7 8 7M6 9.5V20h12V9.5M10 20v-5h4v5']], // 家
+  bulb: [['p', 'M9 17h6M10 20h4M12 3.5a5.5 5.5 0 00-3.2 10c.8.7 1.2 1.5 1.2 2.5h4c0-1 .4-1.8 1.2-2.5A5.5 5.5 0 0012 3.5z']], // 電気
+  drop: [['p', 'M12 3.5s6 6.2 6 10.5a6 6 0 01-12 0C6 9.7 12 3.5 12 3.5z']], // 水道
+  phone: [['r', 7, 2.5, 10, 19, 2],['p', 'M10.5 5.5h3M11 18.5h2']], // 通信
+  hospital: [['r', 4, 4, 16, 16, 3],['p', 'M12 8v8M8 12h8']], // 病院
+  pill: [['p', 'M10.5 20.5l-7-7a4.2 4.2 0 016-6l7 7a4.2 4.2 0 01-6 6zM7 17l6-6']], // くすり
+  scissors: [['p', 'M9.5 17.5a2.7 2.7 0 11-5.4 0 2.7 2.7 0 015.4 0zM9.5 6.5a2.7 2.7 0 11-5.4 0 2.7 2.7 0 015.4 0zM9 8l11 9M9 16L20 7']], // 美容
+  dumbbell: [['p', 'M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11']], // 運動
+  book: [['p', 'M6 4h11a1.5 1.5 0 011.5 1.5V20H7.5A1.5 1.5 0 016 18.5zM6 18.5A1.5 1.5 0 017.5 17H18.5']], // 本
+  cap: [['p', 'M12 5l10 4.5L12 14 2 9.5zM6 11.5V16c0 1.5 3 3 6 3s6-1.5 6-3v-4.5M22 9.5V15']], // 学校
+  game: [['p', 'M7 8h10a4.5 4.5 0 014.4 5.4l-.8 4A2.4 2.4 0 0116.1 18l-1.6-2h-5L7.9 18a2.4 2.4 0 01-4.5-.6l-.8-4A4.5 4.5 0 017 8zM8 11v3M6.5 12.5h3'],['c', 15, 11.5, .8],['c', 17, 13.5, .8]], // ゲーム
+  ticket: [['p', 'M3.5 6.5h17v3.2a2.3 2.3 0 000 4.6v3.2h-17v-3.2a2.3 2.3 0 000-4.6zM14 7v1.5M14 11.2v1.6M14 15.5V17']], // チケット
+  music: [['p', 'M9 17V5.5l10-2V15'],['c', 7, 17, 2.2],['c', 17, 15, 2.2]], // 音楽
+  heart: [['p', 'M12 20s-7.5-4.6-7.5-10A4.2 4.2 0 0112 7.2 4.2 4.2 0 0119.5 10c0 5.4-7.5 10-7.5 10z']], // 愛
+  paw: [['p', 'M8 15.5c0-2.3 1.8-4 4-4s4 1.7 4 4a2.5 2.5 0 01-2.7 2.5c-.5 0-.9-.2-1.3-.2s-.8.2-1.3.2A2.5 2.5 0 018 15.5z'],['c', 6, 10, 1.5],['c', 9.5, 6.5, 1.5],['c', 14.5, 6.5, 1.5],['c', 18, 10, 1.5]], // ペット
+  leaf: [['p', 'M5 19C5 10 10 5 19.5 4.5 19.5 14 14 19.5 5 19zM5 19l8-8']], // 自然
+  wallet: [['p', 'M4 7.5v10.5a2 2 0 002 2h14V9.5a1 1 0 00-1-1H6A2 2 0 014 6.5 2 2 0 016 4.5h11v4'],['c', 16.5, 14.5, 1.1]], // お金
+  star: [['p', 'M12 3L14.4 8.8L20.6 9.2L15.8 13.2L17.3 19.3L12 16L6.7 19.3L8.2 13.2L3.4 9.2L9.6 8.8z']], // ほし（記号のないプリセットの、初めの記号。作る画面の選択肢には出さない）
+}
+export const PRESET_ICON_LABELS = {meal: 'presetIcon.meal', coffee: 'presetIcon.coffee', bowl: 'presetIcon.bowl', cake: 'presetIcon.cake', cart: 'presetIcon.cart', bag: 'presetIcon.bag', shirt: 'presetIcon.shirt', gift: 'presetIcon.gift', train: 'presetIcon.train', bus: 'presetIcon.bus', car: 'presetIcon.car', bike: 'presetIcon.bike', plane: 'presetIcon.plane', home: 'presetIcon.home', bulb: 'presetIcon.bulb', drop: 'presetIcon.drop', phone: 'presetIcon.phone', hospital: 'presetIcon.hospital', pill: 'presetIcon.pill', scissors: 'presetIcon.scissors', dumbbell: 'presetIcon.dumbbell', book: 'presetIcon.book', cap: 'presetIcon.cap', game: 'presetIcon.game', ticket: 'presetIcon.ticket', music: 'presetIcon.music', heart: 'presetIcon.heart', paw: 'presetIcon.paw', leaf: 'presetIcon.leaf', wallet: 'presetIcon.wallet', star: 'presetIcon.star'} // 記号の名前（辞書のキー。作る画面の読み上げ用）
+export const PRESET_ICON_DEFAULT = 'star' // icon のないプリセット（古い v11 のデータ）の記号
+export const PRESET_ICON_PICKER = Object.keys(PRESET_ICONS).filter((id) => id !== PRESET_ICON_DEFAULT) // 作る画面の選択肢（30 個。この順）
+export const presetIconId = (id) => (typeof id === 'string' && Object.hasOwn(PRESET_ICONS, id) ? id : PRESET_ICON_DEFAULT) // 知らない id・無い id は、初めの記号

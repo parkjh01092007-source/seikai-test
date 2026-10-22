@@ -1,6 +1,7 @@
 // 仕訳帳の純関数。お金の計算もここに置く（画面側では計算しない）。
 // 画面に出す文字（エラー文・行の名前など）は、辞書（lang/ja.js）から t() で取る。ラベルの表は、読むたびに t() を呼ぶ（読み込み時に固めない）。
 import { t, translate, dictionaries, getLanguage, LANGUAGES } from './text.js'
+import { PRESET_ICON_PICKER, PRESET_ICON_DEFAULT } from './icons.js'
 
 export const TYPES = ['asset', 'liability', 'revenue', 'expense', 'equity']
 export const TYPE_LABELS = {
@@ -108,7 +109,9 @@ export function applyRenames(accounts, ids, to, now = new Date().toISOString()) 
 
 // 計算で探す特別科目は、名前ではなく key で探す（改名しても壊れない）。削除・使わない設定・type変更は不可。
 export const SPECIAL_KEYS = ['opening', 'adjust-gain', 'adjust-loss', 'credit-card']
-export const ENTRY_PRESET_NAME_MAX = 30 // 仕訳プリセットの名前の長さの上限（文字数）
+export const ENTRY_PRESET_NAME_MAX = 20 // 仕訳プリセットの名前の長さの上限（文字数。新しく作る・直すときの入力の決まり。名前は空でもよい）
+export const ENTRY_PRESET_NAME_LOAD_MAX = 30 // 読み込みは、今までの v11 で保存された 30 字までの名前も受ける
+export const ENTRY_PRESET_MAX = 20 // 仕訳プリセットの件数の上限（追加を止める。読み込みは、これより多くても受ける）
 export const ENTRY_HIDDEN_KEYS = ['opening', 'adjust-gain', 'adjust-loss'] // 入力の選択肢から除く。クレカ未払いは除かない
 export const LEGACY_KEY_BY_NAME = { 開始残高: 'opening', 調整益: 'adjust-gain', 調整損: 'adjust-loss', クレカ未払い: 'credit-card' } // v2からの移行専用
 
@@ -1009,10 +1012,10 @@ export const isNoSpendShown = (days, entries, date) => days.includes(date) && !e
 // ---- 仕訳プリセット（entryPresets。v11。docs は spec-ledger.md 5.18）----
 // 1 件：{ id, name, debitId, creditId, amount（null か 1 以上の整数）, memo, createdAt, updatedAt }。入力欄に、借方・貸方・金額・メモをまとめて入れる型
 
-// 入力の検証。借方・貸方は、仕訳の入力と同じ選択肢（3つの特別科目を除く）。currentIds は編集中のプリセットが今使っている科目。金額は空でもよい（null）
-export function validateEntryPresetInput({ name, debitId, creditId, amountText, memo }, accounts, currentIds = []) {
+// 入力の検証。名前は空でもよい（空なら、ボタンの title・読み上げに、借方→貸方の要約を使う）。icon は、作る画面の選択肢（PRESET_ICON_PICKER）か、初めの記号。渡さなければ初めの記号。
+// 借方・貸方は、仕訳の入力と同じ選択肢（3つの特別科目を除く）。currentIds は編集中のプリセットが今使っている科目。金額は空でもよい（null）
+export function validateEntryPresetInput({ name, icon = PRESET_ICON_DEFAULT, debitId, creditId, amountText, memo }, accounts, currentIds = []) {
   const n = typeof name === 'string' ? name.trim() : ''
-  if (!n) return { error: t('error.nameEmpty') }
   if (n.length > ENTRY_PRESET_NAME_MAX) return { error: t('error.presetNameTooLong', { max: ENTRY_PRESET_NAME_MAX }) }
   const text = typeof amountText === 'string' ? amountText.trim() : ''
   let amount = null
@@ -1024,7 +1027,20 @@ export function validateEntryPresetInput({ name, debitId, creditId, amountText, 
   const ids = new Set(entryAccountOptions(accounts, currentIds).map((x) => x.id))
   if (!ids.has(debitId) || !ids.has(creditId)) return { error: t('error.chooseDebitCredit') }
   if (debitId === creditId) return { error: t('error.sameDebitCredit') }
-  return { name: n, debitId, creditId, amount, memo: typeof memo === 'string' ? memo : '' }
+  if (!PRESET_ICON_PICKER.includes(icon) && icon !== PRESET_ICON_DEFAULT) return { error: t('error.presetIcon') }
+  return { name: n, icon, debitId, creditId, amount, memo: typeof memo === 'string' ? memo : '' }
+}
+
+// 追加できるか（20 件まで）。{ ok: true } か { ok: false, error }
+export const canAddEntryPreset = (list) => (list.length >= ENTRY_PRESET_MAX ? { ok: false, error: t('error.presetLimit', { max: ENTRY_PRESET_MAX }) } : { ok: true })
+
+// ボタンの title・読み上げに使う文：名前があれば名前、なければ「借方→貸方」（金額があれば、そのあとに金額）
+export function presetSummary(preset, accounts, currency) {
+  if (typeof preset.name === 'string' && preset.name.trim() !== '') return preset.name
+  const name = (id) => accounts.find((a) => a.id === id)?.name ?? ''
+  const debit = name(preset.debitId)
+  const credit = name(preset.creditId)
+  return preset.amount === null ? t('presets.summary', { debit, credit }) : t('presets.summaryAmount', { debit, credit, amount: formatMoney(preset.amount, currency) })
 }
 
 export const newEntryPreset = (input, now = new Date().toISOString()) => ({ id: crypto.randomUUID(), ...input, createdAt: now, updatedAt: now })

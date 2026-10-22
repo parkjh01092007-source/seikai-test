@@ -190,6 +190,9 @@
   :root[data-theme='gunjo'] .settings .pset.g-form .fl { display: block; margin: 0; }
   :root[data-theme='gunjo'] .settings .pset.g-form :is(input, select) { width: 100%; }
   :root[data-theme='gunjo'] .settings .pset.g-form > .error { grid-column: 1 / -1; }
+  :root[data-theme='gunjo'] .settings .pset.g-form > .pset-pick-row { grid-column: 1 / -1; }
+  :root[data-theme='gunjo'] .settings .pset-icons { gap: 12px; }
+  :root[data-theme='gunjo'] .settings .pset-icon-opt.on { background: var(--color-accent); color: #fff; }
   :root[data-theme='gunjo'] button.sub-submit.large { height: var(--g-h-large); padding: 0 22px; font-size: 16px; }
   :root[data-theme='gunjo'] .subscriptions ul { margin: 0; padding: 0; }
   :root[data-theme='gunjo'] .subscriptions li { display: grid; grid-template-columns: 104px 1fr auto; gap: 0 18px; align-items: center; margin: 0 0 22px; padding: 14px 20px; background: #fff; border: 0; box-shadow: var(--g-tile-shadow); }
@@ -505,6 +508,8 @@
   :root[data-theme='gunjo'] .entries .g-slip { display: flex; flex-direction: column; align-items: stretch; gap: 6px; margin: 0; }
   :root[data-theme='gunjo'] .entries .g-slip .field { display: block; margin: 0; }
   :root[data-theme='gunjo'] .entries .g-slip .preset-row { gap: 12px; }
+  :root[data-theme='gunjo'] .entries .g-slip .quick-row { gap: 12px; }
+  :root[data-theme='gunjo'] .entries .preset-chip.on { background: var(--color-accent); color: #fff; }
   :root[data-theme='gunjo'] .entries .g-slip .field-label { display: block; margin-bottom: 2px; font-family: var(--font-gothic); font-size: 11px; letter-spacing: 0.2em; color: var(--color-muted); }
   :root[data-theme='gunjo'] .g-slip :is(input, select) { width: 100%; }
   :root[data-theme='gunjo'] .g-slip .amount-input, :root[data-theme='gunjo'] .g-slip .calc-field { width: 100%; }

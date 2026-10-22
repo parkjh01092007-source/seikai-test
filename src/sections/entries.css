@@ -87,17 +87,21 @@
 }
 
 /* 「前回と同じ入力」のボタン：縦に並ぶ入力（群青の札・スマホの入力画面）では、幅いっぱいに伸ばさず左に寄せる */
-.entries .g-slip > .copy-last, .entries .sheet-form > .copy-last, .entries .g-slip > .no-spend, .entries .sheet-form > .no-spend { align-self: flex-start; }
+.entries .g-slip > .quick-row, .entries .sheet-form > .quick-row { align-self: flex-start; }
 
 /* プリセットのボタン（仕訳の入力の上。群青の札・基本の入力欄・「出さない」設定のときのスマホの入力画面）。間は 8px（群青の PC は 12px。gunjo-pc.css） */
 .entries .preset-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1 1 100%; min-width: 0; }
 .entries .preset-label { font-size: 0.85em; color: var(--color-muted); }
-/* スマホ：「＋」を押した最初の画面（プリセットを選ぶ）。1 件ずつ幅いっぱいのボタン。最後に「使わない」 */
-.sheet .preset-pick { display: flex; flex-direction: column; gap: 8px; }
-.sheet .preset-pick button { min-height: 48px; text-align: left; }
-.sheet .preset-pick-item { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 12px; }
-.sheet .preset-pick-item .pn { font-weight: bold; }
-.sheet .preset-pick-item .pl { font-size: 0.85em; color: var(--color-muted); overflow-wrap: anywhere; }
-.sheet .preset-pick .preset-skip { text-align: center; }
-
+/* スマホ：「＋」を押した最初の画面（プリセットを選ぶ）。記号が主役の格子（4 列）。記号の下に、小さい見出し（名前、なければ借方→貸方。1 行で、はみ出しは省略）。最後に「使わない」 */
+.sheet .preset-pick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 8px; }
+.sheet .preset-pick-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 72px; padding: 8px 4px; min-width: 0; }
+.sheet .preset-pick-item .icon { width: 28px; height: 28px; }
+.sheet .preset-pick-item .pc { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; color: var(--color-muted); }
+.sheet .preset-pick .preset-skip { grid-column: 1 / -1; min-height: 48px; text-align: center; }
 .entries .preset-row .preset-chip { margin: 0; }
+/* 反映したプリセットの記号：反転（aria-pressed）。色は、見た目ごとの文字色・地の色の入れ替え */
+.entries .preset-chip.on { background: var(--color-text); color: var(--color-bg); }
+
+/* 前回と同じ入力（複製の絵）と今日は使っていない（円の絵＋文字）の 1 行 */
+.entries .quick-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1 1 100%; min-width: 0; }
+.entries .quick-row > span { display: inline-flex; }

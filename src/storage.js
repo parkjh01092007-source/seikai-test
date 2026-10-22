@@ -1,6 +1,6 @@
 // データの読み書きはこのファイルだけで行う。保存先を変えるときはここだけ直す。
 import { t, getLanguage } from './text.js'
-import { ENTRY_PRESET_NAME_MAX, ENTRY_HIDDEN_KEYS, makeInitialAccounts, addKeys, addCardRoles, addPresets, addLiving, addFixed, hasFixed, applySubscriptions, emptySettings, sanitizeSettings, defaultCurrency, isCurrency, budgetKindAllows, isBudgetMonth, hasLivingMonth, livingAccount, TYPES, ROLES, LIABILITY_ROLES, PRESETS, KINDS, LIVING, SPECIAL_KEYS, isDate } from './ledgerLogic.js'
+import { ENTRY_PRESET_NAME_LOAD_MAX, ENTRY_HIDDEN_KEYS, makeInitialAccounts, addKeys, addCardRoles, addPresets, addLiving, addFixed, hasFixed, applySubscriptions, emptySettings, sanitizeSettings, defaultCurrency, isCurrency, budgetKindAllows, isBudgetMonth, hasLivingMonth, livingAccount, TYPES, ROLES, LIABILITY_ROLES, PRESETS, KINDS, LIVING, SPECIAL_KEYS, isDate } from './ledgerLogic.js'
 
 const KEY = 'orenoyome'
 export const SCHEMA_VERSION = 11
@@ -249,14 +249,14 @@ function validEntryPreset(p, accountsById) {
   const debit = isObj(p) ? accountsById.get(p.debitId) : undefined
   const credit = isObj(p) ? accountsById.get(p.creditId) : undefined
   return (
-    isObj(p) && isStr(p.id) && isStr(p.name) && p.name.trim() !== '' && p.name.length <= ENTRY_PRESET_NAME_MAX &&
+    isObj(p) && isStr(p.id) && isStr(p.name) && p.name.length <= ENTRY_PRESET_NAME_LOAD_MAX && (p.icon === undefined || isStr(p.icon)) &&
     debit !== undefined && credit !== undefined && debit.id !== credit.id &&
     !ENTRY_HIDDEN_KEYS.includes(debit.key) && !ENTRY_HIDDEN_KEYS.includes(credit.key) &&
     (p.amount === null || (isInt(p.amount) && p.amount >= 1)) && isStr(p.memo) && isStr(p.createdAt) && isStr(p.updatedAt)
   )
 }
 
-// entryPresets の検証（v11）。エラー文を返す（問題なければ null）。借方・貸方は、存在する別々の科目（3つの特別科目を除く）。金額は null か 1 以上の整数
+// entryPresets の検証（v11）。エラー文を返す（問題なければ null）。名前は空でもよい（30 字まで）。icon は、なくてもよい（なければ初めの記号）。知らない id でもよい（表示で、初めの記号にする）。借方・貸方は、存在する別々の科目（3つの特別科目を除く）。金額は null か 1 以上の整数
 function checkEntryPresets(entryPresets, accounts) {
   if (!Array.isArray(entryPresets)) return t('import.presetsShape')
   const byId = new Map(accounts.map((a) => [a.id, a]))
