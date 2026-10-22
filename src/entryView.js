@@ -109,6 +109,32 @@ export const saveNoSpendShape = (storage, value) => {
   } catch { /* 覚えられなくてもよい */ }
 }
 
+// ---- 10 件ずつのグループの開閉（⑨。端末ごと。保存データ・書き出し・セーブには入れない）。値は {"2026-10-01": true, ...}（キーは groupByTens の key＝グループの最初の日）。
+// 押した分だけ覚える。覚えていないグループは、その月で一番新しいグループだけ開く。覚えるのは新しい方から TENS_OPEN_KEEP 個まで
+export const TENS_OPEN_KEY = 'orenoyome-entry-tens'
+export const TENS_OPEN_KEEP = 60
+export function readTensOpen(storage) {
+  try {
+    const parsed = JSON.parse(storage.getItem(TENS_OPEN_KEY))
+    if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) return {}
+    return Object.fromEntries(Object.entries(parsed).filter(([k, v]) => /^\d{4}-\d{2}-\d{2}$/.test(k) && typeof v === 'boolean'))
+  } catch {
+    return {}
+  }
+}
+export function saveTensOpen(storage, toggled) {
+  try {
+    const keep = Object.keys(toggled).sort().reverse().slice(0, TENS_OPEN_KEEP)
+    storage.setItem(TENS_OPEN_KEY, JSON.stringify(Object.fromEntries(keep.map((k) => [k, toggled[k]]))))
+  } catch { /* 覚えられなくてもよい */ }
+}
+// 今開いているか：押した分（toggled）が優先。なければ、その月で一番新しいグループ（groups は groupByTens の結果。並びは問わない）だけ開く
+export const isOpenTens = (key, groups, toggled) => (key in toggled ? toggled[key] : key === groups.reduce((max, g) => (g.key > max ? g.key : max), ''))
+// 10 件を超える月だけ、グループの見出しを出す（以下の月は、今までと同じ）
+export const showTens = (groups) => groups.reduce((n, g) => n + g.count, 0) > 10
+const md = (date) => date.slice(5).replace('-', '/')
+export const formatTensRange = (g) => (g.from === g.to ? md(g.from) : t('entries.tensRange', { from: md(g.from), to: md(g.to) }))
+
 // 画面から使う入口
 const browserStorage = () => {
   try {
@@ -123,3 +149,5 @@ export const loadNoSpendShape = () => readNoSpendShape(browserStorage())
 export const rememberNoSpendShape = (value) => saveNoSpendShape(browserStorage(), value)
 export const loadPresetPrompt = () => readPresetPrompt(browserStorage())
 export const rememberPresetPrompt = (value) => savePresetPrompt(browserStorage(), value)
+export const loadTensOpen = () => readTensOpen(browserStorage())
+export const rememberTensOpen = (toggled) => saveTensOpen(browserStorage(), toggled)

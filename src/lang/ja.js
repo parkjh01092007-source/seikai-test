@@ -223,6 +223,11 @@ export default {
   'entries.kindNote': '（{kind}）',
   'entries.deleteConfirm': 'この仕訳を削除します。元に戻せません。先に書き出しておくことをおすすめします。',
   'entries.dayHead': '{md}（{wd}）　{count}件',
+  'entries.tensRange': '{from}〜{to}',
+  'entries.tensCount': '{count}件',
+  'entries.tensTotal': '費用 {amount}',
+  'entries.tensMax': '最高 {amount}',
+  'entries.tensLabel': '{range}、{count}件、費用 {amount}、最高 {max}',
   'entries.pairSeparator': '／', // 一覧のカードの 借方科目／貸方科目 の区切り
   'entries.dayLabel': '{md}（{wd}）',
   'entries.sheetTitle': '仕訳の編集',

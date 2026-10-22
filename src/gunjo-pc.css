@@ -23,7 +23,7 @@
 
   /* ---- ボタン：文字・絵と文字・絵だけ ----
      ボタンのように見せない「開閉の見出し・タブ・メニュー・電卓のキー・知らせ」は、ここに入れない（それぞれの区切りで作る） */
-  :root[data-theme='gunjo'] button:not(.day-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .key, .toggle, [role='tab'], .sidetabs *) {
+  :root[data-theme='gunjo'] button:not(.day-toggle, .tens-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .key, .toggle, [role='tab'], .sidetabs *) {
     box-sizing: border-box; height: var(--g-h); min-height: 0; padding: 0 12px;
     display: inline-flex; align-items: center; justify-content: center; gap: 6px;
     font-family: var(--font-mincho); font-size: 14px; font-weight: 400; line-height: 1;
@@ -31,7 +31,7 @@
     box-shadow: var(--g-btn-shadow); cursor: pointer;
   }
   /* 決定のボタン（青）：送信ボタン。ほかのボタンは白 */
-  :root[data-theme='gunjo'] button:is([type='submit'], .primary, .sub-submit):not(.day-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .key, .toggle, [role='tab'], .sidetabs *) {
+  :root[data-theme='gunjo'] button:is([type='submit'], .primary, .sub-submit):not(.day-toggle, .tens-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .key, .toggle, [role='tab'], .sidetabs *) {
     background: var(--color-accent); color: var(--color-on-accent); border-color: var(--g-deep);
   }
   /* 絵だけの四角：34px の正方形（絵は icon.css で 18px） */
@@ -48,8 +48,8 @@
      あけ方は1つだけ：2つ目からの左の余白 12px。flex・grid で並べる行は、今までの gap（列の間）を 0 にして、二重にしない（行の間 row-gap は残す）。
      余白の規則は特異度 0（:where）。行が自分で余白を決めたいときは、その行の規則が勝つ。
      並べる行の中に、空白の文字（JSX の {' '}）があると、その分だけ広がる。群青の PC では、その空白を描かない（Entries.jsx・Ledger.jsx）。 */
-  :where(:root[data-theme='gunjo']) :where(:is(button:not(.day-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .key, .toggle, [role='tab'], .sidetabs *), input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden']), select) + :is(button:not(.day-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .key, .toggle, [role='tab'], .sidetabs *), input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden']), select)) { margin-inline-start: var(--g-gap-controls); }
-  :root[data-theme='gunjo'] :has(> :is(button:not(.day-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .key, .toggle, [role='tab'], .sidetabs *), input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden']), select) + :is(button:not(.day-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .key, .toggle, [role='tab'], .sidetabs *), input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden']), select)):not(:has(> .field)) { column-gap: 0; }
+  :where(:root[data-theme='gunjo']) :where(:is(button:not(.day-toggle, .tens-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .key, .toggle, [role='tab'], .sidetabs *), input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden']), select) + :is(button:not(.day-toggle, .tens-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .key, .toggle, [role='tab'], .sidetabs *), input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden']), select)) { margin-inline-start: var(--g-gap-controls); }
+  :root[data-theme='gunjo'] :has(> :is(button:not(.day-toggle, .tens-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .key, .toggle, [role='tab'], .sidetabs *), input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden']), select) + :is(button:not(.day-toggle, .tens-toggle, .card-toggle, .acct-toggle, .notices-toggle, .notice-row, .autosave-problem, .calc-btn, .key, .toggle, [role='tab'], .sidetabs *), input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden']), select)):not(:has(> .field)) { column-gap: 0; }
   :root[data-theme='gunjo'] { --g-gap-controls: 12px; }
   /* 仕訳の入力の行（Entries.jsx の EntryForm）：入力欄は <label class="field">（display: contents＝箱がない）の中にあり、隣り合う部品と見なされないので、上の余白の規則は届かない。
      ここは余白でなく、行の gap（12px）であける（上の column-gap: 0 から外し、メモと「追加」の間の余白も 0 にして、二重にしない） */
@@ -534,6 +534,8 @@
   :root[data-theme='gunjo'] .g-entries-list > .icon-only { display: flex; margin: 0 0 6px auto; }
 
   /* ---- 仕訳の一覧の行（Entries.jsx。見本 E-entries）：日ごとに青い線。左に大きな日付（64px の青い明朝。押すと、その日を開閉）・「10月・日曜日」・「計 3,900円」、右に行（左に「借方 ／ 貸方」とメモ、右に金額と編集・削除） ---- */
+  /* 10 件ずつのグループの見出し（⑨）：日ごとの枠の上に、細い帯 */
+  :root[data-theme='gunjo'] .entries .tens-toggle { padding: 6px 0; border-bottom-color: var(--color-accent); color: var(--color-text, inherit); }
   :root[data-theme='gunjo'] .g-daybox { display: grid; grid-template-columns: 112px minmax(0, 1fr); column-gap: 24px; align-items: start; margin: 0 0 8px; padding: 10px 0 14px; border-top: 1px solid var(--color-accent); }
   :root[data-theme='gunjo'] .g-daybox > h3 { grid-column: 1; margin: 0; }
   :root[data-theme='gunjo'] .g-daybox > div { grid-column: 2; min-width: 0; }

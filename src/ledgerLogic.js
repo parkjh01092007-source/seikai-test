@@ -359,6 +359,33 @@ export function groupEntriesByDate(entries, order = 'asc') {
   return order === 'desc' ? groups.reverse() : groups
 }
 
+// 日付の枠（groupEntriesByDate の古い順の結果）を、10 件ずつのグループにまとめる。月の中だけ（呼ぶ側が月の仕訳を渡す）。
+// 古い順に数えて、10 件目に達したら区切る。10 件目の日の仕訳は全部同じグループに入る（10 件より多くなることがある）。
+// 区切りは必ず古い順で決める：order が 'desc' のときは、グループの並びと、グループの中の枠の並びだけを逆にする（中身は同じ）。
+// 見出しの材料：from・to（日付の範囲）、count（仕訳の件数）、total（費用の合計。月の道・日の見出しの計と同じ数え方）、
+// max（1 件の費用の最高額。収入・振替・費用でない仕訳は含めず、費用がなければ 0）。key は最初の日（古い順の並びで変わらない）
+export function groupByTens(dayGroups, accounts, order = 'asc') {
+  const expenseIds = new Set(accounts.filter((a) => a.type === 'expense' && a.key !== 'adjust-loss').map((a) => a.id))
+  const spent = (e) => (e.kind !== 'normal' ? 0 : (expenseIds.has(e.debitId) ? e.amount : 0) - (expenseIds.has(e.creditId) ? e.amount : 0))
+  const out = []
+  let cur = null
+  for (const g of dayGroups) {
+    if (!cur || cur.count >= 10) {
+      cur = { key: g.date, from: g.date, to: g.date, count: 0, total: 0, max: 0, days: [] }
+      out.push(cur)
+    }
+    cur.to = g.date
+    cur.days.push(g)
+    for (const e of g.entries) {
+      cur.count += 1
+      cur.total += spent(e)
+      cur.max = Math.max(cur.max, spent(e))
+    }
+  }
+  if (order === 'desc') { out.reverse(); for (const o of out) o.days = [...o.days].reverse() }
+  return out
+}
+
 // ---- 開始残高 ----
 
 // 開始残高の画面に出す科目：active の資産と負債

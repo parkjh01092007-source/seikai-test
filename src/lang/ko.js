@@ -256,6 +256,11 @@ export default {
   'entries.kindNote': '({kind})',
   'entries.deleteConfirm': '이 분개를 삭제합니다. 되돌릴 수 없습니다. 먼저 내보내 두시기를 권합니다.',
   'entries.dayHead': '{md}（{wd}）　{count}건',
+  'entries.tensRange': '{from}~{to}',
+  'entries.tensCount': '{count}건',
+  'entries.tensTotal': '비용 {amount}',
+  'entries.tensMax': '최고 {amount}',
+  'entries.tensLabel': '{range}, {count}건, 비용 {amount}, 최고 {max}',
   'entries.pairSeparator': '／', // 一覧のカードの 借方科目／貸方科目 の区切り
   'entries.dayLabel': '{md}（{wd}）',
   'entries.sheetTitle': '분개 편집',
