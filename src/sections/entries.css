@@ -32,9 +32,35 @@
 .entries .tens { margin-top: var(--space); }
 .entries .tens > h3 { margin: 0; font-size: var(--font-size); }
 .entries .tens-toggle { display: flex; flex-wrap: wrap; align-items: center; gap: 2px var(--space); width: 100%; box-sizing: border-box; min-height: 44px; padding: 4px var(--space); border: 1px solid var(--color-border); border-radius: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
-.entries .tens-toggle[aria-expanded='true'] { border-color: color-mix(in srgb, var(--color-border) 55%, var(--color-text)); font-weight: bold; }
+/* 開いているとき（案 A）：見出しは範囲と件数だけの細い 1 行の帯（費用・最高額は閉じているときだけ）。グループ全体の左に縦線を通し、日の枠は内側へ寄せて一段小さくする */
+:root:root .entries .tens-toggle[aria-expanded='true'] { min-height: 30px; padding: 2px var(--space); gap: 0 var(--space); font-size: 0.85em; background: color-mix(in srgb, var(--color-accent) 10%, transparent); border-color: transparent; }
+.entries .tens-toggle[aria-expanded='true'] .tens-sum { display: none; }
+.entries .tens:has(> h3 > .tens-toggle[aria-expanded='true']) { border-left: 3px solid var(--color-accent); margin-top: 16px; }
+.entries .tens > div { padding-left: 10px; }
+.entries .tens > div .day-toggle { height: 36px; font-size: 0.92em; }
 .entries .tens-toggle .tens-range { font-weight: bold; }
 .entries .tens-toggle .mark { margin-left: auto; font-size: 0.8em; font-weight: normal; }
+
+/* 展開したグループの中の、日の枠の頭の記号（⑨。設定 → 仕訳。基本・商人・スマホの幅。群青の PC は .g-daybox で .day を使わないので出ない）。
+   記号は全部 CSS の描画（書体に字がなくてよい）。読み上げは、中身が空の図形か、content の「/ ""」（代替文字なし）で、読ませない。
+   色はアクセント色：PC の仕訳の行の番号（「1.」。ふつうの文字色）と見分ける。数字・丸数字はグループごとに 1 から（counter） */
+:is(.entries .tens > div, .bullet-ex) { counter-reset: dayno; }
+:is(.entries .tens > div, .bullet-ex) > .day { counter-increment: dayno; }
+:is(.tens, .bullet-ex):not([data-bullet='none']) .day-toggle > span:first-child::before { content: ''; display: inline-block; flex: none; vertical-align: middle; box-sizing: border-box; margin-right: 0.55em; color: var(--color-accent); }
+:is(.tens, .bullet-ex)[data-bullet='dot'] .day-toggle > span:first-child::before { width: 0.35em; height: 0.35em; border-radius: 50%; background: currentColor; }
+:is(.tens, .bullet-ex)[data-bullet='disc'] .day-toggle > span:first-child::before { width: 0.6em; height: 0.6em; border-radius: 50%; background: currentColor; }
+:is(.tens, .bullet-ex)[data-bullet='dash'] .day-toggle > span:first-child::before { width: 0.85em; height: 2px; background: currentColor; }
+:is(.tens, .bullet-ex)[data-bullet='num'] .day-toggle > span:first-child::before { content: counter(dayno) '.' / ''; min-width: 1.3em; margin-right: 0.4em; font-weight: bold; font-variant-numeric: tabular-nums; }
+:is(.tens, .bullet-ex)[data-bullet='circ'] .day-toggle > span:first-child::before { content: counter(dayno) / ''; display: inline-flex; align-items: center; justify-content: center; width: 1.45em; height: 1.45em; border: 1px solid currentColor; border-radius: 50%; font-size: 0.78em; line-height: 1; margin-right: 0.6em; font-weight: bold; }
+:is(.tens, .bullet-ex)[data-bullet='gt'] .day-toggle > span:first-child::before { width: 0.42em; height: 0.42em; border-top: 2px solid currentColor; border-right: 2px solid currentColor; transform: rotate(45deg); margin-right: 0.75em; }
+/* 設定の例：日の枠を 3 つ縮めて並べる */
+.bullet-set { display: flex; flex-wrap: wrap; gap: var(--space); align-items: flex-start; }
+.bullet-set-main { flex: 1 1 18em; min-width: 0; }
+.bullet-ex-wrap { flex: 0 1 16em; min-width: 0; }
+.bullet-ex-cap { margin: 0 0 4px; color: var(--color-muted); font-size: 0.85em; }
+.bullet-ex .day { margin: 0 0 4px; border: 1px solid var(--color-border); padding: 0; }
+.bullet-ex .day h3 { margin: 0; font-size: var(--font-size); }
+.bullet-ex .day-toggle { display: flex; align-items: center; min-height: 32px; padding: 0 var(--space); font-weight: bold; }
 
 /* 列をそろえた一覧。見出しと全行が同じ --cols を使う */
 .entries .head, .entries .day li.row { display: grid; grid-template-columns: var(--cols); column-gap: var(--space); align-items: center; }

@@ -540,6 +540,7 @@
   :root[data-theme='gunjo'] .g-daybox > h3 { grid-column: 1; margin: 0; }
   :root[data-theme='gunjo'] .g-daybox > div { grid-column: 2; min-width: 0; }
   :root[data-theme='gunjo'] .entries .g-daybox .g-day-head { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: auto; text-align: left; font-weight: 400; }
+  :root[data-theme='gunjo'] .tens > div .g-dnum { font-size: 30px; } /* ⑨：開いたグループの中は、日の大きな数字を小さく */
   :root[data-theme='gunjo'] .g-dnum { font-family: var(--font-num); font-size: var(--g-s3); font-weight: 400; line-height: 1; color: var(--color-accent); }
   :root[data-theme='gunjo'] .g-dsub { font-family: var(--font-mincho); font-size: 12px; color: var(--color-muted); }
   :root[data-theme='gunjo'] .g-dsum { font-style: normal; font-family: var(--font-num); font-size: 12px; color: var(--color-text); }

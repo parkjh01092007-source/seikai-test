@@ -8,7 +8,7 @@ import { today } from '../today.js'
 import { t } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import { usePhone } from '../layout.js'
-import { loadOpenMode, initialOpenDates, isOpenDate, formatDayHead, formatDayLabel, entryChanged, weekdayName, loadPresetPrompt, loadNoSpendShape, loadTensOpen, rememberTensOpen, isOpenTens, showTens, formatTensRange } from '../entryView.js'
+import { loadOpenMode, initialOpenDates, isOpenDate, formatDayHead, formatDayLabel, entryChanged, weekdayName, loadPresetPrompt, loadNoSpendShape, loadTensOpen, rememberTensOpen, loadTensBullet, isOpenTens, showTens, formatTensRange } from '../entryView.js'
 import EntrySheet from './EntrySheet.jsx'
 import { AmountInput } from './Calculator.jsx'
 import { Icon, IconButton } from './Icon.jsx'
@@ -352,6 +352,7 @@ export default function Entries({ data, update }) {
   const [presetStep, setPresetStep] = useState(false) // スマホ：入力画面の前の、プリセットを選ぶ画面（プリセットがあり、設定が「出す」のときだけ）
   const [startAdd, setStartAdd] = useState(false) // スマホの選ぶ画面の「プリセットに追加」から開いた入力画面は、初めから追加の状態
   const [fill, setFill] = useState(null) // 選んだプリセットの値（借方・貸方・金額・メモ）。入力画面の初めの値に重ねる
+  const bullet = loadTensBullet() // 展開したグループの中の、日の枠の頭の記号（端末ごと。群青の PC は日の大きな数字があるので CSS で出さない）
   const [tensToggled, setTensToggled] = useState(loadTensOpen) // 10 件ずつのグループを押して開閉した分（グループの最初の日 → 開いているか）。端末ごとに覚える
   const [toggled, setToggled] = useState({}) // 日付の枠を押して開閉した分（日付 → 開いているか）。月を変えると初めの状態に戻る。覚えない
   const phone = usePhone()
@@ -547,13 +548,13 @@ export default function Entries({ data, update }) {
     const range = formatTensRange(tn)
     const money = (n) => formatMoney(n, settings.currency)
     return (
-      <section key={tn.key} className="tens">
+      <section key={tn.key} className="tens" data-bullet={bullet}>
         <h3>
           <button type="button" className="tens-toggle" aria-expanded={open} aria-controls={id} aria-label={t('entries.tensLabel', { range, count: tn.count, amount: money(tn.total), max: money(tn.max) })} onClick={() => { const next = { ...tensToggled, [tn.key]: !open }; setTensToggled(next); rememberTensOpen(next) }}>
             <span className="tens-range">{range}</span>
             <span>{t('entries.tensCount', { count: tn.count })}</span>
-            <span>{t('entries.tensTotal', { amount: money(tn.total) })}</span>
-            <span>{t('entries.tensMax', { amount: money(tn.max) })}</span>
+            <span className="tens-sum">{t('entries.tensTotal', { amount: money(tn.total) })}</span>
+            <span className="tens-sum">{t('entries.tensMax', { amount: money(tn.max) })}</span>
             <span className="mark"><Icon name={open ? 'chevDown' : 'chevRight'} /></span>
           </button>
         </h3>

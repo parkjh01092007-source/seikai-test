@@ -135,6 +135,26 @@ export const showTens = (groups) => groups.reduce((n, g) => n + g.count, 0) > 10
 const md = (date) => date.slice(5).replace('-', '/')
 export const formatTensRange = (g) => (g.from === g.to ? md(g.from) : t('entries.tensRange', { from: md(g.from), to: md(g.to) }))
 
+// ---- 展開したグループの中の、日の枠の頭の記号（⑨。基本・商人・スマホの幅。群青の PC は日の大きな数字があるので出さない。端末ごと。保存データ・書き出し・セーブには入れない）。初めの値は「・」
+export const TENS_BULLET_KEY = 'orenoyome-entry-bullet'
+export const TENS_BULLETS = ['none', 'dot', 'disc', 'dash', 'num', 'circ', 'gt'] // なし・点・丸・線・数字・丸数字・矢印（どれも CSS で描く。書体に字がなくてよい）
+export const TENS_BULLET_LABELS = { none: 'bullet.none', dot: 'bullet.dot', disc: 'bullet.disc', dash: 'bullet.dash', num: 'bullet.num', circ: 'bullet.circ', gt: 'bullet.gt' } // 選択肢の文言（辞書のキー）
+export const DEFAULT_TENS_BULLET = 'dot'
+export const readTensBullet = (storage) => {
+  try {
+    const v = storage.getItem(TENS_BULLET_KEY)
+    return TENS_BULLETS.includes(v) ? v : DEFAULT_TENS_BULLET
+  } catch {
+    return DEFAULT_TENS_BULLET
+  }
+}
+export const saveTensBullet = (storage, value) => {
+  if (!TENS_BULLETS.includes(value)) return
+  try {
+    storage.setItem(TENS_BULLET_KEY, value)
+  } catch { /* 覚えられなくてもよい */ }
+}
+
 // 画面から使う入口
 const browserStorage = () => {
   try {
@@ -151,3 +171,5 @@ export const loadPresetPrompt = () => readPresetPrompt(browserStorage())
 export const rememberPresetPrompt = (value) => savePresetPrompt(browserStorage(), value)
 export const loadTensOpen = () => readTensOpen(browserStorage())
 export const rememberTensOpen = (toggled) => saveTensOpen(browserStorage(), toggled)
+export const loadTensBullet = () => readTensBullet(browserStorage())
+export const rememberTensBullet = (value) => saveTensBullet(browserStorage(), value)

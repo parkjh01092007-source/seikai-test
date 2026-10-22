@@ -16,7 +16,7 @@ import {
 } from '../ledgerLogic.js'
 import { today } from '../today.js'
 import MonthRoad from './MonthRoad.jsx'
-import { OPEN_MODES, OPEN_MODE_LABELS, loadOpenMode, rememberOpenMode, NO_SPEND_SHAPES, NO_SPEND_SHAPE_LABELS, loadNoSpendShape, rememberNoSpendShape, PRESET_PROMPTS, PRESET_PROMPT_LABELS, loadPresetPrompt, rememberPresetPrompt } from '../entryView.js'
+import { OPEN_MODES, OPEN_MODE_LABELS, loadOpenMode, rememberOpenMode, NO_SPEND_SHAPES, NO_SPEND_SHAPE_LABELS, loadNoSpendShape, rememberNoSpendShape, TENS_BULLETS, TENS_BULLET_LABELS, loadTensBullet, rememberTensBullet, formatDayHead, PRESET_PROMPTS, PRESET_PROMPT_LABELS, loadPresetPrompt, rememberPresetPrompt } from '../entryView.js'
 import { SETTINGS_GROUPS, SETTINGS_SECTIONS, tabDomId, panelDomId } from '../settingsSections.js'
 import Tabs from './Tabs.jsx'
 import { versionLabel, BUILT_AT, CURRENT_BUILD } from '../pwa.js'
@@ -99,6 +99,37 @@ function PresetPromptSelect() {
         </select>
       </label>
       <p className="note">{t('presets.promptNote')}</p>
+    </div>
+  )
+}
+
+// 展開したグループの、日の枠の頭の記号（基本・商人・スマホの幅。群青の PC は出さないので、設定も出さない）。ブラウザごとに覚える（保存データには入れない）
+// 選択欄の右に、実際の日の枠と同じ作り（entries.css の記号の規則）で例を出す。読み上げは飛ばす
+function TensBulletSelect() {
+  const [value, setValue] = useState(loadTensBullet)
+  const change = (next) => {
+    rememberTensBullet(next)
+    setValue(next)
+  }
+  return (
+    <div className="bullet-set">
+      <div className="bullet-set-main">
+        <label className="open-mode">
+          {t('bullet.label')}{' '}
+          <select value={value} onChange={(e) => change(e.target.value)}>
+            {TENS_BULLETS.map((v) => <option key={v} value={v}>{t(TENS_BULLET_LABELS[v])}</option>)}
+          </select>
+        </label>
+        <p className="note">{t('bullet.note')}</p>
+      </div>
+      <div className="bullet-ex-wrap" aria-hidden="true">
+        <p className="bullet-ex-cap">{t('bullet.exampleLabel')}</p>
+        <div className="bullet-ex" data-bullet={value}>
+          {['2026-10-11', '2026-10-12', '2026-10-13'].map((d) => (
+            <section key={d} className="day"><h3><span className="day-toggle"><span>{formatDayHead(d, 1)}</span></span></h3></section>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
@@ -299,6 +330,7 @@ export default function Settings({ driveSync, data, update, openPanel, replaceDa
         <OpenModeSelect side="pc" label={t('entries.openModePc')} />
         <PresetPromptSelect />
         {gunjoPc && <NoSpendShapeSelect currency={data.settings.currency} />}
+        {!gunjoPc && <TensBulletSelect />}
       </>
     ),
     favorites: () => (
