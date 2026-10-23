@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import './drivebusy.css'
 import { t } from '../text.js'
 import { usePhone } from '../layout.js'
+import { useGunjoPc } from '../gunjoPc.js'
 import { BUSY_EVENT, getBusy } from '../driveStore.js'
 
 // ドライブと通信している間の表示（⑫）。数えるのは driveStore.js の call()。
@@ -11,9 +12,22 @@ import { BUSY_EVENT, getBusy } from '../driveStore.js'
 // 見える文字は英語の LOADING 固定（aria-hidden）。読み上げは、見えない文字 drive.busy
 const SHOW_AFTER = 600
 const SHOW_MIN = 500
+// 群青の PC：点の点滅のかわりに、小さな月の満ち欠け（8 段階・0.2 秒ごと・一周 1.6 秒）。新月→右から満ちる→満月→左から欠ける→新月
+const MOON_STEPS = 8
+const MOON_MS = 200
+function moonPath(i) {
+  const c = 9, r = 7.5, p = i / MOON_STEPS, f = (1 - Math.cos(2 * Math.PI * p)) / 2, right = p < 0.5
+  if (f < 0.005) return null
+  if (f > 0.995) return <circle className="lit" cx={c} cy={c} r={r} />
+  const k = (Math.abs(2 * f - 1) * r).toFixed(2)
+  return <path className="lit" d={`M${c} ${c - r}A${r} ${r} 0 0 ${right ? 1 : 0} ${c} ${c + r}A${k} ${r} 0 0 ${(f > 0.5) === right ? 1 : 0} ${c} ${c - r}Z`} />
+}
 
 export default function DriveBusy() {
   const phone = usePhone()
+  const gunjoPc = useGunjoPc()
+  const [step, setStep] = useState(0) // 群青の PC：月のコマ
+  const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches // 動きを止める設定：月は出さず、文字だけ
   const ref = useRef(null)
   const [want, setWant] = useState(null) // 今出したい形：'curtain'・'corner'・null
   const [now, setNow] = useState(false) // 人が押した操作の最中（待たずに、すぐ出す）
@@ -40,6 +54,14 @@ export default function DriveBusy() {
     const id = setTimeout(() => setShown(null), Math.max(0, SHOW_MIN - (Date.now() - since.current)))
     return () => clearTimeout(id)
   }, [want, shown, now])
+
+  // 群青の PC の月：出ている間だけコマを進める。動きを止める設定のときは、進めない（CSS でも月ごと隠す）
+  useEffect(() => {
+    if (!gunjoPc || still || shown !== 'corner') return
+    setStep(0)
+    const id = setInterval(() => setStep((n) => (n + 1) % MOON_STEPS), MOON_MS)
+    return () => clearInterval(id)
+  }, [gunjoPc, still, shown])
 
   // 最前面の層に出し入れする。あとから開いた確認画面の下にならないよう、通信の数が変わるたびに出し直す（確認画面が開いているときだけ）
   useEffect(() => {
@@ -69,8 +91,9 @@ export default function DriveBusy() {
       <span className="sr-only">{t('drive.busy')}</span>
       <span className="db-box" aria-hidden="true">
         {shown === 'curtain' ? <span className="db-hop"><i /><i /><i /></span> : null}
+        {shown === 'corner' && gunjoPc && !still ? <svg className="db-moon" width="18" height="18" viewBox="0 0 18 18" data-step={step}><circle className="ring" cx="9" cy="9" r="7.5" />{moonPath(step)}</svg> : null}
         <span className="db-text">LOADING</span>
-        {shown === 'corner' ? <span className="db-dots"><i /><i /><i /></span> : null}
+        {shown === 'corner' && !gunjoPc ? <span className="db-dots"><i /><i /><i /></span> : null}
       </span>
     </div>
   )

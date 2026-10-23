@@ -336,7 +336,7 @@ export default function App() {
     problem !== null && { key: 'autosave', text: t('save.autosaveFailed'), title: problem, onPress: retryAutosave },
     driveSync.kind && { key: 'drive', text: driveText[driveSync.kind], title: driveTitle[driveSync.kind], onPress: drivePress },
   ].filter(Boolean)
-  const notice = notices.length > 0 && <>{notices.map((n) => <button key={n.key} type="button" className="autosave-problem" title={n.title} onClick={n.onPress}>{n.text}</button>)}</>
+  const notice = notices.length > 0 && <>{notices.map((n) => <button key={n.key} type="button" className="autosave-problem" title={n.title} onClick={n.onPress}>{n.text}{gunjoPc && <small className="why">{n.title}</small>}</button>)}</>
   const noticeRows = notices.length > 0 && <div className="notice-rows">{notices.map((n) => <button key={n.key} type="button" className="autosave-problem notice-row" title={n.title} onClick={n.onPress}>{n.text}</button>)}</div>
   // 新しい版のお知らせ。PC は右上の帯、スマホは中身の一番上（上の帯のすぐ下。重ねずに流れの中に置くので、入力の欄を隠さない）
   const updateNotice = newBuild && !newer && (

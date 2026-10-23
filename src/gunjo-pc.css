@@ -99,6 +99,10 @@
   :root[data-theme='gunjo'] dialog.confirm .extra { margin-bottom: 22px; }
   :root[data-theme='gunjo'] dialog.confirm .typed { margin-bottom: 22px; }
   :root[data-theme='gunjo'] dialog.confirm.conflict .note-line { margin-bottom: 22px; }
+  /* c1：食い違いの確認画面の 2 つの枠。枠は群青 1px、見出しは明朝 16px の群青。中身の字（日時・件数）はゴシック 15px のまま。「新しい」の印は入れない */
+  :root[data-theme='gunjo'] dialog.confirm.conflict .side { border: 1px solid var(--color-accent); padding: 12px 14px; }
+  :root[data-theme='gunjo'] dialog.confirm.conflict .side h3 { margin: 0 0 6px; font-family: var(--font-mincho); font-size: 16px; font-weight: 500; line-height: 1.5; letter-spacing: 0.06em; color: var(--color-accent); }
+  :root[data-theme='gunjo'] dialog.confirm.conflict .sides { gap: 12px; }
 
   /* ---- セーブ・ロード画面（月の暦。SaveLoadPanel.jsx の dialog.g-sl。見本：E-save.html・E-load.html。区切り13-b）----
      幅 1010px・上に 30 日の目盛り（右端が今日。古いものは左端に寄せる）・左に一覧・右に選んだ 1 つの詳細。一覧と詳細は、はみ出したら、それぞれ中でスクロール。
@@ -661,6 +665,10 @@
   :root[data-theme='gunjo'] .main-col.has-band > header .g-notices { position: absolute; top: calc(100% + 10px); right: 0; z-index: 3; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; width: max-content; max-width: 380px; }
   :root[data-theme='gunjo'] .g-notices:empty { display: none; }
   :root[data-theme='gunjo'] .g-notices :is(button, .update-notice) { display: flex; align-items: center; gap: 8px; box-sizing: border-box; height: 26px; max-width: 380px; margin: 0; padding: 0 12px; border: 0; border-radius: 0; background: #fff; color: var(--g-red-deep); font-family: var(--font-gothic); font-size: 13px; line-height: 26px; text-align: left; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: var(--g-btn-shadow); cursor: pointer; }
+  /* c3：札の2行目に理由（今の title と同じ文。全文は title で読める）。2行目は折り返さず 1 行（長い分は …）。札を 3 つ並べても帯 S（172px）に収まるよう、理由つきの札は 32px、札の間 2px、箱は header のすぐ下（2px）から並べる */
+  :root[data-theme='gunjo'] .main-col.has-band > header .g-notices:has(.why) { top: calc(100% + 2px); gap: 2px; }
+  :root[data-theme='gunjo'] .g-notices button:has(.why) { display: block; height: auto; padding: 1px 12px; line-height: 16px; }
+  :root[data-theme='gunjo'] .g-notices .why { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; line-height: 14px; color: #55567A; font-weight: 400; }
   :root[data-theme='gunjo'] .main-col.has-band > header .g-notices .update-notice { padding: 0 0 0 12px; line-height: 26px; color: var(--g-deep); font-size: 13px; cursor: default; }
   :root[data-theme='gunjo'] .g-notices .update-notice button { height: 26px; padding: 0 12px; background: var(--color-accent); color: #fff; box-shadow: none; }
 
@@ -814,4 +822,11 @@
   :root[data-theme='gunjo'] .g-keypad .key.eq { font-size: 24px; }
   :root[data-theme='gunjo'] .g-keypad .key.insert { border-color: var(--g-deep); background: var(--color-accent); color: var(--color-on-accent); font-size: 18px; }
   :root[data-theme='gunjo'] .g-keypad .key.insert:disabled { opacity: 0.4; box-shadow: none; }
+  /* c2：ドライブ通信中の表示（DriveBusy.jsx。右下。操作はふさがない）。点の点滅のかわりに、小さな月の満ち欠け。白い札・青の細い枠・3px の影・明朝 13px */
+  :root[data-theme='gunjo'] .drive-busy.corner { height: 30px; box-sizing: border-box; padding: 0 12px; display: flex; align-items: center; background: #fff; border: 1px solid var(--color-accent); box-shadow: 3px 3px 0 var(--g-deep); font-family: var(--font-mincho); font-weight: 500; }
+  :root[data-theme='gunjo'] .drive-busy.corner:has(.db-moon) { padding-left: 8px; }
+  :root[data-theme='gunjo'] .drive-busy.corner .db-box { gap: 8px; }
+  :root[data-theme='gunjo'] .drive-busy .db-moon { display: block; flex: none; }
+  :root[data-theme='gunjo'] .drive-busy .db-moon .ring { fill: none; stroke: var(--color-accent); stroke-width: 1.2; }
+  :root[data-theme='gunjo'] .drive-busy .db-moon .lit { fill: var(--color-accent); }
 }
