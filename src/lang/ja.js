@@ -247,6 +247,7 @@ export default {
   // 金額の電卓（作業32。spec-ledger.md 5.16）
   'calc.name': '電卓',
   'calc.insert': '入れる',
+  'calc.canInsert': '入れられる',
   'calc.clear': '全部消す',
   'calc.backspace': '1文字消す',
   'calc.error.incomplete': '式が途中です',

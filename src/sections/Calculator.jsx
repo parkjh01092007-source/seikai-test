@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import './calc.css'
 import { Icon } from './Icon.jsx'
@@ -33,6 +33,33 @@ const ROWS = [
   [['0', '0'], ['00', '00'], ['.', '.'], ['+', '+', 'op']],
 ]
 
+// 群青の PC の月（E-rules.html 15章）：入れられる＝満月（full）、式が途中＝欠けた月（part）、ほかの理由＝点線の月（dash）。answer の結果から形を選ぶだけ（新しい判断は持たない）。
+// 名前（title・aria-label）は、理由の文と同じ。入れられるときは「入れられる」
+const moonOf = (answer) => (!answer?.error ? 'full' : answer.error === 'incomplete' ? 'part' : 'dash')
+function Moon({ answer, className }) {
+  const id = useId()
+  const kind = moonOf(answer)
+  const label = answer?.error ? ERROR_TEXT[answer.error]() : t('calc.canInsert')
+  return (
+    <svg className={className} role="img" aria-label={label} data-moon={kind} width="130" height="130" viewBox="0 0 130 130">
+      <title>{label}</title>
+      <defs>
+        <radialGradient id={`${id}g`} cx="38%" cy="42%" r="70%"><stop offset="0" stopColor="#FFFFFF" /><stop offset="1" stopColor="#E4E3FF" /></radialGradient>
+        <radialGradient id={`${id}h`}><stop offset=".55" stopColor="#fff" stopOpacity=".32" /><stop offset="1" stopColor="#fff" stopOpacity="0" /></radialGradient>
+      </defs>
+      {kind === 'dash'
+        ? <circle cx="65" cy="65" r="41.6" fill="rgba(255,255,255,.06)" stroke="#fff" strokeWidth="1.6" strokeDasharray="3 4" />
+        : <>
+          <circle cx="65" cy="65" r="64.5" fill={`url(#${id}h)`} />
+          <circle cx="65" cy="65" r="41.6" fill="rgba(255,255,255,.12)" stroke="rgba(255,255,255,.45)" strokeWidth="1" />
+          <path d={kind === 'full' ? 'M23.4 65a41.6 41.6 0 1 0 83.2 0a41.6 41.6 0 1 0 -83.2 0Z' : 'M65 23.4A41.6 41.6 0 0 0 65 106.6A23.3 41.6 0 0 1 65 23.4Z'} fill={`url(#${id}g)`} stroke="#fff" strokeWidth="1.2" />
+        </>}
+    </svg>
+  )
+}
+// 空の星（3個。群青の PC のキーパッドだけ）：[左, 上, 大きさ]
+const STARS = [[236, 40, 7], [392, 74, 6], [250, 88, 5]]
+
 // 式を1行に収める。入りきらないときは、前の方を記号の区切りで省いて「… 」にする（いま打っている式の最後は、必ず見せる）。幅は、置かれた箱の幅
 function FitExpr({ text, className }) {
   const ref = useRef(null)
@@ -53,6 +80,7 @@ function FitExpr({ text, className }) {
 
 // キーパッド。initial：金額の欄の今の文字（数字なら式の初めに入れる）。onInsert(四捨五入した整数の文字)・onClose()。どちらも、呼んだあとは呼んだ側が閉じる
 export function Keypad({ initial, onInsert, onClose }) {
+  const gunjoPc = useGunjoPc()
   const dialogRef = useRef(null)
   const insertRef = useRef(null)
   const cancelRef = useRef(null)
@@ -76,7 +104,7 @@ export function Keypad({ initial, onInsert, onClose }) {
   return createPortal(
     <dialog
       ref={dialogRef}
-      className="keypad"
+      className={`keypad${gunjoPc ? ' g-keypad' : ''}`}
       aria-label={t('calc.name')}
       onCancel={(e) => { e.preventDefault(); onClose() }}
       onClick={(e) => { if (e.target === dialogRef.current) onClose() }} // 外（幕）を押したとき
@@ -84,6 +112,10 @@ export function Keypad({ initial, onInsert, onClose }) {
     >
       <div className="keypad-body">
         <div className="keypad-display" aria-live="polite">
+          {gunjoPc && <>
+            {STARS.map(([left, top, size]) => <svg key={left} className="keypad-star" style={{ left, top }} width={size} height={size} viewBox="0 0 10 10" aria-hidden="true"><path d="M5 0L6 4L10 5L6 6L5 10L4 6L0 5L4 4Z" fill="#fff" /></svg>)}
+            <Moon className="keypad-moon" answer={answer ?? { error: 'incomplete' }} />
+          </>}
           <FitExpr className="keypad-expr" text={formatExpr(expr)} />
           {/* 入れられない理由は、答えの代わりに、答えの行に出す（行の高さは変えない。下のキーが動かない） */}
           <div className="keypad-answer">{answer?.error ? <span className="keypad-reason">{ERROR_TEXT[answer.error]()}</span> : answerLine(expr, answer)}</div>
@@ -196,6 +228,7 @@ export function AmountInput({ value, onChange, label, focusRequest = 0 }) {
         <span className="calc-band" role="group" aria-label={t('calc.name')} ref={bandRef}>
           {/* 上の行：式と答え。式に記号がないときは出さない（欄に打った数字と同じなので）。理由は、答えの代わりにここへ（行の高さは同じ） */}
           <span className="calc-band-line" hidden={!expression}>
+            {gunjoPc && expression && <Moon className="calc-band-moon" answer={answer} />}
             <FitExpr className="calc-band-expr" text={expression ? formatExpr(value) : ''} />
             <span className={`calc-band-answer${answer?.error ? ' error' : ''}`} aria-live="polite" title={answer?.error ? ERROR_TEXT[answer.error]() : undefined}>{answer?.error ? ERROR_TEXT[answer.error]() : text}</span>
           </span>

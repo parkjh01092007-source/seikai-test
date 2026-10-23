@@ -280,6 +280,7 @@ export default {
   // 금액 계산기 (작업32)
   'calc.name': '계산기',
   'calc.insert': '입력',
+  'calc.canInsert': '입력할 수 있음',
   'calc.clear': '전체 지우기',
   'calc.backspace': '한 글자 지우기',
   'calc.error.incomplete': '식이 끝나지 않았습니다',

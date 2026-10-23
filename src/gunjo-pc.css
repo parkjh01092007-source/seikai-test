@@ -764,4 +764,35 @@
   :root[data-theme='gunjo'] .g-fold summary small { font-size: 10px; letter-spacing: 0.35em; color: var(--color-accent); }
   :root[data-theme='gunjo'] .g-fold summary .value { margin: 0; font-family: var(--font-gothic); font-size: 13px; font-weight: 400; }
   :root[data-theme='gunjo'] .g-fold .note { margin: 6px 0; font-size: 13px; }
+
+  /* ---- 電卓（区切り14。E-rules.html 15章）：空（群青の青）・14°の地平線・星・月。月は Calculator.jsx が useGunjoPc() のときだけ出す。新しい色は使わない（#d6d5ff・#fff は月の道・帯と同じ） ---- */
+  /* 帯：上の行が空（青）で、下の端を斜めの地平線で白く切る。月の印（円の直径 24px。絵は 38px）・式・答え。理由は、答えの所の白い札に赤い字（行の高さは同じ） */
+  :root[data-theme='gunjo'] .calc-band, :root[data-theme='gunjo'] .g-slip .calc-band { gap: 0; padding: 0; border-color: var(--color-accent); background: #fff; box-shadow: 6px 6px 0 var(--g-deep); overflow: hidden; }
+  :root[data-theme='gunjo'] .calc-band-line { position: relative; box-sizing: border-box; height: 56px; gap: 8px; padding: 0 12px; background: var(--color-accent); }
+  :root[data-theme='gunjo'] .calc-band-line::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 10px; background: #fff; clip-path: polygon(0 100%, 100% 0, 100% 100%, 0 100%); }
+  :root[data-theme='gunjo'] .calc-band-moon { flex: none; width: 38px; height: 38px; margin: 0 -4px; pointer-events: none; }
+  :root[data-theme='gunjo'] .calc-band-expr { position: relative; z-index: 1; font-family: var(--font-mincho); color: #d6d5ff; }
+  :root[data-theme='gunjo'] .calc-band-answer { position: relative; z-index: 1; font-family: var(--font-mincho); color: #fff; }
+  :root[data-theme='gunjo'] .calc-band-answer.error { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; box-sizing: border-box; max-height: 40px; padding: 2px 8px; background: #fff; color: var(--color-error); font-family: var(--font-gothic); font-size: 14px; line-height: 18px; white-space: normal; }
+  :root[data-theme='gunjo'] .calc-band-tools { align-self: stretch; padding: 8px 12px; }
+
+  /* 大きなキーパッド（幅 420px）：上は空（高さ 196px）、下の端 40px は白い地平線。式は左上、月は右上（答えの数字にかけない）、答えは月の下の行（高さ 48px）。星は 3 個 */
+  :root[data-theme='gunjo'] .g-keypad { width: 420px; max-width: calc(100% - 32px); border-color: var(--color-accent); border-radius: 0; background: #fff; box-shadow: var(--g-dialog-shadow); overflow: hidden; }
+  :root[data-theme='gunjo'] .g-keypad .keypad-body { padding: 0; }
+  :root[data-theme='gunjo'] .g-keypad .keypad-display { position: relative; height: 196px; margin: 0; overflow: hidden; background: var(--color-accent); text-align: left; }
+  :root[data-theme='gunjo'] .g-keypad .keypad-display::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 40px; background: #fff; clip-path: polygon(0 100%, 100% 0, 100% 100%, 0 100%); }
+  :root[data-theme='gunjo'] .g-keypad .keypad-star { position: absolute; pointer-events: none; }
+  :root[data-theme='gunjo'] .g-keypad .keypad-moon { position: absolute; right: 14px; top: -14px; pointer-events: none; }
+  :root[data-theme='gunjo'] .g-keypad .keypad-expr { position: absolute; z-index: 1; left: 18px; right: 150px; top: 12px; font-family: var(--font-mincho); color: #d6d5ff; }
+  :root[data-theme='gunjo'] .g-keypad .keypad-answer { position: absolute; z-index: 1; left: 18px; right: 18px; bottom: 50px; justify-content: flex-start; font-family: var(--font-mincho); color: #fff; }
+  :root[data-theme='gunjo'] .g-keypad .keypad-reason { box-sizing: border-box; max-height: 44px; padding: 2px 8px; overflow: hidden; background: #fff; color: var(--color-error); font-family: var(--font-gothic); line-height: 20px; }
+  /* キー：枠のない大きな数字（24px の明朝。演算だけ青い字。関数キーは 18px で、細い線で区切る）。やめる・＝・入れる は、白と青のボタン（高さ 48px） */
+  :root[data-theme='gunjo'] .g-keypad .keypad-keys { gap: 0; padding: 0 8px 16px; background: #fff; }
+  :root[data-theme='gunjo'] .g-keypad .key { box-sizing: border-box; height: 54px; min-height: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; color: var(--color-text); font-family: var(--font-mincho); font-size: 24px; cursor: pointer; }
+  :root[data-theme='gunjo'] .g-keypad .key.fn { height: 40px; border-bottom: 1px solid var(--color-border); font-size: 18px; }
+  :root[data-theme='gunjo'] .g-keypad .key.op { color: var(--color-accent); font-weight: 500; }
+  :root[data-theme='gunjo'] .g-keypad :is(.key.cancel, .key.eq, .key.insert) { height: 48px; margin: 8px 6px 0; border: 1px solid var(--color-accent); background: #fff; color: var(--color-accent); box-shadow: var(--g-btn-shadow); font-size: 16px; }
+  :root[data-theme='gunjo'] .g-keypad .key.eq { font-size: 24px; }
+  :root[data-theme='gunjo'] .g-keypad .key.insert { border-color: var(--g-deep); background: var(--color-accent); color: var(--color-on-accent); font-size: 18px; }
+  :root[data-theme='gunjo'] .g-keypad .key.insert:disabled { opacity: 0.4; box-shadow: none; }
 }
