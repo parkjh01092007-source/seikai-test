@@ -78,8 +78,8 @@ function SubscriptionRow({ sub, accounts, currency, editing, onEdit, onCancel, o
   const actions = (
     <div className="sub-actions">
       <IconButton icon="edit" label={t('common.edit')} withText={phone} onClick={onEdit} />
-      <button onClick={onToggle}>{sub.active ? t('common.disable') : t('common.enable')}</button>
       <IconButton icon="trash" label={t('common.delete')} withText={phone} className="danger" onClick={onDelete} />
+      <button onClick={onToggle}>{sub.active ? t('common.disable') : t('common.enable')}</button>
     </div>
   )
   if (gunjoPc) {
