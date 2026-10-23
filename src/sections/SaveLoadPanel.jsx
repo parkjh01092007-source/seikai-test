@@ -80,7 +80,8 @@ export default function SaveLoadPanel({ mode, data, loadBlocked = false, onClose
     try {
       const st = await store.status({ request })
       setStatus(st)
-      if (st.state === 'granted') await refresh()
+      // 群青の PC で保存先がドライブのときだけ、一覧を読む間も「人が押した操作」にして、LOADING を待たずに出す（0.6 秒の待ちは、ほかの場面のまま）
+      if (st.state === 'granted') await (gunjoPc && store.kind === 'drive' ? manualOp(refresh) : refresh())
     } catch (e) {
       setError(storeErrorText(errName(e), e.message))
     }
