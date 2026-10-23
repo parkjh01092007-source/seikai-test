@@ -136,6 +136,24 @@
   :root[data-theme='gunjo'] .sl-scale .old, :root[data-theme='gunjo'] .sl-scale .today { position: absolute; top: 84px; font-size: 11px; color: var(--color-muted); }
   :root[data-theme='gunjo'] .sl-scale .old { left: 0; }
   :root[data-theme='gunjo'] .sl-scale .today { right: 0; }
+  /* 玉 36px（目盛りが 900px 未満。SaveLoadPanel.jsx の SMALL_BELOW）。名前は玉の下端の 4px 下 */
+  :root[data-theme='gunjo'] .sl-scale.sm .mark { width: 36px; margin-left: -18px; }
+  :root[data-theme='gunjo'] .sl-scale.sm .mark .name { top: 40px; }
+  :root[data-theme='gunjo'] .sl-scale.sm .mark.on .name { top: 46px; }
+  /* 「日付なし」の段（目盛りの下）：空＝点 12px、壊れ・新しい版＝点線の円（赤い縁）、日付なし＝外枠だけの新月。押すと選ぶだけ。名前は選んだものと、乗せたときだけ */
+  :root[data-theme='gunjo'] .sl-scale.nd { height: 144px; }
+  :root[data-theme='gunjo'] .sl-scale .nodate { position: absolute; left: 0; right: 0; top: 104px; height: 20px; }
+  :root[data-theme='gunjo'] .sl-scale .nodate .cap { position: absolute; left: 0; top: 3px; font-size: 11px; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .sl-scale .nodate .it { position: absolute; top: 0; width: 24px; height: 20px; margin-left: -12px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 1; }
+  :root[data-theme='gunjo'] .sl-scale .nodate .it:hover { z-index: 3; }
+  :root[data-theme='gunjo'] .sl-scale .nodate .pt { display: block; width: 12px; height: 12px; border-radius: 50%; background: var(--color-muted); }
+  :root[data-theme='gunjo'] .sl-scale .nodate .it.on .pt { background: var(--color-accent); }
+  :root[data-theme='gunjo'] .sl-scale .nodate .sl-moon.dotted .ring { stroke: var(--color-error); }
+  :root[data-theme='gunjo'] .sl-scale .nodate .it.on .sl-moon.dotted .ring { fill: #fff; }
+  :root[data-theme='gunjo'] .sl-scale .nodate .it.on .sl-moon .ring { stroke-width: 2.5; }
+  :root[data-theme='gunjo'] .sl-scale .nodate .name { display: none; position: absolute; top: 22px; left: 50%; transform: translateX(-50%); white-space: nowrap; pointer-events: none; font-size: 11px; line-height: 13px; color: var(--color-muted); background: #fff; }
+  :root[data-theme='gunjo'] .sl-scale .nodate .it.on .name { color: var(--color-accent); font-weight: 700; }
+  :root[data-theme='gunjo'] .sl-scale .nodate .it.on .name,   :root[data-theme='gunjo'] .sl-scale .nodate .it:hover .name { display: block; }
 
   /* 左の一覧・右の詳細 */
   :root[data-theme='gunjo'] .sl-cols { display: grid; grid-template-columns: 400px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 30px; margin-top: 2px; flex: 1 1 auto; min-height: 0; }

@@ -17,8 +17,10 @@ const SETTINGS_HASH = toHash({ entry: 'ledger', tab: 'settings', detailId: null 
 // ---- 群青の PC の「月の暦」（見本：design-ref/gunjo-pc/E-save.html・E-load.html）。形と月の計算は saveMoon.js ----
 const SCALE_PX = 930 // 目盛りの長さ（見本の幅）。実際の長さを測れるまでの値
 const MOON_PX = 44 // 玉の大きさ。近いセーブは、この間隔までずらして並べる
+const MOON_PX_SMALL = 36 // 目盛りが SMALL_BELOW 未満のときの玉の大きさ（窓が狭いと、玉が目盛りからはみ出すため）
+const SMALL_BELOW = 900
 const MOON_TOP = 6 // 玉の上の位置（選んだ玉は 0＝6px 持ち上げる）
-const LABEL_TOP = 54 // 名前の上の位置（玉の下端 50 より下。選んだ名前もほかと同じ高さ）
+const LABEL_GAP = 4 // 玉の下端から名前までの間（選んだ名前もほかと同じ高さ）
 const LABEL_H = 13 // 名前の高さ
 const LABEL_EM = 11 // 名前の 1 文字の幅（11px の全角。重なりを調べるときの見込み）
 const LABEL_PX = 70 // 名前を出す間隔の目安
@@ -227,32 +229,47 @@ export default function SaveLoadPanel({ mode, data, loadBlocked = false, onClose
     const { slot, view } = current
     // 目盛り：日付のあるセーブだけ。選んだもの、次に右（新しい）ものから順に、重ならないものだけ名前を出す。ほかは月の上に乗せたとき出す
     // 位置は日付どおり（pos）。近くて玉が重なるものだけ、表示の位置（x）を横にずらす。名前の重なりは、ずらしたあとの位置で見る
+    const moonPx = axisW < SMALL_BELOW ? MOON_PX_SMALL : MOON_PX
+    const labelTop = MOON_TOP + moonPx + LABEL_GAP
     const dated = rows.filter((r) => r.fraction !== null).map((r) => ({ ...r, pos: scalePosition(r.view.savedAt, now) }))
-    const xs = spreadPositions(dated.map((r) => r.pos), MOON_PX / axisW)
+    const xs = spreadPositions(dated.map((r) => r.pos), moonPx / axisW)
     const marks = dated.map((r, i) => ({ ...r, x: xs[i] }))
-    const moonBox = (m) => { const t = m.slot.file === slot.file ? 0 : MOON_TOP; return { l: m.x * axisW - MOON_PX / 2, r: m.x * axisW + MOON_PX / 2, t, b: t + MOON_PX } }
-    const labelBox = (m) => { const w = [...m.slot.label].length * LABEL_EM; return { l: m.x * axisW - w / 2, r: m.x * axisW + w / 2, t: LABEL_TOP, b: LABEL_TOP + LABEL_H } }
+    const moonBox = (m) => { const t = m.slot.file === slot.file ? 0 : MOON_TOP; return { l: m.x * axisW - moonPx / 2, r: m.x * axisW + moonPx / 2, t, b: t + moonPx } }
+    const labelBox = (m) => { const w = [...m.slot.label].length * LABEL_EM; return { l: m.x * axisW - w / 2, r: m.x * axisW + w / 2, t: labelTop, b: labelTop + LABEL_H } }
     const shown = []
     for (const m of marks.slice().sort((a, b) => (b.slot.file === slot.file) - (a.slot.file === slot.file) || b.pos - a.pos)) {
       if (m.slot.file === slot.file || (shown.every((x) => Math.abs(x.x - m.x) * axisW >= LABEL_PX) && labelClear(labelBox(m), marks.filter((o) => o !== m).map(moonBox)))) shown.push(m)
     }
+    // 日付のないスロット（空・壊れ・新しい版・日付なし）は、目盛りの下の「日付なし」の段に並べる（スロットの順）
+    const undated = rows.filter((r) => r.fraction === null)
     const detailMain = view.main.filter((c) => c.key !== 'free')
     const unreadable = view.status === 'newer' || view.status === 'broken' // 読めないスロットには、上書きしない（先に削除する）
     return (
       <>
-        <div className="sl-scale" aria-hidden="true">
+        <div className={`sl-scale${moonPx < MOON_PX ? ' sm' : ''}${undated.length ? ' nd' : ''}`} aria-hidden="true">
           <div className="axis" ref={axisRef}>
             <div className="line" />
             {Array.from({ length: MOON_DAYS + 1 }, (_, k) => <i key={k} className={k % 5 === 0 ? 'long' : ''} style={{ left: `${(k / MOON_DAYS) * 100}%` }} />)}
             {marks.map((m) => (
               <div key={m.slot.file} className={`mark${m.slot.file === slot.file ? ' on' : ''}${shown.includes(m) ? ' named' : ''}${m.x * axisW < 35 ? ' edge' : ''}`} style={{ left: `${m.x * 100}%` }} onClick={() => pickFromScale(m.slot.file)}>
-                <Moon kind="moon" fraction={m.fraction} size={44} />
+                <Moon kind="moon" fraction={m.fraction} size={moonPx} />
                 <span className="name">{m.slot.label}</span>
               </div>
             ))}
           </div>
           <span className="old">{t('save.scaleOld')}</span>
           <span className="today">▼ {t('save.scaleToday')}</span>
+          {undated.length > 0 && (
+            <div className="nodate">
+              <span className="cap">{t('save.scaleNoDate')}</span>
+              {undated.map((r, i) => (
+                <div key={r.slot.file} className={`it${r.slot.file === slot.file ? ' on' : ''}`} style={{ left: `${82 + i * 32}px` }} onClick={() => pickFromScale(r.slot.file)}>
+                  {r.view.status === 'empty' ? <span className="pt" /> : <Moon kind={r.kind} size={20} />}
+                  <span className="name">{r.slot.label}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <div className="sl-cols">
           <ul className="sl-list">
