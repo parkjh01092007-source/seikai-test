@@ -778,6 +778,7 @@
 
   /* 大きなキーパッド（幅 420px）：上は空（高さ 196px）、下の端 40px は白い地平線。式は左上、月は右上（答えの数字にかけない）、答えは月の下の行（高さ 48px）。星は 3 個 */
   :root[data-theme='gunjo'] .g-keypad { width: 420px; max-width: calc(100% - 32px); border-color: var(--color-accent); border-radius: 0; background: #fff; box-shadow: var(--g-dialog-shadow); overflow: hidden; }
+  :root[data-theme='gunjo'] .g-keypad:focus { outline: none; } /* 押せなくなったとき、フォーカスは箱自身に戻る（枠は出さない） */
   :root[data-theme='gunjo'] .g-keypad .keypad-body { padding: 0; }
   :root[data-theme='gunjo'] .g-keypad .keypad-display { position: relative; height: 196px; margin: 0; overflow: hidden; background: var(--color-accent); text-align: left; }
   :root[data-theme='gunjo'] .g-keypad .keypad-display::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 40px; background: #fff; clip-path: polygon(0 100%, 100% 0, 100% 100%, 0 100%); }

@@ -93,6 +93,13 @@ export function Keypad({ initial, onInsert, onClose }) {
     ;(insertRef.current.disabled ? cancelRef.current : insertRef.current).focus() // 入力欄ではなく、ボタンに置く（キーボードを出さない）
   }, [])
 
+  // 群青の PC：「入れる」が押せなくなってフォーカスを失ったら（式の途中）、ダイアログ自身へ戻す。キーはダイアログが受けるので、続きが打てる
+  useEffect(() => {
+    const d = dialogRef.current
+    const active = document.activeElement
+    if (gunjoPc && !ok && (!d.contains(active) || active.disabled)) d.focus() // 押せなくなったボタンは、このときまだ activeElement に残っている
+  }, [gunjoPc, ok])
+
   const key = (k) => setExpr((e) => press(e, k))
   // キーボードの数字・記号・Backspace（⌫）・Delete（C）・=・Enter（入れる）。フォーカスは、いつもボタンにある（入力欄ではない）
   const keyDown = (e) => {
@@ -106,6 +113,7 @@ export function Keypad({ initial, onInsert, onClose }) {
       ref={dialogRef}
       className={`keypad${gunjoPc ? ' g-keypad' : ''}`}
       aria-label={t('calc.name')}
+      tabIndex={gunjoPc ? -1 : undefined}
       onCancel={(e) => { e.preventDefault(); onClose() }}
       onClick={(e) => { if (e.target === dialogRef.current) onClose() }} // 外（幕）を押したとき
       onKeyDown={keyDown}
