@@ -17,3 +17,15 @@
   .adjustment form > button { flex: 1 1 100%; }
   .adjustment form > .error, .adjustment form > .note:not(.current) { flex: 1 1 100%; }
 }
+
+/* 群青の PC の残高調整の動き（判子が落ちて押される・箱が少し沈む）。名前だけここに置く（gunjo-pc.css の PC の形の外には、何も置けないため）。使うのは gunjo-pc.css の規則だけで、動きを止める設定のときは、そちらで止める */
+@keyframes g-stamp-in { 0% { transform: scale(2.6) rotate(-34deg); opacity: 0; } 52% { transform: scale(0.88) rotate(-12deg); opacity: 1; } 68% { transform: scale(1.07) rotate(-12deg); } 100% { transform: scale(1) rotate(-12deg); opacity: 1; } }
+@keyframes g-thud-a { 0%, 50% { transform: none; } 58% { transform: translateY(4px); } 72% { transform: translateY(-1px); } 100% { transform: none; } }
+@keyframes g-thud-b { 0%, 50% { transform: none; } 58% { transform: translateY(4px); } 72% { transform: translateY(-1px); } 100% { transform: none; } }
+
+/* 動きを止める設定（prefers-reduced-motion）：群青の PC の残高調整の、傾き・判子・箱の沈み・つりあいの札は、動かさない（結果の形は、最初から出る）。
+   gunjo-pc.css の中には、固定・押し出しのほかの @media を置けないので、ここに置く。対象の class（.g-bal・.g-adj-stamp・.g-adjbox）は、群青の PC の画面にしかない */
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme='gunjo'] .g-scale :is(.beam, .pan, .chip) { transition: none !important; }
+  :root[data-theme='gunjo'] .g-adj-stamp, :root[data-theme='gunjo'] .g-adjbox.thud-a, :root[data-theme='gunjo'] .g-adjbox.thud-b { animation: none !important; }
+}

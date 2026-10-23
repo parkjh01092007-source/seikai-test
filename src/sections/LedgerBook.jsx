@@ -8,6 +8,9 @@ import { useGunjoPc } from '../gunjoPc.js'
 import { useBandHost } from './bandHost.js'
 import { BandStat } from './PageBand.jsx'
 import { KIND_LABELS } from './Entries.jsx'
+import Hint from './Hint.jsx'
+import LedgerPicker from './LedgerPicker.jsx'
+import BookArt from './BookArt.jsx'
 
 const Num = ({ n }) => <span className={n < 0 ? 'neg' : ''}>{formatYen(n)}</span>
 
@@ -24,22 +27,27 @@ export default function LedgerBook({ data }) {
   const heroValue = book ? `${book.balance < 0 ? '−' : ''}${formatYen(Math.abs(book.balance))}` : ''
 
   return (
-    <div className={`report${gunjoPc ? ' g-book' : ''}`}>
+    <div className={`report${gunjoPc ? ` g-book${book ? '' : ' g-book-empty'}` : ''}`}>
       {/* 群青の PC：画面の名前は帯のマス。帯に、選んだ科目の残高（マイナスは白地の上で読めるよう、赤にせず「−」を付ける） */}
       {bandHost && book && createPortal(<BandStat label={t('book.heroLabel', { name: book.account.name })} value={heroValue} unit={currencyUnit(data.settings.currency)} />, bandHost)}
       {!gunjoPc && <h2>{t('book.title')}</h2>}
-      <div className="month-bar">
-        <select aria-label={t('common.account')} value={accountId} onChange={(e) => setAccountId(e.target.value)}>
-          <option value="">{t('common.chooseAccount')}</option>
-          {groupByType(accounts).map((g) => (
-            <optgroup key={g.type} label={g.label}>
-              {g.accounts.map((a) => <option key={a.id} value={a.id}>{a.name}{!a.active && t('common.inactive')}</option>)}
-            </optgroup>
-          ))}
-        </select>
-        <input type="month" aria-label={t('common.month')} value={month} onChange={(e) => setMonth(e.target.value)} />
-        <button type="button" onClick={() => setMonth('')}>{t('common.allPeriod')}</button>
-      </div>
+      {gunjoPc
+        ? <LedgerPicker accounts={accounts} entries={entries} accountId={accountId} month={month} onAccount={setAccountId} onMonth={setMonth} />
+        : (
+        <div className="month-bar">
+          <select aria-label={t('common.account')} value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+            <option value="">{t('common.chooseAccount')}</option>
+            {groupByType(accounts).map((g) => (
+              <optgroup key={g.type} label={g.label}>
+                {g.accounts.map((a) => <option key={a.id} value={a.id}>{a.name}{!a.active && t('common.inactive')}</option>)}
+              </optgroup>
+            ))}
+          </select>
+          <input type="month" aria-label={t('common.month')} value={month} onChange={(e) => setMonth(e.target.value)} />
+          <button type="button" onClick={() => setMonth('')}>{t('common.allPeriod')}</button>
+        </div>
+        )}
+      {gunjoPc && !book && <><Hint /><BookArt /></>}
       <p className="note">{t('book.note')}</p>
       {book && book.total === 0 && <p className="note">{t('book.empty')}</p>}
       {book && book.total > 0 && phone && (
@@ -88,7 +96,7 @@ export default function LedgerBook({ data }) {
               {book.rows.map((r) => (
                 <tr key={r.entry.id}>
                   <td>{dateText(r.entry.date)}</td>
-                  <td className="text wrap">{name(r.otherId)}</td>
+                  <td className="text wrap">{gunjoPc ? <button type="button" className="lk" onClick={() => setAccountId(r.otherId)}>{name(r.otherId)}</button> : name(r.otherId)}</td>
                   <td>{r.debit !== null && formatYen(r.debit)}</td>
                   <td>{r.credit !== null && formatYen(r.credit)}</td>
                   <td><Num n={r.balance} /></td>

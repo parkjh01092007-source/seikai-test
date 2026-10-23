@@ -364,18 +364,142 @@
   :root[data-theme='gunjo'] .g-opening .g-actions .error { flex: 1 1 100%; }
   :root[data-theme='gunjo'] .g-opening .g-actions .note { flex: 1 1 100%; font-size: 13px; }
 
-  /* ---- 残高調整（Adjustment.jsx。見本 E-adjust）：帯に 1 文。左に札（幅 560px）、右に説明。入力欄の高さは 34px（欄は 34px の決め。見本の 42px にはしない） ---- */
+  /* ---- 残高調整（Adjustment.jsx・BalanceArt.jsx。区切り16-1。見本は orenoyome-tools の plan-adjust-book）----
+     左：幅 clamp(660px, 45vw, 720px) の箱1つ。段＝入力／記録上→実際＝差額（差額が最大）／記録される仕訳／調整するボタン／過去の調整の履歴。枠線は、箱の外側と段の区切りの線だけ。
+     右：青い面（帯の右の切り口と同じ向き・同じ角度＝43px÷172px で、左の縁をそろえる）。三日月（薄く・静止）と、白い細い線の天秤。
+     色：調整益＝緑 #17743A、調整損＝既存の赤（--color-error）、差額0＝色なし。色だけにせず、符号（+／−）と「調整益／調整損」の字も付ける。天秤は白固定。
+     入力欄の高さは 34px（欄は 34px の決め） */
   :root[data-theme='gunjo'] .g-lead { margin: 4px 0 0; font-family: var(--font-mincho); font-size: 17px; line-height: 1.8; color: var(--menu-muted); }
-  :root[data-theme='gunjo'] .g-adjust { display: grid; grid-template-columns: minmax(0, 560px) minmax(0, 1fr); column-gap: 34px; align-items: start; }
-  :root[data-theme='gunjo'] .g-adj .g-form { display: flex; flex-direction: column; align-items: stretch; gap: 8px; margin: 0; }
-  :root[data-theme='gunjo'] .g-adj .fl { display: block; margin: 0; }
-  :root[data-theme='gunjo'] .g-adj select { width: 100%; }
-  :root[data-theme='gunjo'] .g-adj .g-amount-row { display: flex; align-items: center; gap: 8px; }
-  :root[data-theme='gunjo'] .g-adj .g-amount-row input { flex: 1 1 auto; min-width: 0; font-size: 17px; }
-  :root[data-theme='gunjo'] .g-adj button.primary.large { align-self: flex-start; margin-top: 10px; }
-  :root[data-theme='gunjo'] .g-adj .note { margin: 0; font-size: 13px; line-height: 1.7; }
-  :root[data-theme='gunjo'] .g-side { max-width: 340px; padding-top: 8px; }
-  :root[data-theme='gunjo'] .g-side .note { margin: 6px 0; font-size: 13px; line-height: 1.7; }
+  :root[data-theme='gunjo'] { --g-gain: #17743A; --g-gain-bg: #E8F5EC; --g-loss-bg: #FFF1F1; --g-bw: clamp(660px, 45vw, 720px); }
+  :root[data-theme='gunjo'] .g-adjust { position: relative; min-height: calc(100vh - 172px - 50px); }
+  :root[data-theme='gunjo'] .g-adjbox { position: relative; z-index: 1; width: min(var(--g-bw), 100%); padding: 0; container-type: inline-size; }
+  :root[data-theme='gunjo'] .g-adjbox form { display: block; margin: 0; }
+  :root[data-theme='gunjo'] .g-adj-row { padding: 20px 30px; }
+  :root[data-theme='gunjo'] .g-adj-row + .g-adj-row, :root[data-theme='gunjo'] .g-adjbox form + .g-adj-row { border-top: 1px solid var(--color-border); }
+  :root[data-theme='gunjo'] .g-adj-in { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; }
+  :root[data-theme='gunjo'] .g-adj-in .fl { display: block; margin: 0; }
+  :root[data-theme='gunjo'] .g-adj-in select { width: 100%; }
+  :root[data-theme='gunjo'] .g-adj-in .g-amount-row { display: flex; align-items: center; gap: 8px; }
+  :root[data-theme='gunjo'] .g-adj-in .g-amount-row input { flex: 1 1 auto; min-width: 0; font-size: 20px; }
+  /* 記録上 → 実際 ＝ 差額：差額がいちばん大きい。益は薄い緑の地、損は薄い赤の地、差額0は地なし */
+  :root[data-theme='gunjo'] .g-adj-diff { display: grid; grid-template-columns: auto 44px auto 44px minmax(0, 1fr); align-items: end; }
+  :root[data-theme='gunjo'] .g-adj-diff .k { display: block; margin-bottom: 2px; font-family: var(--font-gothic); font-size: 12px; letter-spacing: 0.12em; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-adj-diff .v { display: block; font-family: var(--font-num); font-size: 32px; line-height: 1.15; white-space: nowrap; }
+  :root[data-theme='gunjo'] .g-adj-diff .v small { margin-left: 3px; font-size: 15px; }
+  :root[data-theme='gunjo'] .g-adj-diff .v.empty { color: #8A89AE; }
+  :root[data-theme='gunjo'] .g-adj-diff .v.empty small { color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-adj-diff .op { padding: 0 0 4px 12px; font-family: var(--font-num); font-size: 24px; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-adj-diff .dif { justify-self: end; text-align: right; }
+  :root[data-theme='gunjo'] .g-adj-diff .dif .v { font-size: 58px; line-height: 1.05; }
+  :root[data-theme='gunjo'] .g-adj-diff .dif .v small { font-size: 22px; }
+  :root[data-theme='gunjo'] .g-adj-diff.is-gain { background: var(--g-gain-bg); }
+  :root[data-theme='gunjo'] .g-adj-diff.is-loss { background: var(--g-loss-bg); }
+  :root[data-theme='gunjo'] :is(.g-adj-diff .v, .g-adj-diff .tag, .g-adj-histtab td, .g-adj-pop dd).is-gain { color: var(--g-gain); }
+  :root[data-theme='gunjo'] :is(.g-adj-diff .v, .g-adj-diff .tag, .g-adj-histtab td, .g-adj-pop dd).is-loss { color: var(--color-error); }
+  :root[data-theme='gunjo'] .g-adj-diff .tag { display: inline-block; margin-left: 10px; padding: 1px 12px; border: 1px solid currentColor; font-family: var(--font-gothic); font-size: 15px; letter-spacing: 0.08em; line-height: 1.5; vertical-align: middle; position: relative; top: -6px; color: var(--color-text); }
+  :root[data-theme='gunjo'] .g-adj-diff .tag.is-gain { color: var(--g-gain); }
+  :root[data-theme='gunjo'] .g-adj-diff .tag.is-loss { color: var(--color-error); }
+  @container (max-width: 640px) {
+    :root[data-theme='gunjo'] .g-adj-diff { grid-template-columns: auto 44px minmax(0, 1fr); row-gap: 12px; }
+    :root[data-theme='gunjo'] .g-adj-diff .dif { grid-column: 1 / -1; justify-self: stretch; }
+    :root[data-theme='gunjo'] .g-adj-diff .op2 { display: none; }
+    :root[data-theme='gunjo'] .g-adj-in { grid-template-columns: minmax(0, 1fr); }
+  }
+  /* 記録される仕訳（借方・貸方）・履歴 */
+  :root[data-theme='gunjo'] :is(.g-adj-entry, .g-adj-hist) .hd { display: flex; align-items: baseline; gap: 10px; margin: 0 0 10px; }
+  :root[data-theme='gunjo'] :is(.g-adj-entry, .g-adj-hist) .hd .g-h { margin: 0; font-size: 18px; }
+  :root[data-theme='gunjo'] :is(.g-adj-entry, .g-adj-hist) .hd .meta { margin-left: auto; font-size: 13px; color: var(--color-muted); }
+  :root[data-theme='gunjo'] :is(.g-adj-entry, .g-adj-hist) .empty { margin: 0; font-size: 13px; line-height: 1.7; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .t-acct { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); border: 1px solid var(--color-border); }
+  :root[data-theme='gunjo'] .t-acct .side { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; padding: 0 14px 10px; }
+  :root[data-theme='gunjo'] .t-acct .side + .side { border-left: 1px solid var(--color-border); }
+  :root[data-theme='gunjo'] .t-acct .side .h { grid-column: 1 / -1; margin: 0 -14px 8px; padding: 6px 14px; background: var(--g-paper); border-bottom: 1px solid var(--color-border); font-size: 12px; letter-spacing: 0.12em; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .t-acct .side .n { font-size: 15px; }
+  :root[data-theme='gunjo'] .t-acct .side b { font-family: var(--font-num); font-size: 20px; font-weight: 400; }
+  :root[data-theme='gunjo'] .g-adj-act { position: relative; display: flex; align-items: center; gap: 22px; }
+  :root[data-theme='gunjo'] .g-adj-act button { flex: none; white-space: nowrap; }
+  :root[data-theme='gunjo'] .g-adj-act .txt { flex: 1 1 auto; min-width: 0; padding-right: 104px; } /* 判子（96px）が文字にかぶらない場所 */
+  :root[data-theme='gunjo'] .g-adj-act .txt p { margin: 0; font-size: 13px; line-height: 1.7; }
+  :root[data-theme='gunjo'] .g-adj-act .txt .note { color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-adj-act .txt .done { font-weight: 500; }
+  :root[data-theme='gunjo'] .g-adj-histtab { width: 100%; border-collapse: collapse; }
+  :root[data-theme='gunjo'] .g-adj-histtab th { padding: 0 6px 5px; border-bottom: 1px solid var(--color-accent); font-size: 12px; font-weight: 400; letter-spacing: 0.1em; color: var(--color-muted); text-align: left; }
+  :root[data-theme='gunjo'] .g-adj-histtab td { padding: 9px 6px; border-bottom: 1px solid var(--color-border); font-size: 15px; }
+  :root[data-theme='gunjo'] .g-adj-histtab :is(th, td).n { text-align: right; }
+  :root[data-theme='gunjo'] .g-adj-histtab td.d { white-space: nowrap; font-family: var(--font-num); color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-adj-histtab td.n { font-family: var(--font-num); font-size: 18px; white-space: nowrap; }
+  :root[data-theme='gunjo'] .g-adj-histtab .tg { margin-left: 8px; font-family: var(--font-gothic); font-size: 12px; letter-spacing: 0.06em; }
+  /* 確認画面（C1：ポップアップは残す）の表 */
+  :root[data-theme='gunjo'] dialog.confirm .g-adj-pop { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 18px; margin: 8px 0 0; padding: 10px 14px; background: var(--g-paper); font-size: 15px; }
+  :root[data-theme='gunjo'] dialog.confirm .g-adj-pop dt { font-size: 13px; letter-spacing: 0.06em; color: var(--color-muted); }
+  :root[data-theme='gunjo'] dialog.confirm .g-adj-pop dd { margin: 0; }
+  :root[data-theme='gunjo'] dialog.confirm .g-adj-pop dd.n { font-family: var(--font-num); font-size: 19px; }
+  /* 判子「調整済」：群青のインク色（赤は「損」の色なので使わない）。落ちて押され、箱が少し沈む */
+  :root[data-theme='gunjo'] .g-adj-stamp { position: absolute; z-index: 5; right: 22px; top: -22px; display: flex; align-items: center; justify-content: center; width: 96px; height: 96px; box-sizing: border-box; border: 4px solid var(--color-accent); border-radius: 50%; background: rgba(255, 255, 255, 0.7); color: var(--color-accent); font-family: var(--font-mincho); font-size: 24px; font-weight: 500; letter-spacing: 0.06em; transform: rotate(-12deg); pointer-events: none; animation: g-stamp-in 0.62s cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+  :root[data-theme='gunjo'] .g-adj-stamp::before { content: ''; position: absolute; inset: 5px; border: 1.5px solid var(--color-accent); border-radius: 50%; }
+  :root[data-theme='gunjo'] .g-adjbox.thud-a { animation: g-thud-a 0.62s both; }
+  :root[data-theme='gunjo'] .g-adjbox.thud-b { animation: g-thud-b 0.62s both; }
+
+  /* ---- 右の青い面（装飾）：帯の下から右端・下端まで。左の縁は、帯の右の切り口（43px÷172px）と平行 ---- */
+  :root[data-theme='gunjo'] .g-adj-panel { position: absolute; z-index: 0; top: -26px; right: -48px; bottom: -24px; left: calc(var(--g-bw) + 56px); container-type: size; overflow: hidden; pointer-events: none; color: #fff; }
+  :root[data-theme='gunjo'] .g-adj-art { position: absolute; inset: 0; clip-path: polygon(25cqh 0, 100% 0, 100% 100%, 0 100%); background: linear-gradient(160deg, #2A1BFF 0%, #2314D8 55%, #1A0FB0 100%); }
+  :root[data-theme='gunjo'] .g-adj-art::before { content: ''; position: absolute; inset: 0; background:
+    radial-gradient(circle at 78% 82%, transparent 0 22%, rgba(255, 255, 255, 0.1) 22.3% 22.8%, transparent 23% 31%, rgba(255, 255, 255, 0.08) 31.3% 31.8%, transparent 32% 40%, rgba(255, 255, 255, 0.06) 40.3% 40.8%, transparent 41%),
+    radial-gradient(rgba(255, 255, 255, 0.16) 1.2px, transparent 1.6px) 0 0 / 28px 28px; }
+  :root[data-theme='gunjo'] .g-adj-moon { position: absolute; left: 50%; top: 50%; width: min(86cqw, 640px); aspect-ratio: 1; margin: calc(min(86cqw, 640px) * -0.5) 0 0 calc(min(86cqw, 640px) * -0.5); border-radius: 50%; box-shadow: calc(min(86cqw, 640px) * 0.2) calc(min(86cqw, 640px) * -0.03) 0 0 rgba(255, 255, 255, 0.075); transform: rotate(-18deg); }
+  @container (max-width: 279px) { :root[data-theme='gunjo'] .g-scale { display: none; } }
+  /* 天秤（白い細い線の製図）：すべての点を、1つの基準（中心 50%・梁の高さ y0・梁の半分の長さ L・角度 a）から決める。大きさ s は、面の幅の約60%・最大480px（斜めの縁の分を引く） */
+  :root[data-theme='gunjo'] .g-scale { --u: calc(100cqw - 12.5cqh); --s: min(calc(var(--u) * 0.6 / 1.04), 480px); --a: 0deg; --w: max(1.5px, calc(var(--s) * 0.0042)); --b: calc(var(--w) * 1.4);
+    --y0: calc(var(--s) * 0.2); --L: calc(var(--s) * 0.35); --pw: calc(var(--s) * 0.34); --sh: calc(var(--s) * 0.25); --bh: calc(var(--s) * 0.085); --cd: calc(var(--s) * 0.072); --cg: 2px; --ringd: calc(var(--s) * 0.07); --endd: calc(var(--s) * 0.028); --dot: calc(var(--s) * 0.014); --R0: calc(var(--ringd) / 2);
+    position: absolute; left: calc(50% + 6.25cqh); top: 50%; width: var(--s); height: calc(var(--s) * 0.98); transform: translate(-50%, -52%); color: #fff; }
+  @supports (width: round(10.5px, 2px)) { :root[data-theme='gunjo'] .g-scale { --cd: round(calc(var(--s) * 0.072), 2px); --ringd: max(16px, round(calc(var(--s) * 0.07), 2px)); --endd: max(8px, round(calc(var(--s) * 0.028), 2px)); --dot: max(4px, round(calc(var(--s) * 0.014), 2px)); } } /* 円の大きさ（硬貨・丸・端の丸・中心の点）は、偶数の画素にそろえる（小数の大きさの円は、画素に丸められて、横長・縦長につぶれて見える） */
+  :root[data-theme='gunjo'] .g-scale, :root[data-theme='gunjo'] .g-scale * { box-sizing: border-box; }
+  :root[data-theme='gunjo'] .g-scale :is(.level, .ref, .arc, .tick) { position: absolute; }
+  :root[data-theme='gunjo'] .g-scale .level { top: var(--y0); height: 0; margin-top: -0.5px; border-top: 1px dashed rgba(255, 255, 255, 0.45); } /* 1px の線の中心を y0 に（-0.5px） */
+  :root[data-theme='gunjo'] .g-scale .level.l { left: calc(var(--s) * -0.17); right: calc(50% + var(--R0)); }
+  :root[data-theme='gunjo'] .g-scale .level.r { left: calc(50% + var(--R0)); right: calc(var(--s) * -0.17); }
+  :root[data-theme='gunjo'] .g-scale .ref { left: 50%; margin-left: -0.5px; top: calc(var(--s) * 0.02); width: 0; height: calc(var(--y0) - var(--s) * 0.02 - var(--R0)); border-left: 1px dashed rgba(255, 255, 255, 0.45); }
+  :root[data-theme='gunjo'] .g-scale .arc { left: 50%; top: calc(var(--y0) - var(--s) * 0.13); width: calc(var(--s) * 0.26); height: calc(var(--s) * 0.13); margin-left: calc(var(--s) * -0.13); border: 1px solid rgba(255, 255, 255, 0.4); border-bottom: 0; border-radius: 999px 999px 0 0; }
+  :root[data-theme='gunjo'] .g-scale .tick { left: 50%; margin-left: -0.5px; top: calc(var(--y0) - var(--s) * 0.13); width: 0; height: calc(var(--s) * 0.018); border-left: 1px solid rgba(255, 255, 255, 0.7); transform-origin: 50% calc(var(--s) * 0.13); }
+  :root[data-theme='gunjo'] .g-scale .post { position: absolute; left: 50%; top: calc(var(--y0) + var(--s) * 0.028); width: calc(var(--s) * 0.042); margin-left: calc(var(--s) * -0.021); height: calc(var(--s) * 0.84 - var(--y0) - var(--s) * 0.028); border-left: var(--b) solid #fff; border-right: var(--b) solid #fff; }
+  :root[data-theme='gunjo'] .g-scale .base { position: absolute; left: 50%; top: calc(var(--s) * 0.87); width: calc(var(--s) * 0.46); margin-left: calc(var(--s) * -0.23); height: calc(var(--s) * 0.06); border: var(--b) solid #fff; border-radius: 2px; }
+  :root[data-theme='gunjo'] .g-scale .step { position: absolute; left: 50%; top: calc(var(--s) * 0.84); width: calc(var(--s) * 0.276); margin-left: calc(var(--s) * -0.138); height: calc(var(--s) * 0.03 + var(--b)); border: var(--b) solid #fff; border-bottom: 0; }
+  :root[data-theme='gunjo'] .g-scale .pivot { position: absolute; z-index: 3; left: 50%; top: var(--y0); width: var(--ringd); height: var(--ringd); margin: calc(var(--ringd) * -0.5) 0 0 calc(var(--ringd) * -0.5); border: var(--b) solid #fff; border-radius: 50%; }
+  :root[data-theme='gunjo'] .g-scale .pivot::after { content: ''; position: absolute; left: 50%; top: 50%; width: var(--dot); height: var(--dot); margin: calc(var(--dot) * -0.5) 0 0 calc(var(--dot) * -0.5); border-radius: 50%; background: #fff; }
+  /* 梁：高さ0の入れ物を y0 に置き、その中心（50% 0）を回転の中心にする。線は入れ物の中心にまたがり、丸の外で止める（丸の中は何も通らない） */
+  :root[data-theme='gunjo'] .g-scale .beam { position: absolute; left: calc(50% - var(--L)); width: calc(var(--L) * 2); top: var(--y0); height: 0; transform: rotate(var(--a)); transform-origin: 50% 0; transition: transform 0.9s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  :root[data-theme='gunjo'] .g-scale .bar { position: absolute; top: calc(var(--b) / -2); height: var(--b); background: #fff; }
+  :root[data-theme='gunjo'] .g-scale .bar.l { left: 0; right: calc(50% + var(--R0)); }
+  :root[data-theme='gunjo'] .g-scale .bar.r { left: calc(50% + var(--R0)); right: 0; }
+  :root[data-theme='gunjo'] .g-scale .end { position: absolute; top: 0; width: var(--endd); height: var(--endd); margin: calc(var(--endd) * -0.5) 0 0 calc(var(--endd) * -0.5); border: var(--b) solid #fff; border-radius: 50%; }
+  :root[data-theme='gunjo'] .g-scale .end.l { left: 0; }
+  :root[data-theme='gunjo'] .g-scale .end.r { left: 100%; }
+  /* 針：丸の中心から、梁に垂直に。先は、細い二等辺三角形の塗りつぶし（先は鋭く、軸も細い）。針の先の点線（.ref）は、針より長く出す */
+  :root[data-theme='gunjo'] .g-scale .needle { position: absolute; left: 50%; bottom: 0; width: var(--w); height: calc(var(--s) * 0.15); margin-left: calc(var(--w) * -0.5); background: #fff; } /* 線は border でなく背景で（border は画素の整数に丸められ、中心が最大 0.25px ずれる） */
+  :root[data-theme='gunjo'] .g-scale .needle i { position: absolute; left: 50%; top: calc(var(--s) * -0.04); width: calc(var(--s) * 0.022); height: calc(var(--s) * 0.07); margin-left: calc(var(--s) * -0.011); background: #fff; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+  /* 皿：頂点（ひもの上の点）を梁の端に置き、梁と逆に回して水平に保つ */
+  :root[data-theme='gunjo'] .g-scale .pan { position: absolute; top: 0; width: var(--pw); margin-left: calc(var(--pw) / -2); height: 0; transform: rotate(calc(var(--a) * -1)); transform-origin: 50% 0; transition: transform 0.9s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  :root[data-theme='gunjo'] .g-scale .pan.l { left: 0; }
+  :root[data-theme='gunjo'] .g-scale .pan.r { left: 100%; }
+  :root[data-theme='gunjo'] .g-scale .apex { position: absolute; left: 50%; top: 0; width: 0; height: 0; }
+  :root[data-theme='gunjo'] .g-scale .strings { position: absolute; left: 0; right: 0; top: 0; height: var(--sh); }
+  :root[data-theme='gunjo'] .g-scale .strings i { position: absolute; top: 0; bottom: 0; width: 50%; }
+  :root[data-theme='gunjo'] .g-scale .strings i:first-child { left: 0; background: linear-gradient(to bottom right, transparent calc(50% - 0.5px), rgba(255, 255, 255, 0.9) 50%, transparent calc(50% + 0.5px)); }
+  :root[data-theme='gunjo'] .g-scale .strings i:last-child { right: 0; background: linear-gradient(to bottom left, transparent calc(50% - 0.5px), rgba(255, 255, 255, 0.9) 50%, transparent calc(50% + 0.5px)); }
+  :root[data-theme='gunjo'] .g-scale .bowl { position: absolute; left: 0; right: 0; top: var(--sh); height: var(--bh); border: var(--b) solid #fff; border-radius: 0 0 999px 999px; }
+  :root[data-theme='gunjo'] .g-scale .cap { position: absolute; left: -12%; right: -12%; top: calc(var(--sh) + var(--bh) + var(--s) * 0.02); text-align: center; line-height: 1.3; }
+  :root[data-theme='gunjo'] .g-scale .cap small { display: block; font-size: max(11px, calc(var(--s) * 0.034)); letter-spacing: 0.14em; opacity: 0.9; }
+  :root[data-theme='gunjo'] .g-scale .cap b { font-family: var(--font-num); font-weight: 400; font-size: max(16px, calc(var(--s) * 0.062)); white-space: nowrap; }
+  :root[data-theme='gunjo'] .g-scale .chip { position: absolute; left: 50%; top: calc(var(--s) * -0.06); transform: translateX(-50%) scale(0.6); opacity: 0; padding: 3px 16px; border: 1px solid #fff; border-radius: 3px; font-size: max(12px, calc(var(--s) * 0.04)); letter-spacing: 0.1em; white-space: nowrap; transition: opacity 0.3s 0.5s, transform 0.3s 0.5s; }
+  :root[data-theme='gunjo'] .g-adj-art.balanced .g-scale .chip { opacity: 1; transform: translateX(-50%) scale(1); }
+  /* 硬貨（金色の細い線＋薄い金の塗り。刻みは菱形のパス。字は使わない）：皿のふちの上に、3・2・1 枚の山 */
+  :root[data-theme='gunjo'] .g-scale .pile { position: absolute; left: 0; right: 0; top: var(--sh); transform: translateY(calc(-100% + var(--b) * 0.5)); display: flex; flex-direction: column; align-items: center; }
+  :root[data-theme='gunjo'] .g-scale .pile .row { display: flex; justify-content: center; gap: var(--cg); }
+  :root[data-theme='gunjo'] .g-scale .pile .row + .row { margin-top: calc(var(--cd) * -0.13); }
+  :root[data-theme='gunjo'] .g-scale .coin { position: relative; display: block; flex: none; width: var(--cd); height: var(--cd); border: var(--w) solid #FFD36B; border-radius: 50%; background: rgba(255, 211, 107, 0.18); }
+  :root[data-theme='gunjo'] .g-scale .coin::before { content: ''; position: absolute; inset: calc(var(--cd) * 0.09); border: 1px solid rgba(255, 211, 107, 0.65); border-radius: 50%; }
+  :root[data-theme='gunjo'] .g-scale .coin svg.mark { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  :root[data-theme='gunjo'] .g-scale .coin svg.mark path { fill: none; stroke: #FFD36B; stroke-width: 1.5px; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round; }
 
   /* ---- 元帳（LedgerBook.jsx。見本 E-book）：帯に選んだ科目の残高。上に 選択欄 180px・月 160px・「全期間」、説明、表（日付・相手・メモ・種類は読みやすいゴシック、数字は明朝の数字） ---- */
   :root[data-theme='gunjo'] .g-book .month-bar { margin-top: 0; }
@@ -389,6 +513,93 @@
   :root[data-theme='gunjo'] .g-book tr.total td:nth-child(6) { padding-left: 4px; }
   :root[data-theme='gunjo'] .g-book :is(th, td):nth-child(2) { min-width: 10em; } /* 相手の科目の列が、長いメモに押されて縦に割れないように */
   :root[data-theme='gunjo'] .g-book td:nth-child(1) { white-space: nowrap; }
+  /* ---- 元帳（科目を選ぶ前）：ヒントのページ札と、右の青い面の罫線（Hint.jsx・BookArt.jsx。区切り16-2a。見本は plan-adjust-book の mock16c/book-initial-*）----
+     科目を選んだら、ヒントも面も消える（選んだあとは、今までの表のまま）。面の形・境目は残高調整と同じ（案1）。ページがめくれる動きは入れない */
+  :root[data-theme='gunjo'] .g-book-empty { position: relative; box-sizing: border-box; min-height: calc(100vh - 172px - 50px); }
+  :root[data-theme='gunjo'] .g-hint.off { display: none; }
+  :root[data-theme='gunjo'] .g-hint { position: relative; z-index: 1; width: min(560px, 100%); margin: 26px 0 0 18px; padding: 18px 56px 16px; box-sizing: border-box; background: #FFFEFA; box-shadow: 0 1px 0 #D9D6F0, 0 2px 0 #fff, 0 3px 0 #D9D6F0, 6px 8px 0 #D6D3F2; transform: rotate(-0.6deg); }
+  :root[data-theme='gunjo'] .g-hint::before { content: ''; position: absolute; left: 36px; top: 0; bottom: 0; width: 6px; border-left: 1.5px solid rgba(42, 27, 255, 0.45); border-right: 1.5px solid rgba(42, 27, 255, 0.45); }
+  :root[data-theme='gunjo'] .g-hint .pg { display: flex; align-items: center; gap: 10px; font-size: 11px; letter-spacing: 0.22em; color: #5A57A0; }
+  :root[data-theme='gunjo'] .g-hint .pg i { display: inline-block; width: 8px; height: 8px; border: 1.5px solid var(--color-accent); transform: rotate(45deg); }
+  :root[data-theme='gunjo'] .g-hint h3 { margin: 4px 0 2px; font-family: var(--font-mincho); font-weight: 500; font-size: 36px; line-height: 1.25; letter-spacing: 0.02em; color: var(--color-text); }
+  :root[data-theme='gunjo'] .g-hint h3::after { content: ''; display: block; width: 64px; height: 4px; margin-top: 4px; background: var(--color-accent); }
+  :root[data-theme='gunjo'] .g-hint p { margin: 8px 0 0; background: repeating-linear-gradient(to bottom, transparent 0 31px, rgba(42, 27, 255, 0.16) 31px 32px); font-family: var(--font-mincho); font-size: 16px; line-height: 32px; color: var(--color-text); }
+  :root[data-theme='gunjo'] .g-hint .ft { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-top: 4px; font-size: 12px; color: #5A57A0; }
+  :root[data-theme='gunjo'] .g-hint .ft .wh b { margin-left: 6px; padding: 1px 8px; border: 1px solid #BDB9F2; background: #fff; color: #3E3B88; font-weight: 400; }
+  :root[data-theme='gunjo'] .g-hint .ft .nx { min-height: 0; height: auto; padding: 0; border: 0; background: none; box-shadow: none; clip-path: none; font-size: 13px; color: var(--color-accent); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  :root[data-theme='gunjo'] .g-hint .ft .no { margin-left: auto; font-family: var(--font-num); font-size: 14px; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-hint .curl { position: absolute; right: 0; bottom: 0; width: 34px; height: 34px; background: linear-gradient(135deg, #E6E3FA 0 50%, transparent 50%); box-shadow: -2px -2px 3px rgba(42, 27, 255, 0.12); }
+  :root[data-theme='gunjo'] .g-adj-art.ruled::before { background: repeating-linear-gradient(to bottom, transparent 0 43px, rgba(255, 255, 255, 0.16) 43px 44px); }
+  :root[data-theme='gunjo'] .g-adj-art.ruled .sheet { position: absolute; inset: 0 6% 0 calc(25cqh + 12px); }
+  :root[data-theme='gunjo'] .g-adj-art.ruled .cols i { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(255, 255, 255, 0.2); }
+  :root[data-theme='gunjo'] .g-adj-art.ruled .cols i.d { width: 6px; background: none; border-left: 1.5px solid rgba(255, 255, 255, 0.34); border-right: 1.5px solid rgba(255, 255, 255, 0.34); box-sizing: border-box; }
+  :root[data-theme='gunjo'] .g-adj-art.ruled .hd { position: absolute; left: 0; right: 0; top: 26px; height: 44px; font-size: 12px; letter-spacing: 0.2em; color: rgba(255, 255, 255, 0.72); }
+  :root[data-theme='gunjo'] .g-adj-art.ruled .hd span { position: absolute; top: 14px; white-space: nowrap; }
+  :root[data-theme='gunjo'] .g-adj-art.ruled .hd::after { content: ''; position: absolute; left: -400px; right: -100px; bottom: 0; height: 2px; background: rgba(255, 255, 255, 0.4); }
+  :root[data-theme='gunjo'] .g-adj-art.ruled .scribble { position: absolute; left: 4%; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.14); }
+  :root[data-theme='gunjo'] .g-adj-art.ruled .bigmoon { position: absolute; right: 6%; bottom: 7%; width: min(24cqw, 200px); aspect-ratio: 1; border: 2px solid rgba(255, 255, 255, 0.55); border-radius: 50%; box-shadow: inset calc(min(24cqw, 200px) * 0.28) 0 0 0 rgba(255, 255, 255, 0.88); }
+  /* ---- 元帳の選択（LedgerPicker.jsx。区切り16-2b。見本は plan-adjust-book の mock16c/book-initial-*・book-selected-*）----
+     科目を選ぶ前は大きな札（区分のタブ・科目のボタン・期間と12か月の帯）、選んだあとは1行の細い札。表の直し3つ：残高の列を大きく／相手の科目を押すとその元帳へ（点線の下線）／行に乗せたときの薄い色 */
+  :root[data-theme='gunjo'] .g-book { padding-top: 8px; }
+  :root[data-theme='gunjo'] .g-book .lx { width: min(var(--g-bw), 100%); }
+  :root[data-theme='gunjo'] .g-book .lx.wide { width: min(1120px, 100%); }
+  :root[data-theme='gunjo'] .lx-card { background: #fff; box-shadow: var(--g-card-shadow); }
+  :root[data-theme='gunjo'] .lx-tabs { display: flex; gap: 4px; padding: 10px 18px 0; background: #EEEDFF; border-bottom: 2px solid var(--color-accent); }
+  :root[data-theme='gunjo'] .lx-tab { margin: 0; padding: 8px 18px 7px; font-family: var(--font-mincho); font-size: 17px; line-height: 1.5; color: var(--color-muted); background: #E1DFFB; border: 1px solid #D2CFF5; border-bottom: 0; border-radius: 10px 10px 0 0; cursor: pointer; }
+  :root[data-theme='gunjo'] .lx-tab.on { color: var(--color-accent); background: #fff; font-weight: 500; border-color: var(--color-accent); border-top-width: 3px; padding-bottom: 9px; margin-bottom: -2px; }
+  :root[data-theme='gunjo'] .lx-body { padding: 12px 22px 12px; }
+  :root[data-theme='gunjo'] .lx-cap { display: flex; align-items: center; gap: 10px; margin: 0 0 6px; font-size: 12px; letter-spacing: 0.16em; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .lx-cap em { font-style: normal; font-size: 11px; letter-spacing: 0.2em; color: var(--color-accent); }
+  :root[data-theme='gunjo'] .lx-accts { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 12px; column-gap: 12px !important; } /* 部品の間を 0 にする共通の規則（:has(> button)）に勝つ */
+  :root[data-theme='gunjo'] button.lx-acct { margin: 0; height: auto; min-height: 40px; justify-content: space-between; align-items: baseline; gap: 6px; padding: 8px 12px; background: #fff; border: 1px solid var(--color-border); border-left: 4px solid #BDB9F2; box-shadow: none; font-family: var(--font-gothic); font-size: 16px; line-height: 1.3; text-align: left; color: var(--color-text); }
+  :root[data-theme='gunjo'] button.lx-acct small { font-size: 12px; color: var(--color-muted); font-family: var(--font-num); white-space: nowrap; }
+  :root[data-theme='gunjo'] button.lx-acct.zero { color: #6B6A94; border-left-color: #E1DFFB; }
+  :root[data-theme='gunjo'] button.lx-acct.on { background: var(--color-accent); color: #fff; border-color: var(--color-accent); border-left-color: #fff; box-shadow: 4px 4px 0 #0B0670; }
+  :root[data-theme='gunjo'] button.lx-acct.on small { color: #E4E2FF; }
+  :root[data-theme='gunjo'] .lx-sec { padding: 10px 22px 14px; border-top: 1px solid var(--color-border); }
+  :root[data-theme='gunjo'] .lx-seg { display: inline-flex; flex: none; padding: 3px; background: #EEEDFF; border-radius: 99px; }
+  :root[data-theme='gunjo'] .lx-seg button { margin: 0; height: auto; min-height: 0; padding: 8px 20px; border: 0; border-radius: 99px; background: none; box-shadow: none; font-family: var(--font-gothic); font-size: 16px; line-height: 1.4; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .lx-seg button.on { background: var(--color-accent); color: #fff; box-shadow: 0 2px 0 #0B0670; }
+  :root[data-theme='gunjo'] .lx-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 18px; }
+  :root[data-theme='gunjo'] .lx-row .lx-cap { margin: 0; }
+  :root[data-theme='gunjo'] .lx-months { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 6px; column-gap: 6px !important; }
+  :root[data-theme='gunjo'] button.lx-m { margin: 0; flex-direction: column; justify-content: flex-start; align-items: center; gap: 2px; height: auto; min-height: 0; padding: 5px 0 4px; background: #fff; border: 1px solid var(--color-border); box-shadow: none; font-family: var(--font-num); font-size: 15px; color: var(--color-text); }
+  :root[data-theme='gunjo'] button.lx-m small { height: 12px; font-family: var(--font-gothic); font-size: 10px; letter-spacing: 0.08em; color: var(--color-muted); }
+  :root[data-theme='gunjo'] button.lx-m svg { display: block; }
+  :root[data-theme='gunjo'] button.lx-m .tk { align-self: center; width: 6px; margin-top: 2px; background: #BDB9F2; border-radius: 2px 2px 0 0; }
+  :root[data-theme='gunjo'] button.lx-m.on { background: var(--color-accent); color: #fff; border-color: var(--color-accent); box-shadow: 3px 3px 0 #0B0670; }
+  :root[data-theme='gunjo'] button.lx-m.on small { color: #E4E2FF; }
+  :root[data-theme='gunjo'] button.lx-m.on .tk { background: #fff; }
+  :root[data-theme='gunjo'] .lx-months.off .lx-m { opacity: 0.38; }
+  :root[data-theme='gunjo'] .lx-moon .ring { fill: #fff; stroke: var(--color-accent); stroke-width: 1.4; }
+  :root[data-theme='gunjo'] .lx-moon .lit { fill: var(--color-accent); }
+  :root[data-theme='gunjo'] .lx-m.on .lx-moon .ring { fill: var(--color-accent); stroke: #fff; }
+  :root[data-theme='gunjo'] .lx-m.on .lx-moon .lit { fill: #fff; }
+  :root[data-theme='gunjo'] .lx-hintnote { flex: 1 1 120px; min-width: 0; font-size: 12px; line-height: 1.4; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .lx-ylabel { margin-left: auto; font-family: var(--font-num); font-size: 14px; font-weight: 400; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .lx-mrow { display: flex; align-items: stretch; gap: 6px; margin-top: 8px; }
+  :root[data-theme='gunjo'] .lx-mrow .lx-months { flex: 1 1 auto; min-width: 0; margin: 0; }
+  :root[data-theme='gunjo'] .lx-mrow > button { height: auto; min-height: 0; width: 24px; min-width: 0; margin: 0; padding: 0; box-shadow: none; font-family: var(--font-gothic); font-size: 16px; }
+  :root[data-theme='gunjo'] button.lx-fold { border-left-width: 1px; border-style: dashed; border-color: #BDB9F2; background: #F4F3FF; color: var(--color-accent); }
+  :root[data-theme='gunjo'] button.lx-fold small { color: var(--color-accent); }
+  :root[data-theme='gunjo'] .lx-yr { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; font-family: var(--font-num); font-size: 14px; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .lx-yr b { min-width: 4.6em; font-weight: 400; text-align: center; }
+  :root[data-theme='gunjo'] .lx-yr button { margin: 0; height: 26px; min-height: 0; width: 26px; padding: 0; box-shadow: none; font-family: var(--font-gothic); font-size: 16px; }
+  :root[data-theme='gunjo'] .lx-compact { display: flex; align-items: center; flex-wrap: wrap; gap: 14px 30px; padding: 14px 22px; }
+  :root[data-theme='gunjo'] .cp-acct { display: flex; align-items: baseline; gap: 10px; font-family: var(--font-mincho); }
+  :root[data-theme='gunjo'] .cp-t { font-size: 15px; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .cp-sep { color: var(--color-muted); }
+  :root[data-theme='gunjo'] .cp-acct b { font-weight: 500; font-size: 26px; color: var(--color-text); }
+  :root[data-theme='gunjo'] button.cp-chg { height: auto; min-height: 0; margin-left: 8px; padding: 0; border: 0; background: none; box-shadow: none; font-family: var(--font-gothic); font-size: 13px; color: var(--color-accent); text-decoration: underline; text-underline-offset: 3px; }
+  :root[data-theme='gunjo'] .cp-per { display: flex; align-items: center; gap: 18px; flex: 1 1 520px; min-width: 0; }
+  :root[data-theme='gunjo'] .cp-per .lx-yr { margin-left: 0; flex: none; }
+  :root[data-theme='gunjo'] .lx-months.cp { flex: 1 1 auto; margin: 0; gap: 4px; column-gap: 4px !important; }
+  :root[data-theme='gunjo'] .lx-months.cp .lx-m { min-height: 52px; padding: 5px 0 3px; gap: 1px; font-size: 13px; }
+  :root[data-theme='gunjo'] .lx-months.cp .lx-m .tk { margin-top: auto; }
+  :root[data-theme='gunjo'] .g-book td:nth-child(5) { font-size: 18px; font-weight: 500; }
+  :root[data-theme='gunjo'] .g-book th:nth-child(5) { color: var(--color-text); }
+  :root[data-theme='gunjo'] .g-book td button.lk { display: inline; height: auto; min-height: 0; padding: 0; border: 0; background: none; box-shadow: none; font: inherit; text-align: left; color: var(--color-accent); text-decoration: underline dotted; text-underline-offset: 4px; }
+  :root[data-theme='gunjo'] .g-book tbody tr:not(.total):hover td { background: #F1F0FB; }
   :root[data-theme='gunjo'] .g-stat-lab { max-width: 640px; overflow-wrap: anywhere; } /* 長い科目名の「…の残高」が帯からはみ出さない */
 
   /* ---- 区切り8の共通：帯の上の段（戻るボタンの場所）、青い下線のタブ、表（g-rep）、達成率の棒 ---- */
