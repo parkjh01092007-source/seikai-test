@@ -3,16 +3,36 @@ import { createPortal } from 'react-dom'
 import './subscriptions.css'
 import { AccountSelect } from './Entries.jsx'
 import {
-  entryAccountOptions, validateSubscriptionInput, newSubscription, editSubscription, setSubscriptionActive, formatMoney,
+  entryAccountOptions, validateSubscriptionInput, newSubscription, editSubscription, setSubscriptionActive, formatMoney, formatYen, currencyUnit,
 } from '../ledgerLogic.js'
 import { today } from '../today.js'
+import { subscriptionMoons, nextRecord, monthlyTotal } from '../flowArt.js'
+import { monthWindow } from '../bookPicker.js'
 import { t } from '../text.js'
 import { usePhone } from '../layout.js'
 import { useGunjoPc } from '../gunjoPc.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import { useBandHost } from './bandHost.js'
 import { BandStat } from './PageBand.jsx'
+import { MoonRow, Moon } from './FlowParts.jsx'
+import SubscriptionRing from './SubscriptionRing.jsx'
 import { Icon, IconButton } from './Icon.jsx'
+
+// 玉の凡例（案X。常に 1 行で出す）。玉の説明は文字で言う（色・形だけに頼らない）
+const LEGEND = [['done', 'subscriptions.legendDone'], ['wait', 'subscriptions.legendWait'], ['before', 'subscriptions.legendBefore'], ['skip', 'subscriptions.legendSkip']]
+function MoonLegend() {
+  return (
+    <div className="g-legend-moons" role="note" title={t('subscriptions.legendNote')}>
+      <span className="t">{t('subscriptions.legendLabel')}</span>
+      {LEGEND.map(([state, key]) => (
+        <span key={state} className="i">
+          <span className="g-moons"><span className="m"><svg viewBox="-10 -10 20 20" aria-hidden="true"><Moon state={state} /></svg></span></span>
+          {t(key)}
+        </span>
+      ))}
+    </div>
+  )
+}
 
 const EMPTY = { name: '', memo: '', amount: '', day: '', debitId: '', creditId: '' }
 
@@ -56,7 +76,7 @@ function SubscriptionForm({ accounts, initial, submitLabel, submitIcon = 'plus',
   )
 }
 
-function SubscriptionRow({ sub, accounts, currency, editing, onEdit, onCancel, onSave, onToggle, onDelete }) {
+function SubscriptionRow({ sub, accounts, currency, editing, moons, current, onEdit, onCancel, onSave, onToggle, onDelete }) {
   const phone = usePhone()
   const gunjoPc = useGunjoPc()
   const name = (id) => accounts.find((a) => a.id === id)?.name ?? ''
@@ -96,6 +116,7 @@ function SubscriptionRow({ sub, accounts, currency, editing, onEdit, onCancel, o
           <div className="g-amount num">{formatMoney(sub.amount, currency)}</div>
           {actions}
         </div>
+        <div className="g-moonline"><MoonRow moons={moons} current={current} label={t('subscriptions.moonsLabel')} /></div>
       </li>
     )
   }
@@ -118,9 +139,16 @@ export default function Subscriptions({ data, update }) {
   const confirm = useConfirm()
   const gunjoPc = useGunjoPc()
   const bandHost = useBandHost() // 群青の PC の帯の、要点を入れる場所（ほかのときは null）
+  const now = today()
+  const nowMonth = now.slice(0, 7)
+  const months = monthWindow(now).map((m) => m.ym)
   const setSubscriptions = (next) => update({ ...data, subscriptions: next })
 
-  const add = (input) => setSubscriptions([...subscriptions, newSubscription(input, today())])
+  const [formOpen, setFormOpen] = useState(false) // 群青の PC の登録の札（<details>）。0 件のときだけ、いつも開く。登録できたら閉じる
+  const add = (input) => {
+    setSubscriptions([...subscriptions, newSubscription(input, today())])
+    setFormOpen(false)
+  }
   const save = (sub) => (input) => {
     setSubscriptions(subscriptions.map((s) => (s.id === sub.id ? editSubscription(s, input) : s)))
     setEditingId(null)
@@ -133,36 +161,67 @@ export default function Subscriptions({ data, update }) {
 
   const notes = <p className="note">{t('subscriptions.noteAuto')} {t('subscriptions.noteScope')}</p>
   const form = <SubscriptionForm accounts={accounts} initial={EMPTY} submitLabel={t('subscriptions.register')} onSubmit={add} clearOnSuccess />
+  const list = subscriptions.length === 0 ? <p className="note">{t('subscriptions.empty')}</p> : (
+    <ul>
+      {subscriptions.map((s) => (
+        <SubscriptionRow
+          currency={data.settings.currency}
+          key={s.id}
+          sub={s}
+          accounts={accounts}
+          moons={gunjoPc ? subscriptionMoons(s, now, months) : undefined}
+          current={nowMonth}
+          editing={editingId === s.id}
+          onEdit={() => setEditingId(s.id)}
+          onCancel={() => setEditingId(null)}
+          onSave={save(s)}
+          onToggle={() => toggle(s)}
+          onDelete={() => remove(s)}
+        />
+      ))}
+    </ul>
+  )
+  if (gunjoPc) {
+    // 群青の PC：帯に要点 3 つ（登録・毎月の合計・次の記入）。左の列に、登録の札（閉じた形。0 件のときだけ開く）・玉の凡例・一覧（行ごとに 12 か月の玉）。右の青い面に 12 か月の輪
+    const empty = subscriptions.length === 0
+    const next = nextRecord(subscriptions, now)
+    const unit = currencyUnit(data.settings.currency)
+    return (
+      <div className="subscriptions g-subs">
+        {bandHost && createPortal(
+          <>
+            <BandStat label={t('subscriptions.count')} value={subscriptions.length} unit={t('settings.countUnit')} />
+            <BandStat label={t('subscriptions.monthlyTotal')} value={formatYen(monthlyTotal(subscriptions))} unit={unit} />
+            <BandStat
+              label={t('subscriptions.nextRecord', { name: next ? next.sub.name : '―' })}
+              value={next ? `${Number(next.date.slice(5, 7))}/${Number(next.date.slice(8, 10))}` : t('subscriptions.nextNone')}
+              unit={next ? t('subscriptions.daysLeft', { n: Math.max(0, next.daysLeft) }) : ''}
+            />
+          </>, bandHost)}
+        <div className="g-subs-col">
+          <details
+            className={`g-card g-new${empty ? ' fixed' : ''}`}
+            open={empty || formOpen}
+            onToggle={(e) => { if (!empty) setFormOpen(e.currentTarget.open) }}
+          >
+            <summary onClick={empty ? (e) => e.preventDefault() : undefined}>
+              <h2 className="g-h">{t('subscriptions.new')}<small lang="en">{t('subscriptions.newEn')}</small></h2>
+            </summary>
+            <div className="g-new-body">{notes}{form}</div>
+          </details>
+          <MoonLegend />
+          {list}
+        </div>
+        <SubscriptionRing subs={subscriptions} today={now} />
+      </div>
+    )
+  }
   return (
     <div className="subscriptions">
       {bandHost && createPortal(<BandStat label={t('subscriptions.count')} value={subscriptions.length} unit={t('settings.countUnit')} />, bandHost)}
-      {/* 群青の PC では、画面の名前は帯のマスにある（h2 を置き換える） */}
-      {!gunjoPc && <h2>{t('subscriptions.title')}</h2>}
-      {gunjoPc ? (
-        <section className="g-card g-new">
-          <h2 className="g-h">{t('subscriptions.new')}<small lang="en">{t('subscriptions.newEn')}</small></h2>
-          {notes}
-          {form}
-        </section>
-      ) : <>{notes}{form}</>}
-      {subscriptions.length === 0 ? <p className="note">{t('subscriptions.empty')}</p> : (
-        <ul>
-          {subscriptions.map((s) => (
-            <SubscriptionRow
-              currency={data.settings.currency}
-              key={s.id}
-              sub={s}
-              accounts={accounts}
-              editing={editingId === s.id}
-              onEdit={() => setEditingId(s.id)}
-              onCancel={() => setEditingId(null)}
-              onSave={save(s)}
-              onToggle={() => toggle(s)}
-              onDelete={() => remove(s)}
-            />
-          ))}
-        </ul>
-      )}
+      <h2>{t('subscriptions.title')}</h2>
+      {notes}{form}
+      {list}
     </div>
   )
 }

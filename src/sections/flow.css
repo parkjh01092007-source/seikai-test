@@ -1,0 +1,9 @@
+/* 群青の PC の定期支払い（SubscriptionRing）の動き。何かが起きたときの一度きり／今月の玉のゆっくりした明滅。
+   動きは gunjo-pc.css の PC の形の中に置けない決め（gunjoPc.check.js）なので、ここに置く。対象の class は、定期支払いの群青 PC の輪にしかない */
+@media (prefers-reduced-motion: no-preference) {
+  .g-ring .pulse { animation: g-ring-pulse 2.4s ease-in-out infinite; }
+  @keyframes g-ring-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+}
+@media (prefers-reduced-motion: reduce) {
+  .g-ring .pulse { animation: none; }
+}

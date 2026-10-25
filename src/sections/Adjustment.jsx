@@ -44,6 +44,16 @@ function ConfirmRows({ plan, accounts, money }) {
   )
 }
 
+// 差額の段の大きさ（群青の PC）：条件は「箱の幅」でなく「中身の長さ」。いちばん長い数字が 5 桁以上なら差額を 2 行目へ下ろし（wrap）、
+// 桁が増えるほど文字を小さくする（val-s1/2＝記録上・実際、dif-s1/2＝差額）。表示だけ。計算は変えない
+const digits = (n) => (n === null ? 0 : String(Math.abs(n)).length)
+const shrink = (d) => (d > 11 ? 2 : d > 9 ? 1 : 0)
+const diffSize = (cur, actual, diff) => {
+  const v = shrink(Math.max(digits(cur), digits(actual)))
+  const d = shrink(digits(diff))
+  return `${Math.max(digits(cur), digits(actual), digits(diff)) >= 5 ? ' wrap' : ''}${v ? ` val-s${v}` : ''}${d ? ` dif-s${d}` : ''}`
+}
+
 export default function Adjustment({ data, update }) {
   const { accounts, entries } = data
   const currency = data.settings.currency
@@ -112,7 +122,7 @@ export default function Adjustment({ data, update }) {
                 <span className="g-amount-row"><input inputMode="numeric" aria-label={t('adjustment.actual')} value={actual} onChange={(e) => { setActual(e.target.value); setStamp(0); setMessage('') }} /><span>{unit}</span></span>
               </label>
             </div>
-            <div className={`g-adj-row g-adj-diff is-${tone}`}>
+            <div className={`g-adj-row g-adj-diff is-${tone}${diffSize(cur, liveActual, diff)}`}>
               <div className="cur"><span className="k">{t('adjustment.rowCurrent')}</span><span className="v">{cur === null ? '—' : formatYen(cur)}<small>{unit}</small></span></div>
               <span className="op" aria-hidden="true">→</span>
               <div className="act"><span className="k">{t('adjustment.rowActual')}</span><span className={`v${liveActual === null ? ' empty' : ''}`}>{liveActual === null ? '—' : formatYen(liveActual)}<small>{unit}</small></span></div>

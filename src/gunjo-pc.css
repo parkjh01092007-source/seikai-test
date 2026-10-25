@@ -311,6 +311,40 @@
   :root[data-theme='gunjo'] .subscriptions .g-mid .note { font-size: 13px; }
   :root[data-theme='gunjo'] .subscriptions .g-amount { font-family: var(--font-num); font-size: var(--g-s6); font-weight: 500; text-align: right; font-variant-numeric: tabular-nums; }
   :root[data-theme='gunjo'] .subscriptions .sub-actions { display: flex; justify-content: flex-end; margin-top: 6px; }
+  /* 定期支払い（案A＋X）：左の列（--g-sw）に、登録の札（<details>）・玉の凡例・一覧。右は青い面（.g-side-panel）に 12 か月の輪 */
+  :root[data-theme='gunjo'] .subscriptions.g-subs { --g-sw: clamp(520px, 50%, 820px); position: relative; min-height: calc(100vh - 222px); } /* 右の青い面が、画面の下の端まで届く（帯 172px＋内側の余白 26px・24px） */
+  :root[data-theme='gunjo'] .subscriptions .g-subs-col { position: relative; z-index: 1; width: var(--g-sw); max-width: 100%; }
+  :root[data-theme='gunjo'] .subscriptions details.g-new > summary { display: flex; align-items: center; gap: 8px; cursor: pointer; list-style: none; }
+  :root[data-theme='gunjo'] .subscriptions details.g-new > summary::-webkit-details-marker { display: none; }
+  :root[data-theme='gunjo'] .subscriptions details.g-new > summary .g-h { margin: 0; }
+  :root[data-theme='gunjo'] .subscriptions details.g-new > summary::after { content: ''; width: 8px; height: 8px; margin: 0 4px 3px auto; border: solid var(--color-accent); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  :root[data-theme='gunjo'] .subscriptions details.g-new[open] > summary::after { margin-bottom: -3px; transform: rotate(-135deg); }
+  :root[data-theme='gunjo'] .subscriptions details.g-new.fixed > summary { cursor: default; }
+  :root[data-theme='gunjo'] .subscriptions details.g-new.fixed > summary::after { display: none; }
+  :root[data-theme='gunjo'] .subscriptions details.g-new > summary:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 4px; }
+  :root[data-theme='gunjo'] .subscriptions details.g-new[open] > summary { margin-bottom: 12px; }
+  :root[data-theme='gunjo'] .subscriptions .g-new-body .g-form { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  :root[data-theme='gunjo'] .subscriptions .g-new-body .g-form .sub-submit { grid-column: 1 / -1; justify-self: start; }
+  :root[data-theme='gunjo'] .subscriptions .g-legend-moons { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin: 0 0 12px; font-family: var(--font-gothic); font-size: 12px; line-height: 16px; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .subscriptions .g-legend-moons .t { letter-spacing: 0.1em; }
+  :root[data-theme='gunjo'] .subscriptions .g-legend-moons .i { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+  :root[data-theme='gunjo'] .subscriptions .g-legend-moons .g-moons .m { width: auto; gap: 0; }
+  :root[data-theme='gunjo'] .subscriptions .g-legend-moons .g-moons svg { width: 14px; height: 14px; }
+  :root[data-theme='gunjo'] .subscriptions li > .g-moonline { grid-column: 2 / 4; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--color-border); }
+  /* 右の青い面：帯の下から右端・下端まで。左の縁は、帯の切り口と同じ斜め（高さの 25％）。中身（輪）は、面が狭い（380px 未満）と隠す */
+  :root[data-theme='gunjo'] .g-side-panel { position: absolute; z-index: 0; top: -26px; right: -48px; bottom: -24px; left: calc(var(--g-sw) + 32px); overflow: clip; pointer-events: none; color: #fff; }
+  :root[data-theme='gunjo'] .g-side-stick { position: sticky; top: 0; height: 100vh; container-type: size; } /* 画面の高さ。一覧が長くても、スクロールについてくる（斜めの角度・輪の大きさが、一覧の長さに左右されない） */
+  :root[data-theme='gunjo'] .g-side-art { position: absolute; inset: 0; clip-path: polygon(25cqh 0, 100% 0, 100% 100%, 0 100%); background: linear-gradient(160deg, #2A1BFF 0%, #2314D8 55%, #1A0FB0 100%); }
+  :root[data-theme='gunjo'] .g-side-art::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(to bottom, transparent 0 43px, rgba(255, 255, 255, 0.1) 43px 44px); }
+  :root[data-theme='gunjo'] .g-side-pin { position: absolute; left: calc(25cqh * 0.7 + 18px); right: 5%; top: 0; height: min(calc(100cqh - 172px), 700px); display: flex; flex-direction: column; justify-content: center; gap: 14px; } /* 172px＝帯の高さ。最初の位置で、下の見える部分の真ん中 */
+  @container (max-width: 379px) { :root[data-theme='gunjo'] .g-side-pin { display: none; } }
+  :root[data-theme='gunjo'] .g-side-cap { font-family: var(--font-mincho); font-size: 22px; letter-spacing: 0.04em; text-align: center; }
+  :root[data-theme='gunjo'] .g-side-cap small { margin-left: 10px; font-size: 10px; letter-spacing: 0.35em; color: #D6D5FF; }
+  @container (max-width: 480px) { :root[data-theme='gunjo'] .g-side-cap small { display: none; } }
+  :root[data-theme='gunjo'] .g-side-sub { align-self: center; text-align: center; font-family: var(--font-gothic); font-size: 12px; line-height: 1.7; color: #D6D5FF; }
+  :root[data-theme='gunjo'] .g-ring { display: block; align-self: center; width: min(100%, 560px); max-height: calc(100cqh - 140px); overflow: visible; font-family: var(--font-mincho); }
+  :root[data-theme='gunjo'] .g-ring text { fill: #D6D5FF; }
+  :root[data-theme='gunjo'] .g-ring .big { fill: #fff; }
 
   /* 設定 → 記帳「日付の開き方」（Settings.jsx の OpenModeSelect）：ラベルの幅を固定して、2つの選択欄を同じ位置（左端がそろう）に置き、上下は 14px あける（行の高さ 34px＋14px＝48px は、倍率 125％・150％・175％ でも画素が割り切れる高さ。2つの選択欄の枠が、同じ画素に乗る）。
      以前は、ラベルの文字の幅（小数）に押されて、選択欄が小数の位置・上下にぴったり重なる形になり、画面の倍率が 125％・150％ のとき、片方の枠だけ薄く太く見えた */
@@ -405,6 +439,16 @@
     :root[data-theme='gunjo'] .g-adj-diff .op2 { display: none; }
     :root[data-theme='gunjo'] .g-adj-in { grid-template-columns: minmax(0, 1fr); }
   }
+  /* 桁が多いとき（Adjustment.jsx の diffSize が wrap を付ける）：箱の幅に関わらず、差額を 2 行目へ下ろす。桁がさらに増えたら文字を小さくする */
+  :root[data-theme='gunjo'] .g-adj-diff.wrap { grid-template-columns: auto 44px minmax(0, 1fr); row-gap: 12px; }
+  :root[data-theme='gunjo'] .g-adj-diff.wrap .dif { grid-column: 1 / -1; justify-self: stretch; }
+  :root[data-theme='gunjo'] .g-adj-diff.wrap .op2 { display: none; }
+  :root[data-theme='gunjo'] .g-adj-diff.val-s1 :is(.cur, .act) .v { font-size: 26px; }
+  :root[data-theme='gunjo'] .g-adj-diff.val-s2 :is(.cur, .act) .v { font-size: 20px; }
+  :root[data-theme='gunjo'] .g-adj-diff.dif-s1 .dif .v { font-size: 44px; }
+  :root[data-theme='gunjo'] .g-adj-diff.dif-s2 .dif .v { font-size: 34px; }
+  :root[data-theme='gunjo'] .g-adj-diff.dif-s1 .dif .v small { font-size: 18px; }
+  :root[data-theme='gunjo'] .g-adj-diff.dif-s2 .dif .v small { font-size: 15px; }
   /* 記録される仕訳（借方・貸方）・履歴 */
   :root[data-theme='gunjo'] :is(.g-adj-entry, .g-adj-hist) .hd { display: flex; align-items: baseline; gap: 10px; margin: 0 0 10px; }
   :root[data-theme='gunjo'] :is(.g-adj-entry, .g-adj-hist) .hd .g-h { margin: 0; font-size: 18px; }
@@ -1040,4 +1084,30 @@
   :root[data-theme='gunjo'] .drive-busy .db-moon { display: block; flex: none; }
   :root[data-theme='gunjo'] .drive-busy .db-moon .ring { fill: none; stroke: var(--color-accent); stroke-width: 1.2; }
   :root[data-theme='gunjo'] .drive-busy .db-moon .lit { fill: var(--color-accent); }
+  /* ---- 区切り17：共通の部品（月の玉・状態の札・履歴の行・空の状態の札。FlowParts.jsx。まだどの画面にも入れていない）。色の役目：緑＝増える／赤＝減る／無色＝中立／青＝進行中。色だけに頼らず、字・形（実線・点線）でも区別する ---- */
+  :root[data-theme='gunjo'] .g-moons { display: flex; align-items: center; gap: 6px; }
+  :root[data-theme='gunjo'] .g-moons .m { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 22px; font-family: var(--font-num); font-size: 10px; line-height: 12px; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-moons .m.now { color: var(--color-accent); font-weight: 500; }
+  :root[data-theme='gunjo'] .g-moons svg { display: block; width: 18px; height: 18px; overflow: visible; }
+  :root[data-theme='gunjo'] .g-moons .full { fill: var(--color-accent); stroke: var(--color-accent); stroke-width: 1.5; }
+  :root[data-theme='gunjo'] .g-moons .lit { fill: var(--color-accent); stroke: none; }
+  :root[data-theme='gunjo'] .g-moons .ring { fill: none; stroke: var(--color-accent); stroke-width: 1.5; }
+  :root[data-theme='gunjo'] .g-moons .dash { fill: none; stroke: var(--color-muted); stroke-width: 1.25; stroke-dasharray: 2 2.5; }
+  :root[data-theme='gunjo'] .g-moons .dot { fill: var(--color-muted); stroke: none; }
+  :root[data-theme='gunjo'] .g-tag { display: inline-block; padding: 1px 10px; border: 1px solid currentColor; font-family: var(--font-gothic); font-size: 12px; letter-spacing: 0.06em; line-height: 1.5; white-space: nowrap; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-tag.is-up { color: var(--g-gain); }
+  :root[data-theme='gunjo'] .g-tag.is-down { color: var(--color-error); }
+  :root[data-theme='gunjo'] .g-tag.is-live { color: var(--color-accent); }
+  :root[data-theme='gunjo'] .g-tag.is-solid { background: var(--color-accent); border-color: var(--color-accent); color: #fff; }
+  :root[data-theme='gunjo'] .g-hist { width: 100%; border-collapse: collapse; }
+  :root[data-theme='gunjo'] .g-hist th { padding: 0 6px 5px; border-bottom: 1px solid var(--color-accent); font-size: 12px; font-weight: 400; letter-spacing: 0.1em; color: var(--color-muted); text-align: left; }
+  :root[data-theme='gunjo'] .g-hist td { padding: 9px 6px; border-bottom: 1px solid var(--color-border); font-size: 15px; text-align: left; }
+  :root[data-theme='gunjo'] .g-hist :is(th, td).n { text-align: right; }
+  :root[data-theme='gunjo'] .g-hist td.d { white-space: nowrap; font-family: var(--font-num); color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-hist td.n { font-family: var(--font-num); font-size: 17px; white-space: nowrap; }
+  :root[data-theme='gunjo'] .g-hist td.n.is-up { color: var(--g-gain); }
+  :root[data-theme='gunjo'] .g-hist td.n.is-down { color: var(--color-error); }
+  :root[data-theme='gunjo'] .g-hist tr.open td { color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-empty { box-sizing: border-box; padding: 18px 22px; background: var(--g-paper); background-image: repeating-linear-gradient(to bottom, transparent 0 27px, var(--color-border) 27px 28px); box-shadow: 4px 4px 0 var(--color-border); font-size: 13px; line-height: 28px; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-empty b { display: block; font-family: var(--font-mincho); font-size: 17px; font-weight: 400; line-height: 28px; color: var(--color-text); }
 }

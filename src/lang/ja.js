@@ -279,6 +279,24 @@ export default {
   'subscriptions.lastMonth': '最後に記入した月：{month}',
   'subscriptions.deleteConfirm': '定期支払い「{name}」を削除します。すでに記入した仕訳は残ります。',
   'subscriptions.empty': '定期支払いはまだありません',
+  // 群青の PC：月の玉の列・凡例・右の面の輪（作業：定期支払い）
+  'subscriptions.legendLabel': '玉の見かた',
+  'subscriptions.legendDone': '満月＝記入済み',
+  'subscriptions.legendWait': '欠けた月＝これから',
+  'subscriptions.legendBefore': '点線＝登録前',
+  'subscriptions.legendSkip': '点＝使わない間',
+  'subscriptions.legendNote': '記入の状態は、保存してある「最後に記入した月」と登録日からの推定です',
+  'subscriptions.monthlyTotal': '毎月の合計',
+  'subscriptions.nextRecord': '次の記入（{name}）',
+  'subscriptions.nextNone': '予定なし', // 次の記入がないとき（使っている定期支払いがない）
+  'subscriptions.daysLeft': 'あと{n}日',
+  'subscriptions.ringTitle': '毎月、くり返す',
+  'subscriptions.ringTitleEn': 'EVERY MONTH',
+  'subscriptions.ringNow': '今月',
+  'subscriptions.ringOf': '／{total}', // 輪の中央「1／4」の「／4」
+  'subscriptions.ringDone': '件が記入済み',
+  'subscriptions.ringCaption': '日が来ると自動で記入され、その月の玉が満ちます',
+  'subscriptions.moonsLabel': '直近12か月の記入の状態',
 
   // 開始残高（Opening）
   'opening.title': '開始残高',
