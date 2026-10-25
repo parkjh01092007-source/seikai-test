@@ -1,14 +1,19 @@
 // 定期支払い・クレカ・貯蓄の「機能の意味を絵にする」ための、表示だけの計算（区切り17。群青 PC の見本が使う）。保存しない・ledgerLogic.js の計算は変えない。
 // 日付の決まり（その月にない日は月末日）は ledgerLogic.js の subscriptionDate・nextMonth・initialLastMonth に任せる。
-import { subscriptionDate, nextMonth, daysInMonth, initialLastMonth, payDateOf } from './ledgerLogic.js'
+import { subscriptionDate, nextMonth, daysInMonth, initialLastMonth, payDateOf, lastClosingDate } from './ledgerLogic.js'
 import { addMonths } from './bookPicker.js'
 
 // ---- 定期支払い：月の玉（案A） ----
 // 月ごとの状態。保存してある lastMonth と、登録した日（createdAt）からの推定で、仕訳を探して確かめるのではない
 //   before：登録より前（さかのぼらない月）／done：記入の対象になった月／wait：今月で、指定日がまだ来ていない／skip：使わない間で、記入しなかった月
 // months は 'YYYY-MM' の並び（古い順。今月が右端）。today は 'YYYY-MM-DD'
+// 登録した日（createdAt は ISO 文字列）の、ローカルの日付。先頭 10 文字（UTC の日付）だと、日本時間の朝は前日になり、今日（ローカル）で決まる lastMonth とずれる
+const localDate = (iso) => {
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime()) ? null : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 export function subscriptionMoons(sub, today, months) {
-  const created = typeof sub.createdAt === 'string' && sub.createdAt.length >= 10 ? sub.createdAt.slice(0, 10) : today
+  const created = (typeof sub.createdAt === 'string' && localDate(sub.createdAt)) || today
   const first = initialLastMonth(sub.day, created) // この月までは、登録のときに「記入済み」の扱い（実際には記入していない）
   const now = today.slice(0, 7)
   return months.map((month) => {
@@ -126,6 +131,39 @@ export function periodBars(card, count = 12) {
   }
   const max = Math.max(...bars.map((b) => b.amount), 0)
   return bars.map((b) => ({ ...b, ratio: max > 0 ? b.amount / max : 0 }))
+}
+
+// レーンの状態：open（まだ締まっていない）／paid（引き落とし予定日が今日以前。日付だけの目安）／closed（締まっていて、まだ引き落とし前）
+export const periodStatus = (lane) => (lane.open ? 'open' : lane.paid ? 'paid' : 'closed')
+
+// 「月/日」の字。today と年が違うときだけ「年/月/日」（一覧・時間軸の字。個別の表の字は periodRows が決める）
+export function shortDate(date, today) {
+  const [y, m, d] = date.split('-').map(Number)
+  return `${today && String(y) !== today.slice(0, 4) ? `${y}/` : ''}${m}/${d}`
+}
+
+// カウントダウンの相手：全カードのレーン（cardLanes）のうち、引き落とし前（paid でない）で、引き落とし日がいちばん近いもの。
+// 利用のない（金額 0 の）レーンは、ほかにあるときは選ばない。同じ日なら、カードの並びが先。見つからなければ null。cards は cardReports の結果
+export function nextPayLane(cards, today) {
+  const all = cards.flatMap((card) => cardLanes(card, today, 3).filter((l) => !l.paid).map((lane) => ({ card, lane })))
+  const used = all.filter((x) => x.lane.amount > 0)
+  const pool = used.length ? used : all
+  return pool.reduce((best, x) => (!best || x.lane.payDate < best.lane.payDate ? x : best), null)
+}
+
+// そのレーン（締め日 closingDate → 引き落とし日 payDate）の中の、今日の位置（0〜1）。締め日より前は 0、引き落とし日より後は 1
+export const lanePos = (lane, today) => clamp01(dayDiff(lane.closingDate, today) / Math.max(1, dayDiff(lane.closingDate, lane.payDate)))
+
+// カードを追加するときの線：入れかけの締め日・引き落とし日（文字）から。半角の 1〜31 だけ。空・範囲外・全角は null。
+// 成功：{ closingDate（最後の締め日）, payDate, left, pos }。保存しない
+export function previewLine(closingText, payText, today) {
+  const ok = (x) => typeof x === 'string' && /^([1-9]|[12][0-9]|3[01])$/.test(x.trim())
+  if (!ok(closingText) || !ok(payText)) return null
+  const closingDay = Number(closingText.trim())
+  const payDay = Number(payText.trim())
+  const lastClosing = lastClosingDate(closingDay, today)
+  const payDate = payDateOf(lastClosing, payDay)
+  return { closingDate: lastClosing, payDate, ...payCountdown({ lastClosing, payDate }, today) }
 }
 
 // 次の引き落とし日までの日数と、いまの位置（今日が最後の締め日と、次の引き落とし日のあいだのどこか：0〜1）

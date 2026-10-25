@@ -24,9 +24,9 @@ export function MoonRow({ moons, current, label }) {
   )
 }
 
-// 状態の札。tone：up（緑＝増える）／down（赤＝減る）／live（青＝進行中）／solid（青の塗り）／なし（無色＝中立）。色だけに頼らないので、必ず字を入れる
-export function StateTag({ tone, children }) {
-  return <span className={`g-tag${tone ? ` is-${tone}` : ''}`}>{children}</span>
+// 状態の札。tone：up（緑＝増える）／down（赤＝減る）／live（青＝進行中）／solid（青の塗り）／solid-light（青い面の上の白い塗り＝確定）／stamp（無色の判子＝引き落とし済み）／なし（無色＝中立）。title は補足（任意）。色だけに頼らないので、必ず字を入れる
+export function StateTag({ tone, title, children }) {
+  return <span className={`g-tag${tone ? ` is-${tone}` : ''}`} title={title}>{children}</span>
 }
 
 // 履歴の行（g-hist の表の 1 行）。date・cells（左から並べる中身）・amount（金額の字）・after（そのあとの額の字）。tone は金額の色（up／down）。open は未確定の行

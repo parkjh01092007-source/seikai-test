@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import './adjustment.css'
+import { AmountInput } from './Calculator.jsx'
 import { groupByType, adjustmentRows, planAdjustment, ledgerBook, formatMoney, formatYen, currencyUnit } from '../ledgerLogic.js'
 import { today } from '../today.js'
 import { t } from '../text.js'
@@ -119,7 +120,7 @@ export default function Adjustment({ data, update }) {
                 </select>
               </label>
               <label className="fl"><span className="lab">{t('adjustment.actual')}</span>
-                <span className="g-amount-row"><input inputMode="numeric" aria-label={t('adjustment.actual')} value={actual} onChange={(e) => { setActual(e.target.value); setStamp(0); setMessage('') }} /><span>{unit}</span></span>
+                <span className="g-amount-row"><AmountInput bare label={t('adjustment.actual')} placeholder="" value={actual} onChange={(v) => { setActual(v); setStamp(0); setMessage('') }} /><span>{unit}</span></span>
               </label>
             </div>
             <div className={`g-adj-row g-adj-diff is-${tone}${diffSize(cur, liveActual, diff)}`}>

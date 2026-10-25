@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { AccountSelect } from './Entries.jsx'
+import { AmountInput } from './Calculator.jsx'
 import {
   entryAccountOptions, validateEntryPresetInput, newEntryPreset, editEntryPreset, moveEntryPreset, canAddEntryPreset, presetSummary, formatMoney, ENTRY_PRESET_NAME_MAX, ENTRY_PRESET_MAX,
 } from '../ledgerLogic.js'
@@ -43,7 +44,9 @@ function PresetForm({ accounts, initial, submitLabel, submitIcon = 'plus', onSub
       {field(t('presets.namePlaceholder'), <input placeholder={t('presets.namePlaceholder')} aria-label={t('common.name')} value={f.name} onChange={(e) => set('name')(e.target.value)} />)}
       {field(t('common.debit'), <AccountSelect label={t('common.debit')} value={f.debitId} onChange={set('debitId')} options={options} />)}
       {field(t('common.credit'), <AccountSelect label={t('common.credit')} value={f.creditId} onChange={set('creditId')} options={options} />)}
-      {field(t('presets.amountOptional'), <input inputMode="numeric" placeholder={t('presets.amountOptional')} aria-label={t('common.amount')} value={f.amount} onChange={(e) => set('amount')(e.target.value)} />)}
+      {field(t('presets.amountOptional'), gunjoPc
+        ? <AmountInput bare label={t('common.amount')} placeholder={t('presets.amountOptional')} value={f.amount} onChange={set('amount')} />
+        : <input inputMode="numeric" placeholder={t('presets.amountOptional')} aria-label={t('common.amount')} value={f.amount} onChange={(e) => set('amount')(e.target.value)} />)}
       {field(t('common.memo'), <input placeholder={t('common.memo')} aria-label={t('common.memo')} value={f.memo} onChange={(e) => set('memo')(e.target.value)} />)}
       <button className="pset-submit"><Icon name={submitIcon} />{submitLabel}</button>
       {onCancel && <button type="button" onClick={onCancel}><Icon name="close" />{t('entries.sheetClose')}</button>}

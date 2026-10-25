@@ -6,7 +6,12 @@ import { useGunjoPc } from '../gunjoPc.js'
 import { useBandHost, useBandTop } from './bandHost.js'
 import { BandStat, signedYen } from './PageBand.jsx'
 import { Icon } from './Icon.jsx'
+import { StateTag } from './FlowParts.jsx'
+import CardTimeline from './CardTimeline.jsx'
+import { periodStatus } from '../flowArt.js'
+import { today } from '../today.js'
 
+const PERIOD_ROWS = 6 // 請求期間の表に出す行（新しい順）。残りは「ほか N 期間」に畳む
 const Num = ({ n }) => <span className={n < 0 ? 'neg' : ''}>{formatYen(n)}</span>
 
 // 個別ページ。card は cardReports の1枚分。表示するだけ（計算・並べ替え・判定は ledgerLogic.js）
@@ -16,18 +21,42 @@ export default function CreditCardDetail({ card, backHref, unit }) {
   const gunjoPc = useGunjoPc()
   const bandHost = useBandHost()
   const bandTop = useBandTop()
-  // 群青の PC（見本 E-carddetail）：帯にカード名（自分の入力なので、システムのゴシック）と「一覧へ戻る」。左に「次の引き落とし分」の札と項目の表、右に請求期間の表（請求期間・利用額・引き落とし）
+  const now = today()
+  // 群青の PC（見本 E24）：帯にカード名と「一覧へ戻る」。左の列（--g-sw）に、「次の引き落とし分」の札・項目の表・「計算のしかた」（畳む）・請求期間の表（状態の札つき。最大 6 行、残りは畳む）。右の青い面に、請求の時間軸
   if (gunjoPc) {
+    const rows = periods.map((p) => ({ ...p, status: periodStatus({ open: p.open, paid: p.payDate <= now }) }))
+    const shown = rows.slice(0, PERIOD_ROWS)
+    const more = rows.slice(PERIOD_ROWS)
+    const periodTable = (list, withHead) => (
+      <div className="table-box"><table className="g-hist">
+        <thead className={withHead ? undefined : 'g-sr'}>
+          <tr><th className="text">{t('card.period')}</th><th><span className="g-sr">{t('card.statusColumn')}</span></th><th className="n">{t('card.usage')}</th><th className="n">{t('card.payColumn')}</th></tr>
+        </thead>
+        <tbody>
+          {list.map((p) => (
+            <tr key={p.closingDate} className={p.open ? 'open' : undefined}>
+              <td>{p.label}</td>
+              <td>
+                {p.status === 'paid' && <StateTag tone="stamp" title={t('card.statusPaidHint')}>{t('card.statusPaid')}</StateTag>}
+                {p.status === 'closed' && <StateTag tone="live">{t('card.statusClosed')}</StateTag>}
+              </td>
+              <td className="n"><Num n={p.amount} />{unit}</td>
+              <td className="n">{p.payLabel}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table></div>
+    )
     return (
-      <div className="g-detail">
+      <div className="g-detail g-cardpage">
         {bandHost && createPortal(<BandStat label={t('card.heroLabel')} value={<span className="user-text">{card.account.name}{!card.account.active && ` ${t('common.inactive')}`}</span>} />, bandHost)}
         {bandTop && createPortal(<a className="g-back" href={backHref}><Icon name="back" />{t('card.back')}</a>, bandTop)}
-        <div className="g-detail-left">
+        <div className="g-card-col g-detail-left">
           <section className="g-card g-next">
             <span>{t('card.next')}</span>
             <b className={card.next < 0 ? 'neg' : ''}>{signedYen(card.next, formatYen)}{unit}</b>
           </section>
-          <div className="table-box"><table>
+          <div className="table-box"><table className="g-facts">
             <tbody>
               <tr><td>{t('card.unbilled')}</td><td><Num n={card.unbilled} />{unit}</td></tr>
               <tr><td>{t('card.payDateApprox')}</td><td>{card.payDate.replaceAll('-', '/')}</td></tr>
@@ -36,27 +65,24 @@ export default function CreditCardDetail({ card, backHref, unit }) {
               <tr><td>{t('card.payDay')}</td><td>{t('card.everyMonthDay', { day: card.payDay })}</td></tr>
             </tbody>
           </table></div>
-          <p className="note">{t('card.noteFormula', { date: card.lastClosing })} {t('card.noteRules')}</p>
-        </div>
-        <div className="g-detail-right">
+          <details className="aux g-calcfold">
+            <summary>{t('card.calcFold')} ▾</summary>
+            <p className="note">{t('card.noteFormula', { date: card.lastClosing })} {t('card.noteRules')}</p>
+          </details>
           <h2 className="g-h">{t('card.periodsTitle')}<small lang="en">{t('card.periodsEn')}</small></h2>
           {periods.length === 0 ? <p className="note">{t('card.noUsage')}</p> : (
-            <div className="table-box"><table>
-              <thead>
-                <tr><th className="text">{t('card.period')}</th><th>{t('card.usage')}</th><th>{t('card.payColumn')}</th></tr>
-              </thead>
-              <tbody>
-                {periods.map((p) => (
-                  <tr key={p.closingDate} className={p.open ? 'open-period' : ''}>
-                    <td>{p.label}{p.open && t('card.unconfirmed')}</td>
-                    <td><Num n={p.amount} />{unit}</td>
-                    <td className="text">{p.payLabel}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table></div>
+            <>
+              {periodTable(shown, true)}
+              {more.length > 0 && (
+                <details className="aux g-more">
+                  <summary>{t('card.periodsMore', { n: more.length })} ▾</summary>
+                  {periodTable(more, false)}
+                </details>
+              )}
+            </>
           )}
         </div>
+        <CardTimeline card={card} today={now} unit={unit} />
       </div>
     )
   }

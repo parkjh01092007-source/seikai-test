@@ -7,6 +7,7 @@ import { t } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import { usePhone } from '../layout.js'
 import { useGunjoPc } from '../gunjoPc.js'
+import { AmountInput } from './Calculator.jsx'
 import { useBandHost } from './bandHost.js'
 import { BandStat } from './PageBand.jsx'
 import { Icon } from './Icon.jsx'
@@ -61,7 +62,7 @@ export default function Opening({ data, update }) {
         {g.accounts.map((a) => (
           <label key={a.id} className="row">
             <span>{a.name}</span>
-            <input inputMode="numeric" aria-label={a.name} value={texts[a.id] ?? ''} onChange={(e) => setTexts((prev) => ({ ...prev, [a.id]: e.target.value }))} />
+            <AmountInput bare label={a.name} placeholder="" value={texts[a.id] ?? ''} onChange={(v) => setTexts((prev) => ({ ...prev, [a.id]: v }))} />
             <span>{currencyUnit(data.settings.currency)}</span>
           </label>
         ))}

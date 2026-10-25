@@ -28,7 +28,8 @@ export default function SubscriptionRing({ subs, today }) {
   const months = monthWindow(today).map((m) => m.ym)
   const rows = ringFractions(subs, today, months)
   const now = rows[rows.length - 1]
-  const label = `${t('subscriptions.ringNow')} ${now.done}${t('subscriptions.ringOf', { total: now.total })} ${t('subscriptions.ringDone')}`
+  const none = now.total === 0 // 今月は記入の対象がない（0 件・登録前・使わない間）：0／0 ではなく、文で言う
+  const label = none ? t('subscriptions.ringNone') : `${t('subscriptions.ringNow')} ${now.done}${t('subscriptions.ringOf', { total: now.total })} ${t('subscriptions.ringDone')}`
   return (
     <div className="g-side-panel" role="img" aria-label={label}>
       <div className="g-side-stick">
@@ -52,9 +53,11 @@ export default function SubscriptionRing({ subs, today }) {
               </g>
             )
           })}
-          <text x={C} y="194" textAnchor="middle" fontSize="12" letterSpacing="4">{t('subscriptions.ringNow')}</text>
-          <text className="big" x={C} y="246" textAnchor="middle" fontSize="58">{now.done}<tspan fontSize="24" dx="6">{t('subscriptions.ringOf', { total: now.total })}</tspan></text>
-          <text x={C} y="276" textAnchor="middle" fontSize="13">{t('subscriptions.ringDone')}</text>
+          {none ? <text className="big" x={C} y="206" textAnchor="middle" fontSize="20">{t('subscriptions.ringNone')}</text> : <>
+            <text x={C} y="194" textAnchor="middle" fontSize="12" letterSpacing="4">{t('subscriptions.ringNow')}</text>
+            <text className="big" x={C} y="246" textAnchor="middle" fontSize="58">{now.done}<tspan fontSize="24" dx="6">{t('subscriptions.ringOf', { total: now.total })}</tspan></text>
+            <text x={C} y="276" textAnchor="middle" fontSize="13">{t('subscriptions.ringDone')}</text>
+          </>}
         </svg>
         <div className="g-side-sub">{t('subscriptions.ringCaption')}</div>
       </div>

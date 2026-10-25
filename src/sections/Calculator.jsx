@@ -161,7 +161,9 @@ const answerLine = (expr, answer) => (answer && !answer.error && !answer.decimal
 // スマホの形：欄の右に絵のボタン → キーパッド。PC の形：欄に入ると、欄の下に帯（上の行に式と答え、下の行に電卓の絵のボタン・＋ − × ÷・×1.1・×1.08）。絵のボタンか Alt+↓ で、大きなキーパッド。
 // PC の Enter：欄に記号があるときだけ、答えを欄に入れる（送信しない）。記号がなければ、今までどおり（送信）
 // focusRequest：増えるたびに、欄へフォーカスを移す（金額が入っていれば全選択）。0 は何もしない。PC の電卓の帯は、打つまで出さない（下の部品を隠さない）
-export function AmountInput({ value, onChange, label, focusRequest = 0 }) {
+// bare：群青の PC の、仕訳以外の金額の欄（定期支払い・残高調整・開始残高・予算・プリセット）。帯は出さない：式は欄の中にそのまま出し、Enter で結果に置き換える（記号がなければ、今までどおり送信）。
+// Alt+↓ で、同じキーパッドが開く。式が読めないとき（途中は除く）は、欄を赤の枠にして、理由を title に出す。placeholder：省略すると label（開始残高のように、科目名を label にして、欄は空にするときは ''）
+export function AmountInput({ value, onChange, label, focusRequest = 0, bare = false, placeholder = label }) {
   const phone = usePhone()
   const gunjoPc = useGunjoPc() // 群青の PC の帯には、税率のボタン（×1.1・×1.08）を出さない
   const [open, setOpen] = useState(false)
@@ -213,7 +215,7 @@ export function AmountInput({ value, onChange, label, focusRequest = 0 }) {
   const answer = expression ? answerOf(value) : null
   const text = answerText(value, answer)
   const keyDown = (e) => {
-    if (e.key === 'Escape' && focused && !dismissed) { e.preventDefault(); setDismissed(true); return }
+    if (e.key === 'Escape' && focused && !dismissed && !bare) { e.preventDefault(); setDismissed(true); return }
     if (e.key === 'ArrowDown' && e.altKey) { e.preventDefault(); setOpen(true); return }
     if (e.key === 'Enter' && !e.nativeEvent.isComposing && e.keyCode !== 229 && expression) { // 日本語の変換中の Enter（確定）では何もしない
       e.preventDefault()
@@ -221,17 +223,18 @@ export function AmountInput({ value, onChange, label, focusRequest = 0 }) {
       if (!answer.error) onChange(String(answer.rounded))
     }
   }
-  const showBand = focused && !dismissed
+  const showBand = focused && !dismissed && !bare
+  const wrong = bare && expression && answer?.error && answer.error !== 'incomplete' // 式の途中（incomplete）は、打っている最中なので赤にしない
   const hold = (e) => e.preventDefault() // 帯のボタンを押しても、欄からフォーカスを外さない
   const apply = (k) => { setDismissed(false); onChange(press(value, k)); inputRef.current?.focus() }
   return (
     <span
-      className="amount-wrap"
+      className={bare ? 'amount-wrap bare' : 'amount-wrap'}
       ref={wrapRef}
       onFocus={(e) => { if (e.currentTarget.contains(e.target)) setFocused(true) }} // キーパッド（portal）の中の動きは、React では欄の子として届くので、DOM で欄の中のものだけ見る
       onBlur={(e) => { if (e.currentTarget.contains(e.target) && !e.currentTarget.contains(e.relatedTarget)) { setFocused(false); setDismissed(false) } }}
     >
-      <input ref={inputRef} inputMode="numeric" placeholder={label} aria-label={label} value={value} onChange={(e) => { setDismissed(false); onChange(e.target.value) }} onKeyDown={keyDown} />
+      <input ref={inputRef} inputMode="numeric" placeholder={placeholder} aria-label={label} value={value} onChange={(e) => { setDismissed(false); onChange(e.target.value) }} onKeyDown={keyDown} aria-invalid={wrong || undefined} title={wrong ? ERROR_TEXT[answer.error]() : undefined} />
       {showBand && (
         <span className="calc-band" role="group" aria-label={t('calc.name')} ref={bandRef}>
           {/* 上の行：式と答え。式に記号がないときは出さない（欄に打った数字と同じなので）。理由は、答えの代わりにここへ（行の高さは同じ） */}

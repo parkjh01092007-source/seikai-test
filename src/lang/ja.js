@@ -293,6 +293,8 @@ export default {
   'subscriptions.ringTitle': '毎月、くり返す',
   'subscriptions.ringTitleEn': 'EVERY MONTH',
   'subscriptions.ringNow': '今月',
+  'subscriptions.editing': '編集中', // 編集の札の上の小さな札（群青の PC）
+  'subscriptions.ringNone': '今月の対象はありません', // 輪の中央。今月に記入される定期支払いが 0 件のとき
   'subscriptions.ringOf': '／{total}', // 輪の中央「1／4」の「／4」
   'subscriptions.ringDone': '件が記入済み',
   'subscriptions.ringCaption': '日が来ると自動で記入され、その月の玉が満ちます',
@@ -506,6 +508,27 @@ export default {
   'card.usage': '利用額',
   'card.unconfirmed': '（未確定）',
   'card.payLabelWrap': '（{label}）',
+  // 群青の PC のクレカ（区切り①。見本 E24）：請求の時間軸・札・カウントダウン
+  'card.timelineTitle': '請求の流れ',
+  'card.timelineEn': 'TIMELINE',
+  'card.timelineAria': '請求の流れ（{n}期間）',
+  'card.timelineLegend': '帯＝その期間の利用（旗が締め日）／◇＝引き落とし日（塗り＝済み）／点線＝まだ確定していない（未確定）',
+  'card.tickMonth': '{m}月',
+  'card.today': '今日 {date}',
+  'card.payLeft': 'あと{n}日',
+  'card.statusClosed': '確定',
+  'card.statusPaid': '引き落とし済み',
+  'card.statusPaidHint': '引き落とし予定日を過ぎています（日付だけで決めた目安）',
+  'card.statusColumn': '状態',
+  'card.periodUsage': '今期の利用 {amount}',
+  'card.calcFold': '計算のしかた',
+  'card.periodsMore': 'ほか{n}期間',
+  'card.countdownTitle': '引き落としまで',
+  'card.countdownEn': 'COUNTDOWN',
+  'card.countdownLine': '{name}　{date}（目安）に {amount}',
+  'card.previewHint': '入れた日で、線が引かれます（{closing}日締め・{pay}日引き落とし）',
+  'card.emptyTitle': 'カードがまだありません',
+  'card.emptyBody': 'カードを追加すると、締め日と引き落とし日の線が引かれます。',
 
   // 予算（Budgets）
   'budgets.title': '予算',

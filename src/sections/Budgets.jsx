@@ -12,6 +12,7 @@ import { useConfirm } from './ConfirmDialog.jsx'
 import { usePhone } from '../layout.js'
 import { useGunjoPc } from '../gunjoPc.js'
 import { useBandHost } from './bandHost.js'
+import { AmountInput } from './Calculator.jsx'
 import { BandStat, signedYen } from './PageBand.jsx'
 import Tabs from './Tabs.jsx'
 import { tabDomId, panelDomId } from '../tabs.js'
@@ -117,6 +118,7 @@ function HistoryRow({ budget, data, update }) {
   const [error, setError] = useState('')
   const past = isPastBudgetMonth(budget.startMonth, today())
   const confirm = useConfirm()
+  const gunjoPc = useGunjoPc()
 
   const change = async () => {
     const r = changeBudgetAmount(data.budgets, budget.id, amountText) // 先に検証する
@@ -135,7 +137,9 @@ function HistoryRow({ budget, data, update }) {
     <li>
       <span className="start">{t('budgets.fromMonth', { month: budget.startMonth })}</span>
       <span className="amount"><Yen n={budget.amount} currency={data.settings.currency} /></span>
-      <input inputMode="numeric" aria-label={t('common.amount')} value={amountText} onChange={(e) => setAmountText(e.target.value)} />
+      {gunjoPc
+        ? <AmountInput bare label={t('common.amount')} placeholder="" value={amountText} onChange={setAmountText} />
+        : <input inputMode="numeric" aria-label={t('common.amount')} value={amountText} onChange={(e) => setAmountText(e.target.value)} />}
       <button type="button" onClick={change}>{t('budgets.changeAmount')}</button>
       <IconButton icon="trash" label={t('common.delete')} onClick={remove} />
       {error && <span className="error">{error}</span>}
@@ -267,7 +271,7 @@ export default function Budgets({ data, update }) {
                       {budgetAccountOptions(accounts, kind).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
                     </select>
                   </label>
-                  <label className="fl"><span className="lab">{t('common.amount')}</span><input inputMode="numeric" aria-label={t('common.amount')} value={amount} onChange={(e) => setAmount(e.target.value)} /></label>
+                  <label className="fl"><span className="lab">{t('common.amount')}</span><AmountInput bare label={t('common.amount')} placeholder="" value={amount} onChange={setAmount} /></label>
                   <label className="fl"><span className="lab">{t('budgets.startMonth')}</span><input type="month" aria-label={t('budgets.startMonth')} value={startMonth} onChange={(e) => setStartMonth(e.target.value)} /></label>
                   <button className="primary large"><Icon name="plus" />{t('common.add')}</button>
                   {error && <span className="error">{error}</span>}

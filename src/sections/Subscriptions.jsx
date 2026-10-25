@@ -14,7 +14,8 @@ import { useGunjoPc } from '../gunjoPc.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import { useBandHost } from './bandHost.js'
 import { BandStat } from './PageBand.jsx'
-import { MoonRow, Moon } from './FlowParts.jsx'
+import { MoonRow, Moon, StateTag } from './FlowParts.jsx'
+import { AmountInput } from './Calculator.jsx'
 import SubscriptionRing from './SubscriptionRing.jsx'
 import { Icon, IconButton } from './Icon.jsx'
 
@@ -46,7 +47,12 @@ function SubscriptionForm({ accounts, initial, submitLabel, submitIcon = 'plus',
   const [f, setF] = useState(initial)
   const [error, setError] = useState('')
   const set = (k) => (v) => setF((s) => ({ ...s, [k]: v }))
-  const field = (label, control) => (gunjoPc ? <label className="fl"><span className="lab">{label}</span>{control}</label> : control)
+  const field = (label, control, cls) => (gunjoPc ? <label className={cls ? `fl ${cls}` : 'fl'}><span className="lab">{label}</span>{control}</label> : control)
+  // 群青の PC の金額の欄は電卓（式を欄の中に出す。Enter で結果。Alt+↓ でキーパッド）。ほかの形は今までの欄
+  const amountControl = gunjoPc
+    ? <AmountInput bare label={t('common.amount')} value={f.amount} onChange={set('amount')} />
+    : <input inputMode="numeric" placeholder={t('common.amount')} aria-label={t('common.amount')} value={f.amount} onChange={(e) => set('amount')(e.target.value)} />
+  const dayControl = <input inputMode="numeric" className="day" aria-label={t('subscriptions.dayLabel')} value={f.day} onChange={(e) => set('day')(e.target.value)} />
 
   const submit = (e) => {
     e.preventDefault()
@@ -57,14 +63,36 @@ function SubscriptionForm({ accounts, initial, submitLabel, submitIcon = 'plus',
     if (clearOnSuccess) setF(EMPTY)
   }
 
+  // 群青の PC の編集の札（見本 E23-subs-edit-B2）：1 行目＝日・名前・メモ、2 行目＝借方・貸方、3 行目＝金額・やめる・保存。Tab の順は、この見た目の順。Esc でやめる（キーパッドなど、portal の中の Esc は数えない）
+  if (gunjoPc && onCancel) {
+    return (
+      <form onSubmit={submit} className="g-form g-edit" onKeyDown={(e) => { if (e.key === 'Escape' && !e.defaultPrevented && e.currentTarget.contains(e.target)) onCancel() }}>
+        <div className="g-e-tag"><StateTag tone="live">{t('subscriptions.editing')}</StateTag></div>
+        {field(`${t('subscriptions.every')} ${t('subscriptions.dayUnit')}`, dayControl, 'g-e-day')}
+        {field(t('common.name'), <input placeholder={t('common.name')} aria-label={t('common.name')} value={f.name} onChange={(e) => set('name')(e.target.value)} />, 'g-e-name')}
+        {field(t('subscriptions.memoPlaceholder'), <input placeholder={t('subscriptions.memoPlaceholder')} aria-label={t('common.memo')} value={f.memo} onChange={(e) => set('memo')(e.target.value)} />, 'g-e-memo')}
+        {field(t('common.debit'), <AccountSelect label={t('common.debit')} value={f.debitId} onChange={set('debitId')} options={options} />, 'g-e-debit')}
+        {field(t('common.credit'), <AccountSelect label={t('common.credit')} value={f.creditId} onChange={set('creditId')} options={options} />, 'g-e-credit')}
+        <div className="g-e-r3">
+          {field(t('common.amount'), amountControl, 'g-e-amount')}
+          <div className="g-e-btns">
+            <button type="button" className="sub-cancel" onClick={onCancel}><Icon name="close" />{t('entries.sheetClose')}</button>
+            <button className="sub-submit"><Icon name={submitIcon} />{submitLabel}</button>
+          </div>
+        </div>
+        {error && <span className="error">{error}</span>}
+      </form>
+    )
+  }
+
   return (
     <form onSubmit={submit} className={gunjoPc ? 'g-form' : undefined}>
       {field(t('common.name'), <input placeholder={t('common.name')} aria-label={t('common.name')} value={f.name} onChange={(e) => set('name')(e.target.value)} />)}
       {field(t('subscriptions.memoPlaceholder'), <input placeholder={t('subscriptions.memoPlaceholder')} aria-label={t('common.memo')} value={f.memo} onChange={(e) => set('memo')(e.target.value)} />)}
-      {field(t('common.amount'), <input inputMode="numeric" placeholder={t('common.amount')} aria-label={t('common.amount')} value={f.amount} onChange={(e) => set('amount')(e.target.value)} />)}
+      {field(t('common.amount'), amountControl)}
       {gunjoPc
-        ? <label className="fl"><span className="lab">{t('subscriptions.every')}{' '}{t('subscriptions.dayUnit')}</span><input inputMode="numeric" className="day" aria-label={t('subscriptions.dayLabel')} value={f.day} onChange={(e) => set('day')(e.target.value)} /></label>
-        : <label>{t('subscriptions.every')}{' '}<input inputMode="numeric" className="day" aria-label={t('subscriptions.dayLabel')} value={f.day} onChange={(e) => set('day')(e.target.value)} />{' '}{t('subscriptions.dayUnit')}</label>}
+        ? <label className="fl"><span className="lab">{t('subscriptions.every')}{' '}{t('subscriptions.dayUnit')}</span>{dayControl}</label>
+        : <label>{t('subscriptions.every')}{' '}{dayControl}{' '}{t('subscriptions.dayUnit')}</label>}
       {field(t('common.debit'), <AccountSelect label={t('common.debit')} value={f.debitId} onChange={set('debitId')} options={options} />)}
       {field(t('common.credit'), <AccountSelect label={t('common.credit')} value={f.creditId} onChange={set('creditId')} options={options} />)}
       {/* スマホの形の編集は、仕訳の編集画面（下から出る画面）と同じ左右の順番：左「やめる」、右「保存」（spec-mobile.md 11.3）。PC は今のまま（保存 → やめる） */}
@@ -82,7 +110,7 @@ function SubscriptionRow({ sub, accounts, currency, editing, moons, current, onE
   const name = (id) => accounts.find((a) => a.id === id)?.name ?? ''
   if (editing) {
     return (
-      <li>
+      <li className={gunjoPc ? 'g-editing' : undefined}>
         <SubscriptionForm
           accounts={accounts}
           initial={{ name: sub.name, memo: sub.memo, amount: String(sub.amount), day: String(sub.day), debitId: sub.debitId, creditId: sub.creditId }}
@@ -92,6 +120,7 @@ function SubscriptionRow({ sub, accounts, currency, editing, moons, current, onE
           onSubmit={onSave}
           onCancel={onCancel}
         />
+        {gunjoPc && <div className="g-moonline"><MoonRow moons={moons} current={current} label={t('subscriptions.moonsLabel')} /></div>}
       </li>
     )
   }

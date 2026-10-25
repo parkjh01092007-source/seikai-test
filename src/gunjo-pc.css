@@ -331,6 +331,25 @@
   :root[data-theme='gunjo'] .subscriptions .g-legend-moons .g-moons .m { width: auto; gap: 0; }
   :root[data-theme='gunjo'] .subscriptions .g-legend-moons .g-moons svg { width: 14px; height: 14px; }
   :root[data-theme='gunjo'] .subscriptions li > .g-moonline { grid-column: 2 / 4; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--color-border); }
+  /* 定期支払いの編集の札（見本 E23-subs-edit-B2）：左に青い線、上に「編集中」の札。3 行：日・名前・メモ／借方・貸方／金額・やめる・保存。3 行目は下そろえ（欄もボタンも高さ var(--g-h)）。数字の欄は、右端から 14px 内側 */
+  :root[data-theme='gunjo'] .subscriptions li.g-editing { margin-top: 14px; padding: 12px 20px 16px 16px; border-left: 4px solid var(--color-accent); }
+  :root[data-theme='gunjo'] .subscriptions .g-form.g-edit { grid-template-columns: 84px minmax(0, 1fr) minmax(0, 1fr); gap: 10px 16px; align-items: end; margin: 0; }
+  :root[data-theme='gunjo'] .subscriptions .g-edit > .g-e-tag { grid-column: 1 / -1; margin-bottom: -2px; }
+  :root[data-theme='gunjo'] .subscriptions .g-edit .fl { min-width: 0; }
+  :root[data-theme='gunjo'] .subscriptions .g-edit .g-e-day { grid-column: 1; }
+  :root[data-theme='gunjo'] .subscriptions .g-edit :is(.g-e-name, .g-e-debit) { grid-column: 2; }
+  :root[data-theme='gunjo'] .subscriptions .g-edit :is(.g-e-memo, .g-e-credit) { grid-column: 3; }
+  :root[data-theme='gunjo'] .subscriptions .g-edit .g-e-r3 { grid-column: 2 / 4; display: flex; align-items: flex-end; gap: 16px; }
+  :root[data-theme='gunjo'] .subscriptions .g-edit .g-e-amount { flex: 1 1 0; min-width: 140px; }
+  :root[data-theme='gunjo'] .subscriptions .g-edit .g-e-btns { flex: none; display: flex; align-items: flex-end; } /* ボタンの間は、既存の規則（隣り合う部品の余白 var(--g-gap-controls)）に任せる */
+  :root[data-theme='gunjo'] .subscriptions .g-edit .g-e-btns button { box-sizing: border-box; height: var(--g-h); white-space: nowrap; }
+  :root[data-theme='gunjo'] .subscriptions .g-edit :is(input.day, .g-e-amount input) { box-sizing: border-box; text-align: right; padding-right: 14px; }
+  :root[data-theme='gunjo'] .subscriptions li.g-editing > .g-moonline { margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--color-border); }
+  /* 群青の PC の金額の電卓（bare：帯なし）：欄は、まわりの欄と同じ幅いっぱい。式が読めないときは、赤の枠（理由は title） */
+  :root[data-theme='gunjo'] .amount-wrap.bare { display: flex; min-width: 0; }
+  :root[data-theme='gunjo'] .amount-wrap.bare > input { flex: 1 1 auto; min-width: 0; }
+  :root[data-theme='gunjo'] .g-adj-in .g-amount-row > .amount-wrap { flex: 1 1 auto; }
+  :root[data-theme='gunjo'] .amount-wrap.bare > input[aria-invalid='true'] { border-color: var(--color-error); outline: 1px solid var(--color-error); color: var(--color-error); }
   /* 右の青い面：帯の下から右端・下端まで。左の縁は、帯の切り口と同じ斜め（高さの 25％）。中身（輪）は、面が狭い（380px 未満）と隠す */
   :root[data-theme='gunjo'] .g-side-panel { position: absolute; z-index: 0; top: -26px; right: -48px; bottom: -24px; left: calc(var(--g-sw) + 32px); overflow: clip; pointer-events: none; color: #fff; }
   :root[data-theme='gunjo'] .g-side-stick { position: sticky; top: 0; height: 100vh; container-type: size; } /* 画面の高さ。一覧が長くても、スクロールについてくる（斜めの角度・輪の大きさが、一覧の長さに左右されない） */
@@ -666,41 +685,114 @@
   :root[data-theme='gunjo'] tr.total .g-bar { background: rgba(255, 255, 255, 0.3); }
   :root[data-theme='gunjo'] tr.total .g-bar > i { background: #fff; }
 
-  /* ---- クレカ一覧（CreditCard.jsx。見本 E-card）：左にカードの札、右に「カードを追加」の札。帯に今月・前月の利用 ---- */
-  :root[data-theme='gunjo'] .g-card-list { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 420px); column-gap: 34px; align-items: start; }
+  /* ---- クレカ（CreditCard.jsx・CreditCardDetail.jsx。見本 E24）：左の列（--g-sw）に札と表、右は青い面（.g-side-panel。一覧はカウントダウン、個別は請求の時間軸）。面が狭い（380px 未満）と、中身は隠れる（既存の決め。幅 960〜1073px） ---- */
+  :root[data-theme='gunjo'] .g-cardpage { --g-sw: clamp(520px, 50%, 820px); position: relative; min-height: calc(100vh - 222px); }
+  :root[data-theme='gunjo'] .g-card-col { position: relative; z-index: 1; width: var(--g-sw); max-width: 100%; }
   :root[data-theme='gunjo'] .g-card-list .g-h { margin-bottom: 14px; }
   :root[data-theme='gunjo'] .g-cards { display: block; margin: 0; padding: 0; }
   :root[data-theme='gunjo'] .g-cards li { margin: 0 0 16px; }
-  :root[data-theme='gunjo'] .g-cards .card-button { box-sizing: border-box; width: 100%; padding: 22px 24px; border: 0; background: #fff; box-shadow: var(--g-tile-shadow); font-size: 17px; }
-  :root[data-theme='gunjo'] .g-cards .card-button .amount { font-family: var(--font-mincho); font-size: 15px; color: var(--color-text); }
+  :root[data-theme='gunjo'] .g-cards .card-button.g-cardtile { display: block; box-sizing: border-box; width: 100%; padding: 16px 22px 12px; border: 0; background: #fff; box-shadow: var(--g-tile-shadow); font-size: 17px; text-align: left; color: inherit; }
+  :root[data-theme='gunjo'] .g-ct-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  :root[data-theme='gunjo'] .g-ct-head > .user-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  :root[data-theme='gunjo'] .g-cards .card-button .amount { flex: none; font-family: var(--font-mincho); font-size: 15px; color: var(--color-text); }
   :root[data-theme='gunjo'] .g-cards .card-button .amount b { margin-left: 8px; font-family: var(--font-num); font-size: 22px; font-weight: 500; color: var(--color-accent); }
   :root[data-theme='gunjo'] .g-cards .card-button .amount b.neg { color: var(--color-error); }
   :root[data-theme='gunjo'] .g-cards .card-button.inactive { color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-sub-row { display: flex; align-items: center; gap: 10px; min-height: 26px; margin-top: 6px; font-family: var(--font-gothic); font-size: 13px; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-sub-row .g-sub-tag { margin-left: auto; }
+  /* 小さな線（一覧のカード・追加の線・カウントダウン）：左の旗＝最後の締め日、右の◇＝引き落とし日、点＝今日。字は実寸 */
+  :root[data-theme='gunjo'] .g-mini { margin-top: 4px; }
+  :root[data-theme='gunjo'] .g-mini svg { display: block; }
+  :root[data-theme='gunjo'] .g-mini text { font-family: var(--font-mincho); font-size: 12px; fill: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-mini .base { stroke: #C9C8E6; stroke-width: 2; }
+  :root[data-theme='gunjo'] .g-mini .done { stroke: var(--color-accent); stroke-width: 3; }
+  :root[data-theme='gunjo'] .g-mini .flag { fill: none; stroke: var(--color-accent); stroke-width: 2; }
+  :root[data-theme='gunjo'] .g-mini .pay { fill: #fff; stroke: var(--color-accent); stroke-width: 1.8; }
+  :root[data-theme='gunjo'] .g-mini .pay.paid { fill: var(--color-accent); }
+  :root[data-theme='gunjo'] .g-mini .now { fill: var(--color-accent); }
+  :root[data-theme='gunjo'] .g-mini text.now-text { fill: var(--color-accent); }
+  :root[data-theme='gunjo'] .g-mini.on-blue { width: min(100%, 560px); align-self: center; }
+  :root[data-theme='gunjo'] .g-mini.on-blue text { fill: #D6D5FF; }
+  :root[data-theme='gunjo'] .g-mini.on-blue .base { stroke: #fff; stroke-opacity: 0.35; }
+  :root[data-theme='gunjo'] .g-mini.on-blue .done { stroke: #fff; stroke-width: 4; }
+  :root[data-theme='gunjo'] .g-mini.on-blue .flag { stroke: #fff; }
+  :root[data-theme='gunjo'] .g-mini.on-blue .pay { fill: var(--color-accent); stroke: #fff; stroke-width: 2; }
+  :root[data-theme='gunjo'] .g-mini.on-blue .pay.paid { fill: #fff; }
+  :root[data-theme='gunjo'] .g-mini.on-blue .now { fill: #fff; r: 8px; }
+  :root[data-theme='gunjo'] .g-mini.on-blue text.now-text { fill: #fff; }
+  /* 追加の札（<details>。カードが 0 枚のときだけ開く） */
+  :root[data-theme='gunjo'] details.g-addcard > summary { display: flex; align-items: center; gap: 8px; cursor: pointer; list-style: none; }
+  :root[data-theme='gunjo'] details.g-addcard > summary::-webkit-details-marker { display: none; }
+  :root[data-theme='gunjo'] details.g-addcard > summary .g-h { margin: 0; }
+  :root[data-theme='gunjo'] details.g-addcard > summary::after { content: ''; width: 8px; height: 8px; margin: 0 4px 3px auto; border: solid var(--color-accent); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  :root[data-theme='gunjo'] details.g-addcard[open] > summary::after { margin-bottom: -3px; transform: rotate(-135deg); }
+  :root[data-theme='gunjo'] details.g-addcard.fixed > summary { cursor: default; }
+  :root[data-theme='gunjo'] details.g-addcard.fixed > summary::after { display: none; }
+  :root[data-theme='gunjo'] details.g-addcard > summary:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 4px; }
+  :root[data-theme='gunjo'] details.g-addcard[open] > summary { margin-bottom: 12px; }
+  :root[data-theme='gunjo'] .g-addrow { margin-top: 18px; }
   :root[data-theme='gunjo'] .g-addcard .note { margin: 12px 0 0; font-size: 13px; line-height: 1.7; }
   :root[data-theme='gunjo'] .g-addcard .card-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px 12px; align-items: end; margin: 10px 0 0; }
   :root[data-theme='gunjo'] .g-addcard .card-form .fl { display: block; margin: 0; }
   :root[data-theme='gunjo'] .g-addcard .card-form .g-wide { grid-column: 1 / -1; }
   :root[data-theme='gunjo'] .g-addcard .card-form :is(input, input.day) { width: 100%; }
   :root[data-theme='gunjo'] .g-addcard .card-form button.g-wide { justify-self: start; margin-top: 8px; }
-
-  /* ---- クレカ個別（CreditCardDetail.jsx。見本 E-carddetail）：帯に「一覧へ戻る」とカード名。左に「次の引き落とし分」の札と項目の表、右に請求期間の表 ---- */
+  :root[data-theme='gunjo'] .g-addcard .g-preview .note { margin: 2px 0 0; }
+  /* 右の青い面：カウントダウンの数字と、請求の時間軸 */
+  :root[data-theme='gunjo'] .g-count { align-self: center; font-family: var(--font-mincho); font-size: clamp(40px, 11cqw, 84px); line-height: 1.1; text-align: center; white-space: nowrap; }
+  :root[data-theme='gunjo'] .g-count b { margin: 0 6px; font-size: clamp(56px, 16cqw, 120px); font-weight: 400; }
+  :root[data-theme='gunjo'] .g-tl { position: relative; width: 100%; }
+  :root[data-theme='gunjo'] .g-tl svg { display: block; overflow: visible; }
+  :root[data-theme='gunjo'] .g-tl text { font-family: var(--font-mincho); fill: #D6D5FF; paint-order: stroke; stroke: #2314D8; stroke-width: 4; stroke-linejoin: round; }
+  :root[data-theme='gunjo'] .g-tl .tick { font-size: 12px; }
+  :root[data-theme='gunjo'] .g-tl .head { font-size: 13px; fill: #fff; }
+  :root[data-theme='gunjo'] .g-tl .paylabel { font-size: 13px; }
+  :root[data-theme='gunjo'] .g-tl .lane.paid .head { fill: #D6D5FF; }
+  :root[data-theme='gunjo'] .g-tl .grid { stroke: #fff; stroke-opacity: 0.16; }
+  :root[data-theme='gunjo'] .g-tl .band { fill: #fff; }
+  :root[data-theme='gunjo'] .g-tl .lane.paid .band { fill-opacity: 0.4; }
+  :root[data-theme='gunjo'] .g-tl .lane.open .band { fill-opacity: 0.14; stroke: #fff; stroke-width: 1.6; stroke-dasharray: 5 4; }
+  :root[data-theme='gunjo'] .g-tl .flagpole { stroke: #fff; stroke-width: 2; }
+  :root[data-theme='gunjo'] .g-tl .flag { fill: #fff; }
+  :root[data-theme='gunjo'] .g-tl .elbow { fill: none; stroke: #fff; stroke-width: 1.6; }
+  :root[data-theme='gunjo'] .g-tl .pay { fill: var(--color-accent); stroke: #fff; stroke-width: 1.8; }
+  :root[data-theme='gunjo'] .g-tl .lane.paid :is(.flagpole, .flag, .elbow) { opacity: 0.55; }
+  :root[data-theme='gunjo'] .g-tl .lane.paid .pay { fill: #fff; fill-opacity: 0.7; }
+  :root[data-theme='gunjo'] .g-tl .lane.open .flagpole { stroke-dasharray: 3 2.5; }
+  :root[data-theme='gunjo'] .g-tl .lane.open .flag { fill: none; stroke: #fff; stroke-width: 1.2; }
+  :root[data-theme='gunjo'] .g-tl .lane.open .elbow { stroke-dasharray: 4 3; }
+  :root[data-theme='gunjo'] .g-tl .today { stroke: #fff; stroke-width: 1.8; stroke-dasharray: 3 3; }
+  :root[data-theme='gunjo'] .g-tl .chip { fill: #fff; }
+  :root[data-theme='gunjo'] .g-tl text.chip-text { fill: var(--color-accent); font-size: 13px; font-weight: 500; stroke: none; }
+  :root[data-theme='gunjo'] .g-lane-tag { position: absolute; right: 3px; line-height: 1; }
+  :root[data-theme='gunjo'] .g-tl-legend { align-self: flex-start; text-align: left; font-size: 11px; }
+  /* 状態の札（クレカ）：確定＝青の実線の枠（is-live）。引き落とし済み＝無色の判子（二重枠・少し傾ける）。青い面の上では、確定＝白い塗り、判子＝薄い色 */
+  :root[data-theme='gunjo'] .g-tag.is-stamp { padding: 0 9px; border: 3px double currentColor; font-weight: 500; letter-spacing: 0.1em; transform: rotate(-4deg); }
+  :root[data-theme='gunjo'] .g-tag.is-solid-light { background: #fff; border-color: #fff; color: var(--color-accent); }
+  :root[data-theme='gunjo'] .g-side-pin .g-tag.is-stamp { color: #D6D5FF; }
+  /* 個別ページ：帯にカード名と「一覧へ戻る」。左に札・表・畳んだ説明・請求期間の表 */
   :root[data-theme='gunjo'] .g-back {
     display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-sizing: border-box; height: var(--g-h); padding: 0 12px;
     font-family: var(--font-mincho); font-size: 14px; line-height: 1; text-decoration: none; background: var(--color-accent); color: #fff; border: 1px solid rgba(255, 255, 255, 0.85); box-shadow: var(--g-btn-shadow);
   }
   :root[data-theme='gunjo'] .g-back .icon { width: 16px; height: 16px; }
   :root[data-theme='gunjo'] .g-stat-num .user-text { font-size: 28px; font-weight: 500; line-height: 1.15; } /* カード名（自分の入力）は、システムのゴシック */
-  :root[data-theme='gunjo'] .g-detail { display: grid; grid-template-columns: minmax(0, 440px) minmax(0, 1fr); column-gap: 40px; align-items: start; }
   :root[data-theme='gunjo'] .g-next { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; margin-bottom: 14px; }
   :root[data-theme='gunjo'] .g-next > span { font-family: var(--font-mincho); font-size: 16px; }
   :root[data-theme='gunjo'] .g-next > b { font-family: var(--font-num); font-size: 28px; font-weight: 500; color: var(--color-accent); }
   :root[data-theme='gunjo'] .g-next > b.neg { color: var(--color-error); }
   :root[data-theme='gunjo'] .g-detail table { width: 100%; }
-  :root[data-theme='gunjo'] .g-detail-left td:last-child { text-align: right; }
-  :root[data-theme='gunjo'] .g-detail-right .g-h { margin: 6px 0 10px; }
-  :root[data-theme='gunjo'] .g-detail-right td.text, :root[data-theme='gunjo'] .g-detail-right th.text { text-align: right; }
-  :root[data-theme='gunjo'] .g-detail-right :is(td, th):first-child { text-align: left; }
-  :root[data-theme='gunjo'] .g-detail .note { margin: 12px 0; font-size: 13px; line-height: 1.7; }
+  :root[data-theme='gunjo'] .g-detail .g-facts td { padding: 6px 0; }
+  :root[data-theme='gunjo'] .g-detail .g-facts td:last-child { text-align: right; }
+  :root[data-theme='gunjo'] .g-detail .g-h { margin: 22px 0 10px; }
+  :root[data-theme='gunjo'] .g-detail .note { margin: 8px 0; font-size: 13px; line-height: 1.7; }
+  :root[data-theme='gunjo'] .g-detail :is(details.g-calcfold, details.g-more) > summary { display: inline-block; padding: 2px 10px; border: 1px solid var(--color-border); background: #fff; font-family: var(--font-gothic); font-size: 12px; color: var(--color-muted); cursor: pointer; list-style: none; }
+  :root[data-theme='gunjo'] .g-detail :is(details.g-calcfold, details.g-more) > summary::-webkit-details-marker { display: none; }
+  :root[data-theme='gunjo'] .g-detail :is(details.g-calcfold, details.g-more) > summary:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+  :root[data-theme='gunjo'] .g-detail details.g-calcfold { margin: 6px 0 0; }
+  :root[data-theme='gunjo'] .g-detail details.g-more { margin: 8px 0 0; }
+  :root[data-theme='gunjo'] .g-detail .g-hist td:nth-child(2) { white-space: nowrap; }
+  :root[data-theme='gunjo'] .g-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
   /* ---- 貯蓄（Savings.jsx。見本 E-savings）：帯に取り分けの科目ごとの残高。科目ごとに「科目名 EARMARK」と表（相手の科目・メモは左、金額・累計は右） ---- */
   :root[data-theme='gunjo'] .g-savings section + section { margin-top: 34px; }
