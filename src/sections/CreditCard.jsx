@@ -15,6 +15,7 @@ import { Icon } from './Icon.jsx'
 import { StateTag, EmptyCard } from './FlowParts.jsx'
 import CardMiniLine from './CardMiniLine.jsx'
 import CardCountdown from './CardCountdown.jsx'
+import CardAdjust from './CardAdjust.jsx'
 
 const cardHash = (detailId) => toHash({ entry: 'ledger', tab: 'card', detailId }) // 一覧（null）／個別（カードの id）の # 。組み立ては route.js
 
@@ -120,6 +121,7 @@ export default function CreditCard({ data, update, detailId = null }) {
   const gunjoPc = useGunjoPc()
   const bandHost = useBandHost()
   const [formOpen, setFormOpen] = useState(false) // 群青の PC：「カードを追加」の札を開いているか（カードが 0 枚のときは、いつも開く）
+  if (gunjoPc && detailId === 'adjust') return <CardAdjust data={data} update={update} /> // クレカ残高調整ページ。ほかの形では 'adjust' は一覧と同じ（selected が見つからない）
   const now = today()
   const unit = currencyUnit(data.settings.currency)
   const reports = cardReports(data.accounts, data.entries, now)
@@ -172,6 +174,7 @@ export default function CreditCard({ data, update, detailId = null }) {
                 <p className="note">{t('card.closingDayHint')} {t('card.newNote')}</p>
               </div>
             </details>
+            <a className="g-card g-adjlink" href={cardHash('adjust')}>{t('cardAdjust.linkLabel')}<small lang="en">{t('cardAdjust.linkEn')}</small></a>
           </div>
         </div>
         {next && <CardCountdown next={next} today={now} unit={unit} />}

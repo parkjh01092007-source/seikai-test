@@ -1202,4 +1202,63 @@
   :root[data-theme='gunjo'] .g-hist tr.open td { color: var(--color-muted); }
   :root[data-theme='gunjo'] .g-empty { box-sizing: border-box; padding: 18px 22px; background: var(--g-paper); background-image: repeating-linear-gradient(to bottom, transparent 0 27px, var(--color-border) 27px 28px); box-shadow: 4px 4px 0 var(--color-border); font-size: 13px; line-height: 28px; color: var(--color-muted); }
   :root[data-theme='gunjo'] .g-empty b { display: block; font-family: var(--font-mincho); font-size: 17px; font-weight: 400; line-height: 28px; color: var(--color-text); }
+  /* ---- クレカ残高調整（CardAdjust.jsx。見本 E26）：一覧の入口（追加の札と並べる）と、専用ページ。差額の色は残高調整と同じ（調整益＝緑・調整損＝赤・0＝無色。字も付ける） ---- */
+  :root[data-theme='gunjo'] .g-addrow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  :root[data-theme='gunjo'] .g-addrow > * { margin: 0; }
+  :root[data-theme='gunjo'] .g-addrow:has(details[open]) { grid-template-columns: minmax(0, 1fr); }
+  :root[data-theme='gunjo'] .g-addrow:has(details[open]) .g-adjlink { order: -1; }
+  :root[data-theme='gunjo'] .g-adjlink { display: flex; align-items: center; gap: 8px; font-family: var(--font-mincho); font-size: 20px; color: var(--color-accent); text-decoration: none; }
+  :root[data-theme='gunjo'] .g-adjlink small { margin-left: auto; font-size: 10px; letter-spacing: 0.35em; }
+  :root[data-theme='gunjo'] .g-adjlink:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 4px; }
+  :root[data-theme='gunjo'] .g-adjpage .g-card-col > section > .g-h { margin-bottom: 14px; }
+  :root[data-theme='gunjo'] details.g-ck { box-sizing: border-box; margin-bottom: 18px; background: #fff; box-shadow: var(--g-tile-shadow); }
+  :root[data-theme='gunjo'] details.g-ck > summary { display: flex; align-items: baseline; gap: 14px; padding: 14px 20px; cursor: pointer; list-style: none; }
+  :root[data-theme='gunjo'] details.g-ck > summary::-webkit-details-marker { display: none; }
+  :root[data-theme='gunjo'] details.g-ck > summary:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+  :root[data-theme='gunjo'] details.g-ck > summary .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 17px; }
+  :root[data-theme='gunjo'] details.g-ck > summary .sm2 { flex: none; margin-left: auto; font-family: var(--font-mincho); font-size: 13px; color: var(--color-muted); }
+  :root[data-theme='gunjo'] details.g-ck > summary .sm2 b { margin: 0 10px 0 4px; font-family: var(--font-num); font-size: 15px; font-weight: 400; color: var(--color-text); }
+  :root[data-theme='gunjo'] details.g-ck > summary::after { content: ''; flex: none; align-self: center; width: 8px; height: 8px; margin: 0 4px 3px 0; border: solid var(--color-accent); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  :root[data-theme='gunjo'] details.g-ck[open] > summary::after { margin-bottom: -3px; transform: rotate(-135deg); }
+  :root[data-theme='gunjo'] details.g-ck[open] > summary { border-bottom: 1px solid var(--color-border); }
+  :root[data-theme='gunjo'] .g-ckbody { padding: 6px 20px 16px; }
+  :root[data-theme='gunjo'] .g-ckrow { padding: 12px 0; border-bottom: 1px solid var(--color-border); }
+  :root[data-theme='gunjo'] .g-ckrow .l1 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+  :root[data-theme='gunjo'] .g-ckrow .l1 .t { font-family: var(--font-mincho); font-size: 16px; }
+  :root[data-theme='gunjo'] .g-ckrow .l1 .d { font-size: 12px; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-ckrow .l1 .rec { margin-left: auto; font-size: 12px; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-ckrow .l1 .rec b { margin-left: 6px; font-family: var(--font-num); font-size: 20px; font-weight: 400; color: var(--color-text); }
+  :root[data-theme='gunjo'] .g-ckrow .l2 { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  :root[data-theme='gunjo'] .g-ckrow .l2 .lab { flex: none; font-size: 12px; letter-spacing: 0.06em; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-ckrow .l2 .g-amount-row { display: flex; align-items: center; gap: 8px; flex: 1 1 auto; min-width: 0; max-width: 260px; margin-left: auto; }
+  :root[data-theme='gunjo'] .g-ckrow .l2 .g-amount-row > .amount-wrap { flex: 1 1 auto; }
+  :root[data-theme='gunjo'] .g-ckrow .l2 .g-amount-row input { flex: 1 1 auto; min-width: 0; font-size: 18px; text-align: right; }
+  :root[data-theme='gunjo'] .g-ckrow .l2 .yen { font-size: 13px; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-ckrow .l3 { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px 10px; min-height: 24px; margin-top: 8px; font-size: 13px; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-ckrow .l3 .ba { font-family: var(--font-num); font-size: 15px; color: var(--color-text); }
+  :root[data-theme='gunjo'] .g-ckrow .l3 .df { font-family: var(--font-num); font-size: 18px; font-weight: 500; }
+  :root[data-theme='gunjo'] .g-ckrow .l3 .df.is-up { color: var(--g-gain); }
+  :root[data-theme='gunjo'] .g-ckrow .l3 .df.is-down, :root[data-theme='gunjo'] .g-ckrow .l3 .err { color: var(--color-error); }
+  :root[data-theme='gunjo'] .g-ckrow:has(.err) .g-amount-row input { border-color: var(--color-error); outline: 1px solid var(--color-error); }
+  :root[data-theme='gunjo'] .g-ckacts { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+  :root[data-theme='gunjo'] .g-ckacts :is(.note, .done, .error) { flex: 1; margin: 0; font-size: 13px; line-height: 1.7; }
+  :root[data-theme='gunjo'] .g-ckacts .done { font-weight: 500; }
+  :root[data-theme='gunjo'] .g-ckacts button { flex: none; }
+  :root[data-theme='gunjo'] .g-ckacts button[aria-disabled='true'] { opacity: 0.4; box-shadow: none; cursor: default; } /* 押せない見た目（disabled にしないのは、Enter のとき案内を出すため） */
+  /* 確認の札の中の表（仕訳 2 本）と、右の青い面の棒 */
+  :root[data-theme='gunjo'] dialog.confirm .g-ca-pop .scope { margin: 0 0 8px; font-size: 12px; line-height: 1.7; color: var(--color-muted); }
+  :root[data-theme='gunjo'] dialog.confirm .g-ca-pop table { width: 100%; margin: 6px 0 0; border-collapse: collapse; }
+  :root[data-theme='gunjo'] dialog.confirm .g-ca-pop :is(th, td) { padding: 7px 6px; border-bottom: 1px solid var(--color-border); font-size: 13px; text-align: left; }
+  :root[data-theme='gunjo'] dialog.confirm .g-ca-pop th { border-bottom-color: var(--color-accent); font-weight: 400; color: var(--color-muted); }
+  :root[data-theme='gunjo'] dialog.confirm .g-ca-pop :is(th, td).n { text-align: right; white-space: nowrap; }
+  :root[data-theme='gunjo'] dialog.confirm .g-ca-pop td.n { font-family: var(--font-num); font-size: 15px; }
+  :root[data-theme='gunjo'] dialog.confirm .g-ca-pop .sumln { margin: 10px 0 0; font-size: 13px; line-height: 1.8; }
+  :root[data-theme='gunjo'] .g-fixbar { align-self: stretch; }
+  :root[data-theme='gunjo'] .g-fixbar .t { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 6px; font-family: var(--font-mincho); font-size: 13px; }
+  :root[data-theme='gunjo'] .g-fixbar .t span:last-child { font-family: var(--font-num); color: #D6D5FF; }
+  :root[data-theme='gunjo'] .g-fixbar .trk { position: relative; height: 22px; }
+  :root[data-theme='gunjo'] .g-fixbar .b0 { position: absolute; left: 0; top: 0; bottom: 0; box-sizing: border-box; border: 1.6px dashed #fff; }
+  :root[data-theme='gunjo'] .g-fixbar .b1 { position: absolute; left: 0; top: 5px; bottom: 5px; background: #fff; }
+  :root[data-theme='gunjo'] .g-fixbar.empty .trk { border-bottom: 1px dashed rgba(255, 255, 255, 0.5); }
+  :root[data-theme='gunjo'] .g-fixbar .b1.down { background: rgba(255, 255, 255, 0.45); }
 }

@@ -552,9 +552,15 @@ export function closingDateOfEntry(date, closingDay) {
   return date <= closing ? closing : subscriptionDate(nextMonth(date.slice(0, 7)), closingDay)
 }
 
+// 確定分の調整の目印：残高調整（kind が adjustment）で、メモがこの字のもの（クレカ残高調整ページが付ける。調整の仕訳は編集できないので変わらない）。
+// 辞書は読まず、字を固定する（辞書の言い回しが後で変わっても、保存済みのメモと食い違わないため）。字を足すときは、古い字を残す
+export const CLOSED_FIX_MEMOS = ['確定分', '확정분']
+export const isClosedFix = (e) => e.kind === 'adjustment' && CLOSED_FIX_MEMOS.includes(e.memo)
+
 // カード1枚の計算。card でない科目・存在しない id は null
-// unbilled（未請求の利用額）＝最後の締め日より後の貸方合計（opening は除く。adjustment は含む）。next（次の引き落とし分）＝残高 − unbilled
-// periods：請求期間ごとの利用額 [{ closingDate, amount }]（締め日の新しい順。利用のある期間だけ）
+// 数える仕訳（符号つき）：貸方＝カード（opening は除く。adjustment は含む）は ＋、借方＝カードの adjustment は −。借方＝カードの normal（返済・返品）は数えない
+// unbilled（未請求の利用額）＝最後の締め日より後の合計。確定分の調整（isClosedFix）は、日付に関係なく最後の締め日の期に入り、unbilled には入らない。next（次の引き落とし分）＝残高 − unbilled
+// periods：請求期間ごとの利用額 [{ closingDate, amount }]（締め日の新しい順。合計が 0 でない期間だけ）
 export function cardReport(accounts, entries, accountId, today) {
   const account = accounts.find((a) => a.id === accountId)
   if (!account || !isCard(account)) return null
@@ -564,12 +570,14 @@ export function cardReport(accounts, entries, accountId, today) {
   const byPeriod = {}
   let unbilled = 0
   for (const e of entries) {
-    if (e.creditId !== accountId || e.kind === 'opening') continue
-    if (e.date > lastClosing) unbilled += e.amount
-    const closing = closingDateOfEntry(e.date, closingDay)
-    byPeriod[closing] = (byPeriod[closing] ?? 0) + e.amount
+    const amount = e.creditId === accountId && e.kind !== 'opening' ? e.amount : e.debitId === accountId && e.kind === 'adjustment' ? -e.amount : 0
+    if (amount === 0) continue
+    const fix = isClosedFix(e)
+    if (!fix && e.date > lastClosing) unbilled += amount
+    const closing = fix ? lastClosing : closingDateOfEntry(e.date, closingDay)
+    byPeriod[closing] = (byPeriod[closing] ?? 0) + amount
   }
-  const periods = Object.entries(byPeriod).map(([closingDate, amount]) => ({ closingDate, amount })).sort((a, b) => b.closingDate.localeCompare(a.closingDate))
+  const periods = Object.entries(byPeriod).filter(([, amount]) => amount !== 0).map(([closingDate, amount]) => ({ closingDate, amount })).sort((a, b) => b.closingDate.localeCompare(a.closingDate))
   return { account, closingDay, payDay, balance, lastClosing, unbilled, next: balance - unbilled, payDate: payDateOf(lastClosing, payDay), periods }
 }
 
@@ -599,10 +607,12 @@ export function periodRows(periods, lastClosing, payDay) {
 
 export const cardReports = (accounts, entries, today) => cardAccounts(accounts).map((a) => cardReport(accounts, entries, a.id, today))
 
-// 全カード合計：暦月（1日〜末日）の利用額を、すべてのカードで足す（opening は除く。adjustment は含む）。締め日には関係しない
+// 全カード合計：暦月（1日〜末日）の利用額を、すべてのカードで足す（opening は除く。貸方＝カードの adjustment は含み、借方＝カードの adjustment は引く）。締め日には関係しない
+// 確定分の調整（isClosedFix）は、その月の利用ではないので、増減どちらも数えない
 export function cardMonthTotal(accounts, entries, month) {
   const ids = new Set(cardAccounts(accounts).map((a) => a.id))
-  return { month, amount: sum(entries.filter((e) => ids.has(e.creditId) && e.kind !== 'opening' && e.date.startsWith(month)), (e) => e.amount) }
+  const used = (e) => (ids.has(e.creditId) && e.kind !== 'opening' ? e.amount : ids.has(e.debitId) && e.kind === 'adjustment' ? -e.amount : 0)
+  return { month, amount: sum(entries.filter((e) => e.date.startsWith(month) && !isClosedFix(e)), used) }
 }
 
 // 締め日・引き落とし日の入力：半角の 1〜31 だけ（先頭0・小数・全角・空・文字はエラー）。label は「締め日」「引き落とし日」
@@ -852,6 +862,42 @@ export function planAdjustment(accounts, entries, accountId, actualText, today, 
     amount: Math.abs(diff), memo: '', kind: 'adjustment', createdAt: now, updatedAt: now,
   }
   return { account, current, actual, diff, amount: entry.amount, kindLabel: gain ? t('sheet.gain') : t('sheet.loss'), entry, entries: [...entries, entry] }
+}
+
+// クレカ残高調整の計画（保存はしない）。確定分（cardReport の next）と今期（unbilled）を、それぞれ実際の額に合わせる。日付は today
+// closedText・openText：実際の額の入力（空は「変えない」）。currency：案内の金額の単位（settings.currency。省略は円）。差額 ＝ 実際 − 記録上。差額0の行は仕訳を作らない
+// 成功: { account, rows: [{ target, current, actual, diff, gain, kindLabel, entry }], entries }（rows は仕訳を作る行だけ。確定分が先）/ 全部空か差額0: { none: true, account } / 失敗: { error, target? }
+// 確定分の仕訳は、メモが closedMemo（isClosedFix の目印）。確定分を減らせるのは、最後の締め日の期の利用額まで
+export function planCardAdjustment(accounts, entries, cardId, { closedText = '', openText = '', currency }, today, now = new Date().toISOString()) {
+  if (!isDate(today)) return { error: t('error.dateWrong') }
+  const report = cardReport(accounts, entries, cardId, today)
+  if (!report) return { error: t('error.cardNotFound') }
+  const gainId = accounts.find((a) => a.key === 'adjust-gain')?.id
+  const lossId = accounts.find((a) => a.key === 'adjust-loss')?.id
+  if (!gainId || !lossId) return { error: t('error.adjustAccountsMissing') }
+  const closedLimit = report.periods.find((p) => p.closingDate === report.lastClosing)?.amount ?? 0
+  const rows = []
+  for (const [target, text, current, memo] of [['closed', closedText, report.next, t('cardAdjust.closedMemo')], ['open', openText, report.unbilled, '']]) {
+    if (text === '') continue
+    const parsed = parseOpeningAmount(text)
+    if (parsed.error) return { error: parsed.error, target }
+    const actual = parsed.amount
+    const diff = actual - current
+    if (diff === 0) continue
+    if (target === 'closed' && -diff > closedLimit) {
+      const [, m, d] = report.lastClosing.split('-').map(Number)
+      return { error: t('cardAdjust.errClosedOver', { closing: `${m}/${d}`, amount: formatMoney(Math.max(0, closedLimit), currency) }), target }
+    }
+    const gain = diff < 0 // 負債：減る＝調整益（借方＝カード）、増える＝調整損（貸方＝カード）
+    const entry = {
+      id: crypto.randomUUID(), date: today,
+      debitId: gain ? cardId : lossId, creditId: gain ? gainId : cardId,
+      amount: Math.abs(diff), memo, kind: 'adjustment', createdAt: now, updatedAt: now,
+    }
+    rows.push({ target, current, actual, diff, gain, kindLabel: gain ? t('sheet.gain') : t('sheet.loss'), entry })
+  }
+  if (rows.length === 0) return { none: true, account: report.account }
+  return { account: report.account, rows, entries: [...entries, ...rows.map((r) => r.entry)] }
 }
 
 // ---- 定期支払い（サブスク） ----

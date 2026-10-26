@@ -209,7 +209,7 @@ export default function App() {
   // データの移行画面が出ているときは、# に関係なく移行画面を出す（古い形のデータなので、# も読まない）。新しい版のデータのときも同じく、# を読まない
   const migrating = needsMigration(data)
   const newer = isNewerData(data)
-  const route = migrating || newer ? null : parseHash(hash, cardAccounts(data.accounts).map((a) => a.id))
+  const route = migrating || newer ? null : parseHash(hash, [...cardAccounts(data.accounts).map((a) => a.id), 'adjust'])
   const canonical = route ? toHash(route) : null
   // 設定以外の画面へ移ったら、設定のタブは初めの（記帳）に戻す。ほかの画面から設定へのリンク（セーブ画面の「設定へ」）は、移る前に setSettingsTab で開くタブを決める
   const onSettingsScreen = route?.tab === 'settings'
@@ -326,6 +326,8 @@ export default function App() {
   const tabDef = entry && route.tab ? entry.groups.flatMap((g) => g.tabs).find((x) => x.id === route.tab) : null
   const band = gunjoPc && !newer && !migrating ? (tabDef?.band ? tabDef : !entry ? HOME_BAND : null) : null // 帯を出す画面（nav.js の band。ホームも）
 
+  const adjustPage = band && route.tab === 'card' && route.detailId === 'adjust' // クレカ残高調整ページ：帯の名前だけ変える
+
   // 知らせ（書けない・つながらない・食い違いなどのとき）。1つの並び（notices）にまとめる：{ key, text, title, onPress }。出し場所（spec-mobile.md 第4章）：
   //   PC は右上の帯に並べる／スマホはメニューのある画面では上の帯の右端に「⚠ 件数」（押すと一覧）／ホーム・移行画面では中身の一番上に1つ1行
   // 「ドライブに保存できません」（4.5）：ログインが切れたときは、押すとログイン（移る前にいた設定のタブを覚える）、つながらないときは、押すとやり直し。食い違いは、押すと確認画面
@@ -354,7 +356,7 @@ export default function App() {
       <BandTopContext.Provider value={band ? bandTop : null}>
       <BandRoadContext.Provider value={band ? bandRoad : null}>
       <div className={`main-col${band ? ' has-band' : ''}`}>
-        {band && <PageBand name={t(band.label)} en={band.en ? t(band.en) : ''} kind={band.band} hostRef={setBandHost} topRef={setBandTop} roadRef={setBandRoad} />}
+        {band && <PageBand name={adjustPage ? t('cardAdjust.title') : t(band.label)} en={adjustPage ? t('cardAdjust.titleEn') : band.en ? t(band.en) : ''} kind={band.band} hostRef={setBandHost} topRef={setBandTop} roadRef={setBandRoad} />}
         {/* 右上の書き出し・読み込みの帯。スマホの形では出さない（同じ機能は 設定 → データ。index.css） */}
         {!newer && <header>
           <div>

@@ -133,6 +133,14 @@ export function periodBars(card, count = 12) {
   return bars.map((b) => ({ ...b, ratio: max > 0 ? b.amount / max : 0 }))
 }
 
+// クレカ残高調整ページの右の面の棒：確定分・今期の「記録上（点線）→ 実際（白）」。rows は [{ target, current, actual }]（actual は、直さない行では current）。
+// 長さは、全部の数字のうち一番大きいものを 100 とした割合（0〜100）。down は実際が記録上より小さい（棒を薄くする）。表示だけ
+export function fixBars(rows) {
+  const max = Math.max(1, ...rows.flatMap((r) => [r.current, r.actual]))
+  const pct = (n) => Math.max(0, n) / max * 100
+  return rows.map((r) => ({ ...r, recorded: pct(r.current), after: pct(r.actual), down: r.actual < r.current }))
+}
+
 // レーンの状態：open（まだ締まっていない）／paid（引き落とし予定日が今日以前。日付だけの目安）／closed（締まっていて、まだ引き落とし前）
 export const periodStatus = (lane) => (lane.open ? 'open' : lane.paid ? 'paid' : 'closed')
 
