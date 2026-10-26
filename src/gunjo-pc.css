@@ -1261,4 +1261,111 @@
   :root[data-theme='gunjo'] .g-fixbar .b1 { position: absolute; left: 0; top: 5px; bottom: 5px; background: #fff; }
   :root[data-theme='gunjo'] .g-fixbar.empty .trk { border-bottom: 1px dashed rgba(255, 255, 255, 0.5); }
   :root[data-theme='gunjo'] .g-fixbar .b1.down { background: rgba(255, 255, 255, 0.45); }
+  /* ---- 貯蓄（Savings.jsx・SavingsRose.jsx・SavingsMonthCard.jsx・SavingsGoalCard.jsx・SavingsPeriod.jsx。見本 E22）：左の列（--g-sw）に目標の札と表、右は青い面（.g-side-panel.is-live。鶏頭図＋単月の棒グラフ）。
+     面が狭い（入れ物 .g-sv-page の幅が 884px 未満＝面が 380px 未満になる幅）ときは、同じ部品が、表の下に全幅の青い札として流れる（案 b。本人の決め）。扇・凡例・ボタンの玉は measure-g4 の「大きさと影」から外す（決定 G） ---- */
+  :root[data-theme='gunjo'] .g-sv-page { --g-sw: 520px; position: relative; container: g-sv / inline-size; min-height: calc(100vh - 222px); }
+  :root[data-theme='gunjo'] .g-sv-col { position: relative; z-index: 1; width: var(--g-sw); max-width: 100%; }
+  :root[data-theme='gunjo'] .g-sv-goal { box-sizing: border-box; margin-bottom: 18px; padding: 14px 22px; background: #fff; box-shadow: var(--g-tile-shadow); }
+  :root[data-theme='gunjo'] .g-sv-goal .row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+  :root[data-theme='gunjo'] .g-sv-goal .hl { font-family: var(--font-mincho); font-size: 15px; font-weight: 400; }
+  :root[data-theme='gunjo'] .g-sv-goal .row > small { font-size: 12px; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-sv-goal .big { font-family: var(--font-mincho); font-size: 30px; font-weight: 500; color: var(--color-accent); }
+  :root[data-theme='gunjo'] .g-sv-goal .big small { margin-left: 3px; font-size: 14px; }
+  :root[data-theme='gunjo'] .g-sv-goal .row .g-tag { margin-left: auto; }
+  :root[data-theme='gunjo'] .g-sv-goal .bar { position: relative; height: 12px; margin-top: 8px; border: 1px solid var(--color-accent); background: #fff; }
+  :root[data-theme='gunjo'] .g-sv-goal .bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--color-accent); }
+  :root[data-theme='gunjo'] .g-sv-goal .note { margin: 6px 0 0; }
+  :root[data-theme='gunjo'] .g-sv-aux { margin: 8px 0 0; font-size: 12px; color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-sv-aux > summary { display: inline-block; padding: 2px 10px; border: 1px solid var(--color-border); background: #fff; cursor: pointer; list-style: none; }
+  :root[data-theme='gunjo'] .g-sv-aux[open] > summary { border-color: var(--color-muted); }
+  :root[data-theme='gunjo'] .g-sv-aux ul { margin: 8px 0 0; padding: 0; list-style: none; }
+  :root[data-theme='gunjo'] .g-sv-aux li { display: flex; align-items: center; gap: 12px; padding: 4px 0; border-bottom: 1px solid var(--color-border); font-size: 13px; }
+  :root[data-theme='gunjo'] .g-sv-aux li > span:nth-child(2) { margin-left: auto; font-family: var(--font-num); }
+  :root[data-theme='gunjo'] .g-sv-aux .note { margin: 8px 0 0; line-height: 1.8; }
+  /* 右の青い面（操作を受ける）：中身の枠だけ操作を受け、面の枠は今までどおり下の画面の操作を通す */
+  :root[data-theme='gunjo'] .g-sv-page .g-side-panel.is-live .g-side-pin { pointer-events: auto; left: calc(25cqh * 0.36 + 8px); right: 1.5%; gap: 10px; justify-content: safe center; }
+  :root[data-theme='gunjo'] .g-rose-wrap { container: g-rose / inline-size; width: 100%; }
+  :root[data-theme='gunjo'] .g-rose-grid { display: flex; flex-direction: column; gap: 12px; align-items: stretch; }
+  :root[data-theme='gunjo'] .g-rose-main { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  :root[data-theme='gunjo'] .g-rose-side { min-width: 0; }
+  @container g-rose (min-width: 516px) { /* 棒グラフの場所を右に空けておく（固定しても円盤は動かない）。516px＝円盤の最小 270px＋札 232px＋間 14px。SavingsRose.jsx の WIDE と同じ数字 */
+    :root[data-theme='gunjo'] .g-rose-grid { flex-direction: row; align-items: center; gap: 14px; }
+    :root[data-theme='gunjo'] .g-rose-main { flex: 1 1 0; }
+    :root[data-theme='gunjo'] .g-rose-side { flex: 0 0 232px; }
+  }
+  @container g-rose (max-width: 515.98px) { /* 足りない幅：固定したときだけ、円盤を縮めて、下に出す */
+    :root[data-theme='gunjo'] .g-rose-side:empty { display: none; }
+    :root[data-theme='gunjo'] .g-rose-grid.show .g-rose { max-width: 176px; }
+    :root[data-theme='gunjo'] .g-rose-grid.show .g-rose-leg { display: none; }
+    :root[data-theme='gunjo'] .g-rose-grid .g-sv-card .bl { grid-template-columns: 1fr 1fr; gap: 2px 10px; }
+    :root[data-theme='gunjo'] .g-rose-grid .g-sv-card .bl li { padding: 2px 0; }
+    :root[data-theme='gunjo'] .g-rose-grid .g-sv-card .bl .n { font-size: 13px; }
+    :root[data-theme='gunjo'] .g-rose-grid .g-sv-card .bl b { font-size: 16px; }
+    :root[data-theme='gunjo'] .g-rose-grid .g-sv-card .bl li i { display: none; }
+    :root[data-theme='gunjo'] .g-rose-grid .g-sv-card svg { max-height: 170px; }
+  }
+  @container g-rose (max-width: 359px) { /* 面がごく狭い（画面 1044px 付近）：札の一覧は 1 列（2 列だと科目名が 1 字ずつ折れる） */
+    :root[data-theme='gunjo'] .g-rose-grid .g-sv-card .bl { grid-template-columns: 1fr; }
+  }
+  :root[data-theme='gunjo'] .g-rose { display: block; width: 100%; max-width: clamp(220px, calc(100cqh - 430px), 720px); margin: 0 auto; overflow: visible; }
+  :root[data-theme='gunjo'] .g-rose text { font-family: var(--font-mincho); }
+  :root[data-theme='gunjo'] .g-rose .wd { cursor: pointer; outline: none; }
+  :root[data-theme='gunjo'] .g-rose .gr { transform-origin: 220px 220px; }
+  :root[data-theme='gunjo'] .g-rose .gr.now { filter: drop-shadow(0 0 6px rgba(52, 192, 110, 0.75)); }
+  :root[data-theme='gunjo'] .g-rose .hlw { opacity: 0; pointer-events: none; }
+  :root[data-theme='gunjo'] .g-rose .wd.cur .hlw, :root[data-theme='gunjo'] .g-rose .wd:focus-visible .hlw { opacity: 1; }
+  :root[data-theme='gunjo'] .g-rose-ctl { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+  :root[data-theme='gunjo'] .g-side-panel.is-live .g-rose-ctl button { background: rgba(255, 255, 255, 0.08); color: #fff; border-color: rgba(255, 255, 255, 0.85); }
+  :root[data-theme='gunjo'] .g-side-panel.is-live .g-rose-ctl button[aria-pressed='true'] { background: #fff; color: var(--color-accent); }
+  :root[data-theme='gunjo'] .g-rose-ctl .sq { display: inline-block; width: 12px; height: 12px; border: 1.5px solid currentColor; }
+  :root[data-theme='gunjo'] .g-rose-ctl button[aria-pressed='true'] .sq { background: var(--color-accent); box-shadow: inset 0 0 0 2px #fff; }
+  :root[data-theme='gunjo'] .g-rose-ctl button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  :root[data-theme='gunjo'] .g-rose-leg { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 12px; margin: 0; padding: 0; list-style: none; font-family: var(--font-gothic); font-size: 12px; color: #D6D5FF; }
+  :root[data-theme='gunjo'] .g-rose-leg li { display: inline-flex; align-items: center; gap: 5px; }
+  :root[data-theme='gunjo'] .g-rose-leg i { display: inline-block; width: 16px; height: 10px; border: 1px solid rgba(255, 255, 255, 0.6); }
+  :root[data-theme='gunjo'] .g-rose-leg i.dn { background: repeating-linear-gradient(-45deg, #C23A3A 0 3px, #F6B9B7 3px 5px); border-style: dashed; }
+  :root[data-theme='gunjo'] .g-rose-leg i.gl { height: 0; border: 0; border-top: 2.5px dashed #fff; }
+  /* 借方と貸方の交換ボタン（EntryForm）。入力の札：札の下の行（quick-row）の先頭（コピーの左）。大きさ・間隔は、コピー・今日は使っていないと同じ（共通のボタンの規則と、行の gap 12px）。縦に並ぶ欄に合わせて、絵を 90 度回す。編集の行（横の並び）は、2 つの選択欄の間・回さない */
+  :root[data-theme='gunjo'] .quick-row .swap-accounts .icon { transform: rotate(90deg); }
+  :root[data-theme='gunjo']:lang(ko) :is(.g-sv-goal .note, .g-sv-aux .note, .g-rose-hint, .g-rose-idle, .g-sv-dlg .note) { word-break: keep-all; overflow-wrap: break-word; } /* 韓国語は、語の途中で折らない */
+  :root[data-theme='gunjo'] .g-rose-hint { margin: 0; text-align: center; font-family: var(--font-mincho); font-size: 18px; line-height: 1.7; color: #fff; }
+  :root[data-theme='gunjo'] .g-rose.is-ghost { pointer-events: none; }
+  :root[data-theme='gunjo'] .g-rose-idle { margin: 0; text-align: center; font-family: var(--font-gothic); font-size: 13px; color: #fff; }
+  /* 単月の棒グラフの札（紙色の上に描く。青の上では緑・赤が読めないため） */
+  :root[data-theme='gunjo'] .g-sv-card { box-sizing: border-box; padding: 12px 16px 14px; background: #F7F7FB; color: #12123A; box-shadow: 7px 7px 0 var(--g-deep); font-family: var(--font-mincho); }
+  :root[data-theme='gunjo'] .g-sv-card .bh { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  :root[data-theme='gunjo'] .g-sv-card .bh b { font-size: 20px; font-weight: 500; }
+  :root[data-theme='gunjo'] .g-sv-card svg { display: block; width: 100%; }
+  :root[data-theme='gunjo'] .g-sv-card svg text { font-family: var(--font-mincho); }
+  :root[data-theme='gunjo'] .g-sv-card .bl { display: grid; grid-template-columns: 1fr; gap: 4px 0; margin: 6px 0 0; padding: 0; list-style: none; }
+  :root[data-theme='gunjo'] .g-sv-card .bl li { display: flex; align-items: center; gap: 8px; padding: 3px 0; border-bottom: 1px solid #DCDBEF; font-size: 14px; }
+  :root[data-theme='gunjo'] .g-sv-card .bl li i { display: inline-block; flex: none; width: 18px; height: 12px; border: 1px solid #55567A; }
+  :root[data-theme='gunjo'] .g-sv-card .bl li i.sum { background: #fff; border-color: #12123A; }
+  :root[data-theme='gunjo'] .g-sv-card .bl li i.dn { background: repeating-linear-gradient(-45deg, #C23A3A 0 3px, #F6B9B7 3px 5px); border-style: dashed; }
+  :root[data-theme='gunjo'] .g-sv-card .bl li i.gl { height: 0; border: 0; border-top: 3px dashed #2A1BFF; }
+  :root[data-theme='gunjo'] .g-sv-card .bl .n { flex: 1; }
+  :root[data-theme='gunjo'] .g-sv-card .bl b { font-size: 15px; font-weight: 500; }
+  :root[data-theme='gunjo'] .g-sv-card .bl b.dn { color: #8F1D1D; }
+  /* 「表示する期間」のダイアログ（body に出る） */
+  :root[data-theme='gunjo'] .g-sv-layer { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; }
+  :root[data-theme='gunjo'] .g-sv-scrim { position: absolute; inset: 0; background: rgba(5, 2, 58, 0.45); }
+  :root[data-theme='gunjo'] .g-sv-dlg { position: relative; box-sizing: border-box; width: min(340px, calc(100vw - 32px)); padding: 18px 20px; background: #F7F7FB; color: var(--color-text); box-shadow: var(--g-dialog-shadow); }
+  :root[data-theme='gunjo'] .g-sv-dlg h3 { margin: 0 0 4px; font-family: var(--font-mincho); font-size: 18px; font-weight: 400; }
+  :root[data-theme='gunjo'] .g-sv-dlg .note { margin: 0; font-size: 12px; }
+  :root[data-theme='gunjo'] .g-sv-dlg .yr { display: flex; align-items: center; justify-content: space-between; margin: 12px 0; font-family: var(--font-mincho); font-size: 18px; font-weight: 400; }
+  :root[data-theme='gunjo'] .g-sv-dlg .mg { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: 8px; margin: 0 -4px; } /* 列の間は、ボタンの左右の余白 4px（下）。全体の余白の規則（隣り合うボタンの左 12px・行の column-gap: 0）には頼らない */
+  :root[data-theme='gunjo'] .g-sv-dlg .mg button { margin: 0 4px; padding: 0; }
+  :root[data-theme='gunjo'] .g-sv-dlg .mg button.on { background: var(--color-accent); color: #fff; }
+  :root[data-theme='gunjo'] .g-sv-dlg button:disabled { opacity: 0.38; border-style: dashed; box-shadow: none; cursor: default; }
+  :root[data-theme='gunjo'] .g-sv-dlg .ft { display: flex; justify-content: space-between; gap: 12px; margin-top: 14px; }
+  /* 面が狭いとき（案 b）：表の下に、全幅の青い札として流れる。斜めの上辺（28px）と罫線の紙は、面と同じ */
+  @container g-sv (max-width: 883.98px) {
+    :root[data-theme='gunjo'] .g-sv-page { min-height: 0; }
+    :root[data-theme='gunjo'] .g-sv-col { width: 100%; }
+    :root[data-theme='gunjo'] .g-sv-page .g-side-panel { position: relative; inset: auto; margin: 36px 0 0; overflow: visible; pointer-events: auto; }
+    :root[data-theme='gunjo'] .g-sv-page .g-side-stick { position: relative; height: auto; container-type: normal; }
+    :root[data-theme='gunjo'] .g-sv-page .g-side-art { clip-path: polygon(0 28px, 100% 0, 100% 100%, 0 100%); }
+    :root[data-theme='gunjo'] .g-sv-page .g-side-panel.is-live .g-side-pin { position: relative; left: auto; right: auto; height: auto; padding: 56px 28px 36px; }
+    :root[data-theme='gunjo'] .g-rose { max-width: 560px; }
+  }
 }

@@ -1,4 +1,5 @@
 .entries { font-size: var(--font-size); color: var(--color-text); --cols: 2.5em 9em 9em 6em 1fr 9em; }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; } /* 読み上げだけ（交換ボタンの結果） */
 .entries form { display: flex; gap: var(--space); flex-wrap: wrap; align-items: center; margin-bottom: var(--space); }
 .entries .error { color: var(--color-error); }
 /* 入力欄の固定（PC の幅）：入力の行は、一覧をスクロールしても画面の上に貼り付く（地は各見た目の --color-bg の無地）。スマホの形は、この行を出さず、右下の「＋」ボタン（下の @media）。電卓の帯などは、行の中なので、行と一緒に一覧の上の層に出る */

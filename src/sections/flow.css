@@ -7,3 +7,15 @@
 @media (prefers-reduced-motion: reduce) {
   .g-ring .pulse { animation: none; }
 }
+
+/* 群青の PC の貯蓄（SavingsRose）の動き。扇が外へ伸びる一度きり（終わりの月・取り崩しを引く、を切り替えたときも）と、棒グラフの棒が伸びる一度きり。reduced-motion は最初から描いた形。
+   対象の class は、貯蓄の群青 PC の鶏頭図・棒グラフの札にしかない */
+@media (prefers-reduced-motion: no-preference) {
+  .g-rose .gr { animation: g-rose-grow 0.7s ease-out both; animation-delay: calc(var(--i, 0) * 45ms); }
+  @keyframes g-rose-grow { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .g-sv-card svg rect { transform-box: fill-box; transform-origin: 50% 100%; animation: g-rose-bar 0.6s ease-out both; }
+  @keyframes g-rose-bar { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+}
+@media (prefers-reduced-motion: reduce) {
+  .g-rose .gr, .g-sv-card svg rect { animation: none; }
+}

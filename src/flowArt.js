@@ -178,14 +178,7 @@ export function previewLine(closingText, payText, today) {
 export const payCountdown = (card, today) => ({ left: dayDiff(today, card.payDate), pos: clamp01(dayDiff(card.lastClosing, today) / Math.max(1, dayDiff(card.lastClosing, card.payDate))) })
 const clamp01 = (x) => Math.min(1, Math.max(0, x))
 
-// ---- 貯蓄：月ごとの積み上げ（案A）と階段（案B） ----
-// 目標の進み率：実績 × 100 ÷ 目標（0 に向かって切り捨て。ledgerLogic.js の達成率と同じ約束）。目標が 0 以下なら null。bar は棒の長さ（0〜1。超えても 1）
-export function goalProgress(actual, goal) {
-  if (!(goal > 0)) return null
-  const rate = Math.trunc((actual * 100) / goal) + 0
-  return { rate, bar: clamp01(actual / goal), over: actual > goal, left: Math.max(0, goal - actual) }
-}
-
+// ---- 貯蓄：月ごとの動き ----
 // 科目の月ごとの動き：months（'YYYY-MM' の並び）ごとに、借方に入った額（取り分け）と貸方に入った額（取り崩し）。通常の仕訳（normal）だけ。開始残高・残高調整は入れない
 export function monthlyFlows(entries, accountId, months) {
   const map = new Map(months.map((m) => [m, { month: m, up: 0, down: 0 }]))
@@ -198,24 +191,6 @@ export function monthlyFlows(entries, accountId, months) {
   }
   return [...map.values()].map((r) => ({ ...r, net: r.up - r.down }))
 }
-
-// 階段：savingsHistory の rows（日付順。{ delta, total }）から、折れ線の点。x は日付の位置（from〜to を 0〜1）、y は累計。段ごとに { date, from（段の前の累計）, to（後）, kind: 'up'|'down' }
-export function stairSteps(rows) {
-  return rows.map(({ entry, delta, total }) => ({ date: entry.date, from: total - delta, to: total, kind: delta < 0 ? 'down' : 'up' }))
-}
-
-// ---- 貯蓄：鶏頭図（月ごとの取り分け・取り崩し）----
-// 扇の面積が金額に比例するように、半径は金額の平方根で決める。r0 は「ゼロ」の輪の半径、k は面積の倍率（円に換算した 1 円あたりの面積。扇の角度は掛けない）
-// 外へ伸びる扇（取り分け）：r = √(r0² + k·金額)。内へ向く扇（取り崩し）：r = √(r0² − k·金額)。内へは r0² / k を超える額は中心で止まる（0 まで）
-export const roseRadius = (amount, r0, k, side = 'out') => Math.sqrt(Math.max(0, r0 * r0 + (side === 'out' ? 1 : -1) * k * Math.max(0, amount)))
-// 一番大きい額（max）が、半径 rMax まで届く k
-export const roseScale = (max, r0, rMax) => (max > 0 ? Math.max(0, rMax * rMax - r0 * r0) / max : 0)
-// 内へ向く扇が中心まで届く額（これを超える額は、扇の長さが頭打ちになる）
-export const roseInwardCap = (r0, k) => (k > 0 ? (r0 * r0) / k : Infinity)
-
-// 鶏頭図の月ごとの基準：その月の目標（予算の goal）の合計。目標がない月は、その月の実績（取り分け。なければ取り崩し）。
-// 基準の額が、扇の「基準の円」（半径 rBase）にちょうど届く：k = roseScale(基準, r0, rBase)、半径 = roseRadius(金額, r0, k)
-export const roseReference = (goalSum, up, down) => (goalSum > 0 ? goalSum : Math.max(up, down))
 
 // ---- 鶏頭図：扇の幅・半径の下限・表示期間・棒グラフの縦目盛り（区切り20）----
 export const ROSE_SPAN = 30 // 扇の幅（度）。12 か月で一周。全月で同じ（取り崩し反映でも細くしない）

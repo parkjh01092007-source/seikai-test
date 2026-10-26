@@ -8,7 +8,7 @@ import { today } from '../today.js'
 import { t } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import { usePhone } from '../layout.js'
-import { loadOpenMode, initialOpenDates, isOpenDate, formatDayHead, formatDayLabel, entryChanged, weekdayName, loadNoSpendShape, loadTensOpen, rememberTensOpen, loadTensBullet, isOpenTens, showTens, formatTensRange } from '../entryView.js'
+import { swapDebitCredit, loadOpenMode, initialOpenDates, isOpenDate, formatDayHead, formatDayLabel, entryChanged, weekdayName, loadNoSpendShape, loadTensOpen, rememberTensOpen, loadTensBullet, isOpenTens, showTens, formatTensRange } from '../entryView.js'
 import EntrySheet from './EntrySheet.jsx'
 import PlusMenu from './PlusMenu.jsx'
 import NoSpendPicker from './NoSpendPicker.jsx'
@@ -52,11 +52,20 @@ function Field({ label, className = '', children }) {
 // addPreset：{ list（今のプリセット）, onAdd(input) → 新しいプリセットの id }。新しい仕訳の入力だけが渡す。渡すと「プリセットに追加」の＋付きの星のボタンが出て、押すと入力欄が追加の状態になる（日付の欄は隠れ、記号・名前〔任意〕・保存／やめる。今の借方・貸方・金額・メモを引き継ぐ）
 export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus', onSubmit, onCancel, currentIds, favorites = { debit: [], credit: [] }, variant, onValues, lastEntry, currency, presets, noSpend, addPreset, quickHost, startAdding = false }) {
   const options = entryAccountOptions(accounts, currentIds)
+  const swapOn = useGunjoPc() // 交換ボタンを出す条件（この 1 行）。今は群青の PC だけ。全テーマへ広げるときは true にし、sheet の並び（.sheet-pair）にも差し込む
+  const [swapNote, setSwapNote] = useState('') // 入れ替えたあとの読み上げ（見えない行）
   const [f, setF] = useState(initial)
   const [error, setError] = useState('')
   const set = (k) => (v) => setF((s) => ({ ...s, [k]: v }))
   // 借方・貸方を変えたら、生活費の月も整える（同じ科目のままなら選び方を残し、別の収益の科目なら、その科目の決まり。収益がなくなれば消す）
   const setAccount = (k) => (v) => setF((s) => { const next = { ...s, [k]: v }; return { ...next, living: livingOnAccountChange(accounts, s, next) } })
+  const swap = () => {
+    const next = swapDebitCredit(accounts, f)
+    if (!next) return
+    const nameOf = (id) => accounts.find((a) => a.id === id)?.name || '―'
+    setF(next); setError('')
+    setSwapNote(t('entries.swapDone', { debit: nameOf(next.debitId), credit: nameOf(next.creditId) }))
+  }
   const formRef = useRef(null)
   const [applied, setApplied] = useState(null) // 最後に反映したもの（プリセットの id か 'copy'＝前回と同じ入力）。反転の表示用
   const [undo, setUndo] = useState(null) // 反映の取り消し用：{ key, before（押す直前の借方・貸方・金額・メモ・生活費の月）, beforeApplied }。反映を押すたびに、直前の 1 つ分だけ覚える
@@ -119,9 +128,17 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
         onClick={() => noSpend.onToggle(f.date)}><Icon name={shown ? 'circleScribble' : 'circle'} />{shown ? (f.date === noSpend.today ? t('entries.noSpendDone') : t('entries.noSpendDoneDate', { md })) : label}</button>
     )
   }
+  // 借方と貸方の交換ボタン。入力の札（variant='card'）では、下の quick-row の先頭（交換→コピー→今日は使っていない。大きさ・間隔はほかのボタンと同じ）、編集の行では、借方と貸方の欄の間（fields.swap）。プリセットの追加の状態には出さない
+  const swapButton = swapOn && (
+    <>
+      <button type="button" className="swap-accounts icon-only" aria-label={t('entries.swapAccounts')} title={t('entries.swapTitle')} disabled={!f.debitId && !f.creditId} onClick={swap}><Icon name="swap" /></button>
+      <span className="sr-only" aria-live="polite">{swapNote}</span>
+    </>
+  )
+  const swapQuick = swapOn && variant === 'card'
   // 前回と同じ入力（複製の絵）と今日は使っていない（円）を 1 行に。span で包むのは、群青の PC の「隣り合う部品は余白で 12px」規則に巻き込まないため（間は行の gap）
-  const quickRow = copyButton || noSpendButton ? (
-    <div className="quick-row">{copyButton && <span>{copyButton}</span>}{noSpendButton && <span>{noSpendButton}</span>}</div>
+  const quickRow = swapQuick || copyButton || noSpendButton ? (
+    <div className="quick-row">{swapQuick && <span>{swapButton}</span>}{copyButton && <span>{copyButton}</span>}{noSpendButton && <span>{noSpendButton}</span>}</div>
   ) : null
   // 「前回と同じ入力」「今日は使っていない」「プリセットに追加」のボタン：新しい仕訳の枠（欄）の外、見出しの右端（群青の札・基本）／入力画面の上端（スマホ）に出す。quickHost（見出しの中の置き場所）があれば、そこへ移す。なければ、欄の中に出す
   const placeQuick = quickRow && quickHost ? createPortal(quickRow, quickHost) : quickRow
@@ -142,6 +159,7 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
     amount: <Field label={t('common.amount')}><AmountInput label={t('common.amount')} value={f.amount} onChange={set('amount')} focusRequest={focusTick} /></Field>,
     debit: <Field label={t('common.debit')}><AccountSelect label={t('common.debit')} value={f.debitId} onChange={setAccount('debitId')} options={options} favoriteIds={favorites.debit} /></Field>,
     credit: <Field label={t('common.credit')}><AccountSelect label={t('common.credit')} value={f.creditId} onChange={setAccount('creditId')} options={options} favoriteIds={favorites.credit} /></Field>,
+    swap: swapOn && variant !== 'card' && <span className="swap-slot">{swapButton}</span>,
     living: showLiving && (
       <Field label={t('living.month')} className="living">
         <select aria-label={t('living.month')} value={f.living ?? ''} onChange={(e) => set('living')(e.target.value)}>
@@ -222,6 +240,7 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
       {fields.date}
       {fields.amount}
       {fields.debit}
+      {fields.swap}
       {fields.credit}
       {fields.living}
       <input className="memo-input" placeholder={t('common.memo')} aria-label={t('common.memo')} value={f.memo} onChange={(e) => set('memo')(e.target.value)} />

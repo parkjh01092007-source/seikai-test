@@ -1,7 +1,16 @@
 import { t } from './text.js'
+import { livingOnAccountChange } from './ledgerLogic.js'
 
 // 仕訳の一覧の見え方（spec-mobile.md 5.3）。React を読み込まない（node の check から読める）。
 // 日付の枠の開き方：一番新しい日だけ / 全部 / 全部閉じる。スマホの幅と PC の幅で別々に覚える（ブラウザごと。保存データ・書き出し・セーブファイルには入れない）
+
+// 借方・貸方の入れ替え（交換ボタン）：科目だけ入れ替える。日付・金額・メモは変えない。生活費の月は、収益の科目が反対側へ動くだけなら選び方を残す（livingOnAccountChange）。
+// 両方空のときは null（押せない）。入力の値の入れ替えだけで、保存はしない（編集画面は「保存」を押すまで保存データを変えない）
+export function swapDebitCredit(accounts, f) {
+  if (!f.debitId && !f.creditId) return null
+  const next = { ...f, debitId: f.creditId, creditId: f.debitId }
+  return { ...next, living: livingOnAccountChange(accounts, f, next) }
+}
 
 export const OPEN_MODES = ['latest', 'all', 'none']
 export const OPEN_MODE_LABELS = { latest: 'entries.openMode.latest', all: 'entries.openMode.all', none: 'entries.openMode.none' } // 選択肢の文言（辞書のキー）
