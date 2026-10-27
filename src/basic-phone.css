@@ -143,6 +143,58 @@
   :root[data-theme='basic'] .b-phone-p2 .rows2 > li { padding: var(--b-space-4); column-gap: var(--b-space-2); row-gap: var(--b-space-1); border-bottom: 1px solid var(--b-side-line); }
   :root[data-theme='basic'] .b-phone-p2 .rows2 .name { font-weight: var(--b-weight-bold); }
   :root[data-theme='basic'] .b-phone-p2 .rows2 .sub { white-space: normal; overflow-wrap: anywhere; }
+
+  /* クレカ残高調整（一覧の「残高調整」から開く。構造・処理は基本 PC と同じ。形はスマホの縦並び）。 */
+  :root[data-theme='basic'] .b-phone-card-actions { display: flex; gap: var(--b-space-3); margin: var(--b-space-4) var(--b-space-0); }
+  :root[data-theme='basic'] .b-phone-card-action { flex: 1 1 0; display: inline-flex; align-items: center; justify-content: center; gap: var(--b-space-2); box-sizing: border-box; min-width: 0; min-height: var(--b-phone-action); padding: var(--b-space-2) var(--b-space-3); border: 1px solid var(--b-line); border-radius: var(--b-phone-radius); background: var(--b-surface); color: var(--b-text); font: inherit; text-decoration: none; text-align: center; cursor: pointer; }
+  :root[data-theme='basic'] .b-phone-card-action:focus-visible { outline: 2px solid var(--b-active-bar); outline-offset: var(--b-space-1); }
+  :root[data-theme='basic'] .b-phone-cards .sheet .card-form { padding: var(--b-space-0); border: 0; background: transparent; }
+  :root[data-theme='basic'] .b-phone-cards .sheet .card-form > input:not(.day) { flex: 1 1 100%; }
+  :root[data-theme='basic'] .b-phone-cards .sheet .card-form > button { flex: 1 1 100%; background: var(--b-navy); border-color: var(--b-navy); color: var(--b-surface); }
+  :root[data-theme='basic'] .b-phone-card-adjust .back { margin-top: var(--b-space-3); }
+  :root[data-theme='basic'] .b-phone-card-adjust .back a { display: inline-flex; align-items: center; text-decoration: none; }
+  :root[data-theme='basic'] .b-phone-card-adjust .g-ck { margin: var(--b-space-0) var(--b-space-0) var(--b-space-4); border: 1px solid var(--b-side-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-phone-card-adjust .g-ck > summary { display: flex; flex-wrap: wrap; align-items: center; gap: var(--b-space-2); box-sizing: border-box; min-height: var(--b-phone-control); padding: var(--b-space-3) var(--b-space-4); overflow-wrap: anywhere; cursor: pointer; list-style: none; }
+  :root[data-theme='basic'] .b-phone-card-adjust .g-ck > summary::-webkit-details-marker { display: none; }
+  :root[data-theme='basic'] .b-phone-card-adjust .g-ck > summary::after { content: ''; flex: none; margin-left: auto; width: var(--b-space-2); height: var(--b-space-2); border: solid var(--b-muted); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  :root[data-theme='basic'] .b-phone-card-adjust .g-ck[open] > summary::after { transform: rotate(-135deg); }
+  :root[data-theme='basic'] .b-phone-card-adjust .g-ck[open] > summary { border-bottom: 1px solid var(--b-line); }
+  :root[data-theme='basic'] .b-phone-card-adjust .g-ck > summary .nm { font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-phone-card-adjust .sm2 { display: flex; flex-wrap: wrap; flex-basis: 100%; gap: var(--b-space-2); color: var(--b-muted); font-size: var(--b-font-size); order: 3; }
+  :root[data-theme='basic'] .b-phone-card-adjust .sm2 b { color: var(--b-text); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-phone-card-adjust .g-ckbody { padding: var(--b-space-0) var(--b-space-4) var(--b-space-4); }
+  :root[data-theme='basic'] .b-phone-card-adjust .g-ckrow { display: flex; flex-direction: column; gap: var(--b-space-2); padding: var(--b-space-4) var(--b-space-0); border-bottom: 1px solid var(--b-side-line); }
+  :root[data-theme='basic'] .b-phone-card-adjust .g-ckrow > * { min-width: 0; }
+  :root[data-theme='basic'] .b-phone-card-adjust .l1 { display: flex; flex-direction: column; gap: var(--b-space-1); }
+  :root[data-theme='basic'] .b-phone-card-adjust .l1 .t { font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-phone-card-adjust .l1 .d,
+  :root[data-theme='basic'] .b-phone-card-adjust .rec,
+  :root[data-theme='basic'] .b-phone-card-adjust .l2 .lab { font-size: var(--b-font-size); color: var(--b-muted); }
+  :root[data-theme='basic'] .b-phone-card-adjust .rec b { margin-inline-start: var(--b-space-2); color: var(--b-text); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-phone-card-adjust .l2 { display: flex; flex-direction: column; gap: var(--b-space-1); }
+  :root[data-theme='basic'] .b-phone-card-adjust .g-amount-row { display: flex; align-items: center; gap: var(--b-space-2); }
+  :root[data-theme='basic'] .b-phone-card-adjust .g-amount-row > .amount-wrap { flex: 1 1 auto; display: flex; min-width: 0; }
+  :root[data-theme='basic'] .b-phone-card-adjust .g-amount-row input { width: 100%; text-align: right; font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-phone-card-adjust .g-ckrow:has(.err) input { border-color: var(--b-negative); outline: 1px solid var(--b-negative); }
+  :root[data-theme='basic'] .b-phone-card-adjust .l3 { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--b-space-2); color: var(--b-muted); font-size: var(--b-font-size); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-phone-card-adjust .l3 .ba { color: var(--b-text); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-phone-card-adjust .l3 .df { font-weight: var(--b-weight-bold); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-phone-card-adjust .is-up { color: var(--b-positive); }
+  :root[data-theme='basic'] .b-phone-card-adjust .is-down,
+  :root[data-theme='basic'] .b-phone-card-adjust .err { color: var(--b-negative); }
+  :root[data-theme='basic'] .b-phone-card-adjust .g-tag { padding: var(--b-space-1) var(--b-space-2); border: 1px solid currentColor; font-size: var(--b-font-size); }
+  :root[data-theme='basic'] .b-phone-card-adjust .g-ckacts { display: flex; flex-direction: column; gap: var(--b-space-3); margin-top: var(--b-space-4); }
+  :root[data-theme='basic'] .b-phone-card-adjust .g-ckacts > p { margin: var(--b-space-0); }
+  :root[data-theme='basic'] .b-phone-card-adjust .g-ckacts > button { min-height: var(--b-phone-action); background: var(--b-navy); border-color: var(--b-navy); color: var(--b-surface); }
+  :root[data-theme='basic'] .b-phone-card-adjust .g-ckacts > button[aria-disabled='true'] { opacity: 0.5; cursor: default; }
+  /* 確認ダイアログの中の 2 本の仕訳の表（この確認だけ）。 */
+  :root[data-theme='basic'] dialog.confirm .g-ca-pop { max-width: 100%; overflow-x: auto; }
+  :root[data-theme='basic'] dialog.confirm .g-ca-pop table { width: 100%; border-collapse: collapse; }
+  :root[data-theme='basic'] dialog.confirm .g-ca-pop th,
+  :root[data-theme='basic'] dialog.confirm .g-ca-pop td { padding: var(--b-space-2) var(--b-space-3); border-bottom: 1px solid var(--b-side-line); text-align: left; overflow-wrap: anywhere; }
+  :root[data-theme='basic'] dialog.confirm .g-ca-pop th { color: var(--b-muted); background: var(--b-table-head); font-size: var(--b-font-size); }
+  :root[data-theme='basic'] dialog.confirm .g-ca-pop .n { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] dialog.confirm .g-ca-pop .scope { color: var(--b-muted); font-size: var(--b-font-size); }
   :root[data-theme='basic'] .b-phone-p2 .rows2 > li.total { border-top: 2px solid var(--b-line); border-bottom: 2px solid var(--b-line); background: var(--b-total-bg); font-weight: var(--b-weight-bold); }
   :root[data-theme='basic'] .b-phone-p2 .rows2 > li.total .sub { color: var(--b-text); font-weight: var(--b-weight-bold); }
 

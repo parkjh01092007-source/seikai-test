@@ -18,6 +18,7 @@ import { StateTag, EmptyCard } from './FlowParts.jsx'
 import CardMiniLine from './CardMiniLine.jsx'
 import CardCountdown from './CardCountdown.jsx'
 import CardAdjust from './CardAdjust.jsx'
+import EntrySheet from './EntrySheet.jsx'
 
 const cardHash = (detailId) => toHash({ entry: 'ledger', tab: 'card', detailId }) // 一覧（null）／個別（カードの id）の # 。組み立ては route.js
 
@@ -42,7 +43,7 @@ function AddPreview({ closing, pay, now }) {
 }
 
 // カードの追加。入力は消さない（エラーのとき）。日は前後の空白を取って渡す（検証は addCard）
-function AddCardForm({ data, update, now }) {
+function AddCardForm({ data, update, now, onAdded }) {
   const [name, setName] = useState('')
   const [closing, setClosing] = useState('')
   const [pay, setPay] = useState('')
@@ -59,6 +60,7 @@ function AddCardForm({ data, update, now }) {
     setName('')
     setClosing('')
     setPay('')
+    onAdded?.() // 基本スマホ：追加したら下から出るシートを閉じる
   }
 
   // 群青の PC（見本 E-card）：ラベルを上に付けた欄（カード名は幅いっぱい、日は2列）と、大きい決定のボタン。説明は呼ぶ側が札の中に置く
@@ -127,8 +129,9 @@ export default function CreditCard({ data, update, detailId = null }) {
   const basicPc = useBasicPc()
   const basicPhone = useBasicPhone()
   const bandHost = useBandHost()
+  const [adding, setAdding] = useState(false) // 基本スマホ：「カード追加」の下から出るシート
   const [formOpen, setFormOpen] = useState(false) // 群青の PC：「カードを追加」の札を開いているか（カードが 0 枚のときは、いつも開く）
-  if ((gunjoPc || basicPc) && detailId === 'adjust') return <CardAdjust data={data} update={update} /> // 既存の URL と処理を使い、基本 PC にも表示する。スマホ・ほかのテーマは従来どおり
+  if ((gunjoPc || basicPc || basicPhone) && detailId === 'adjust') return <CardAdjust data={data} update={update} /> // 既存の URL と処理を使い、基本 PC・基本スマホにも表示する。ほかのテーマ・群青スマホは従来どおり
   const now = today()
   const unit = currencyUnit(data.settings.currency)
   const reports = cardReports(data.accounts, data.entries, now)
@@ -216,9 +219,29 @@ export default function CreditCard({ data, update, detailId = null }) {
           })}
         </ul>
       )}
-      {basicPc ? <div className="b-section-head"><h3>{t('card.add')}</h3></div> : <h3>{t('card.add')}</h3>}
-      <AddCardForm data={data} update={update} />
-      <p className="note">{t('card.newNote')}</p>
+      {basicPhone ? (
+        <>
+          <div className="b-phone-card-actions">
+            <a className="b-phone-card-action" href={cardHash('adjust')}>{t('cardAdjust.linkLabel')}</a>
+            <button type="button" className="b-phone-card-action" onClick={() => setAdding(true)}><Icon name="plus" />{t('card.add')}</button>
+          </div>
+          {adding && (
+            <div className="b-phone-entries b-phone-cards">
+              <EntrySheet title={t('card.add')} onClose={() => setAdding(false)} onOutside={() => setAdding(false)}>
+                <AddCardForm data={data} update={update} onAdded={() => setAdding(false)} />
+                <p className="note">{t('card.newNote')}</p>
+                <div className="sheet-actions"><button type="button" onClick={() => setAdding(false)}><Icon name="close" />{t('entries.sheetClose')}</button></div>
+              </EntrySheet>
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          {basicPc ? <div className="b-section-head"><h3>{t('card.add')}</h3></div> : <h3>{t('card.add')}</h3>}
+          <AddCardForm data={data} update={update} />
+          <p className="note">{t('card.newNote')}</p>
+        </>
+      )}
     </div>
   )
 }

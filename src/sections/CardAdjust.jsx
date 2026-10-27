@@ -9,6 +9,7 @@ import { t } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import { useBandTop } from './bandHost.js'
 import { useBasicPc } from '../basicPc.js'
+import { useBasicPhone } from '../basicPhone.js'
 import { Icon } from './Icon.jsx'
 import { StateTag, EmptyCard } from './FlowParts.jsx'
 
@@ -171,6 +172,8 @@ function FixPanel({ report, texts, data, now, unit }) {
 export default function CardAdjust({ data, update }) {
   const bandTop = useBandTop()
   const basicPc = useBasicPc()
+  const basicPhone = useBasicPhone()
+  const basic = basicPc || basicPhone // 基本は、PC もスマホも同じ構造（右の図は描かない）。見た目は basic-pc.css・basic-phone.css
   const now = today()
   const unit = currencyUnit(data.settings.currency)
   const reports = cardReports(data.accounts, data.entries, now)
@@ -182,13 +185,14 @@ export default function CardAdjust({ data, update }) {
   const textsOf = (id) => ({ closed: '', open: '', ...texts[id] })
 
   return (
-    <div className={basicPc ? 'report b-page b-card-adjust' : 'report g-rep g-card-list g-cardpage g-adjpage'}>
+    <div className={basicPc ? 'report b-page b-card-adjust' : basicPhone ? 'report b-phone-p2 b-phone-card-adjust' : 'report g-rep g-card-list g-cardpage g-adjpage'}>
       {bandTop && createPortal(<a className="g-back" href={listHash}><Icon name="back" />{t('cardAdjust.back')}</a>, bandTop)}
       {basicPc && <><div className="back"><a href={listHash}>{t('cardAdjust.back')}</a></div><div className="b-page-head"><h2>{t('cardAdjust.linkLabel')}</h2><p>{t('cardAdjust.note')}</p></div></>}
+      {basicPhone && <><div className="back"><a href={listHash}>{t('cardAdjust.back')}</a></div><h2>{t('cardAdjust.linkLabel')}</h2></>}
       <div className="g-card-col">
         <section>
-          {basicPc ? <div className="b-section-head"><h3>{t('cardAdjust.heading')}</h3></div> : <h2 className="g-h">{t('cardAdjust.heading')}<small lang="en">{t('cardAdjust.headingEn')}</small></h2>}
-          {ordered.length === 0 ? (basicPc ? <p className="note">{t('card.empty')}</p> : <EmptyCard title={t('card.emptyTitle')}>{t('card.emptyBody')}</EmptyCard>) : ordered.map((r, i) => (
+          {basicPc ? <div className="b-section-head"><h3>{t('cardAdjust.heading')}</h3></div> : basicPhone ? <h3>{t('cardAdjust.heading')}</h3> : <h2 className="g-h">{t('cardAdjust.heading')}<small lang="en">{t('cardAdjust.headingEn')}</small></h2>}
+          {ordered.length === 0 ? (basic ? <p className="note">{t('card.empty')}</p> : <EmptyCard title={t('card.emptyTitle')}>{t('card.emptyBody')}</EmptyCard>) : ordered.map((r, i) => (
             <CardBlock
               key={r.account.id} data={data} update={update} report={r} index={i} texts={textsOf(r.account.id)}
               setText={(x, v) => setTexts((s) => ({ ...s, [r.account.id]: { ...textsOf(r.account.id), ...s[r.account.id], [x]: v } }))}
@@ -197,7 +201,7 @@ export default function CardAdjust({ data, update }) {
           ))}
         </section>
       </div>
-      {!basicPc && ordered.length > 0 && <FixPanel report={picked} texts={picked ? textsOf(picked.account.id) : {}} data={data} now={now} unit={unit} />}
+      {!basic && ordered.length > 0 && <FixPanel report={picked} texts={picked ? textsOf(picked.account.id) : {}} data={data} now={now} unit={unit} />}
     </div>
   )
 }
