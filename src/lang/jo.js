@@ -113,6 +113,7 @@ export default {
   'book.noteAll': 'いちばん古い仕訳から、今までをお出ししますわ。',
   'book.noteMonth': '直近12か月ですのよ。月が明るいほど、今に近いですわ。',
   'book.empty': '仕訳がございませんの',
+  'book.jumpConfirm': 'この仕訳をお直しになるために、仕訳の画面へ移動なさいますの？',
   'monthly.livingNote': '（その月の暮らしに使う収入 − その月の支出でしてよ）',
   'monthly.livingDifference': '収支は、給料などすべての収入でお計算いたしますのよ。生活費のやりくりは、「生活費に使う」とお決めになった収入だけで計算いたしますわ！',
   'monthly.trendNote': '月末の数字ですの',

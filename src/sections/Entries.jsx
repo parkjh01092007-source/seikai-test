@@ -284,7 +284,7 @@ export const KIND_LABELS = {
   get adjustment() { return t('entries.kind.adjustment') },
 }
 
-function EntryRow({ entry, number, accounts, favorites, currency, editing, onEdit, onCancel, onSave, onDelete }) {
+function EntryRow({ entry, number, accounts, favorites, currency, editing, onEdit, onCancel, onSave, onDelete, marked, markRef }) {
   const gunjoPc = useGunjoPc()
   const basicPc = useBasicPc()
   const name = (id) => accounts.find((a) => a.id === id)?.name ?? ''
@@ -331,7 +331,7 @@ function EntryRow({ entry, number, accounts, favorites, currency, editing, onEdi
   }
   if (basicPc) {
     return (
-      <li className="row b-entry-row">
+      <li className={`row b-entry-row${marked ? ' jump-mark' : ''}`} ref={marked ? markRef : undefined}>
         <span className="cell b-entry-memo">
           {KIND_LABELS[entry.kind] && <span className="note">{t('entries.kindNote', { kind: KIND_LABELS[entry.kind] })}</span>}
           {entry.memo}
@@ -371,11 +371,11 @@ function EntryRow({ entry, number, accounts, favorites, currency, editing, onEdi
 }
 
 // スマホの幅の1件（spec-mobile.md 5.2）：2行のカード。押すと開く（開いている行は1つだけ。Entries が持つ）。開くと、全部の文字と、編集・削除（開始残高・残高調整は種類だけ）が出る
-function EntryCard({ entry, number, accounts, currency, open, onToggle, onEdit, onDelete }) {
+function EntryCard({ entry, number, accounts, currency, open, onToggle, onEdit, onDelete, marked, markRef }) {
   const name = (id) => accounts.find((a) => a.id === id)?.name ?? ''
   const detailId = `card-${entry.id}`
   return (
-    <li className={`card${open ? ' open' : ''}`}>
+    <li className={`card${open ? ' open' : ''}${marked ? ' jump-mark' : ''}`} ref={marked ? markRef : undefined}>
       <button type="button" className="card-toggle" aria-expanded={open} aria-controls={detailId} onClick={onToggle}>
         <span className="no">{number}.</span>
         <span className="names">{name(entry.debitId)}{t('entries.pairSeparator')}{name(entry.creditId)}</span>
@@ -396,10 +396,12 @@ function EntryCard({ entry, number, accounts, currency, open, onToggle, onEdit, 
 
 const ORDER_LABELS = { asc: 'entries.orderAsc', desc: 'entries.orderDesc' } // 日付の枠の並びの切り替えボタンの文言（辞書のキー）
 
-export default function Entries({ data, update }) {
+export default function Entries({ data, update, detailId = null }) { // detailId：元帳の日付から来た仕訳の id（# から。なければ null）。その仕訳の月を開いて目印を付ける
   const { accounts, entries, settings } = data
   const [month, setMonth] = useState(() => today().slice(0, 7))
   const [editingId, setEditingId] = useState(null)
+  const [markId, setMarkId] = useState(null) // 目印を付ける仕訳（元帳の日付から来たとき）。月を変えると外れる
+  const markRef = useRef(null)
   const [order, setOrder] = useState('asc') // 日付の枠の並び。画面の中だけで持ち、保存しない（画面を移る・再読み込みで古い順に戻る）
   const [openRowId, setOpenRowId] = useState(null) // 開いている行（スマホの幅のカード。1つだけ）。月を変える・その日を閉じると閉じる
   const [creating, setCreating] = useState(false) // スマホ：右下の「＋」から開く、新しい仕訳の入力画面
@@ -460,7 +462,13 @@ export default function Entries({ data, update }) {
     setTensToggled(next)
     rememberTensOpen(next)
   }
-  const changeMonth = (v) => { setMonth(v); setEditingId(null); setOpenRowId(null); setToggled({}) }
+  const changeMonth = (v) => { setMonth(v); setEditingId(null); setOpenRowId(null); setToggled({}); setMarkId(null) }
+  useEffect(() => { // 元帳の日付から来たとき：その仕訳の月・日・10 件のグループを開き、目印を付ける（編集は始めない）
+    const target = detailId && entries.find((e) => e.id === detailId)
+    if (!target) return
+    setMonth(target.date.slice(0, 7)); setToggled({ [target.date]: true }); openTensOf(entries, target.date); setMarkId(target.id)
+  }, [detailId]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { markRef.current?.scrollIntoView({ block: 'center' }) }, [markId])
   const shiftMonth = (d) => { const [y, m] = month.split('-').map(Number); const x = new Date(y, m - 1 + d, 1); changeMonth(`${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}`) } // 前の月・次の月（群青の PC の帯）
   const road = (gunjoPc || basicPc) && month ? roadDays(accounts, entries, month, today(), data.noSpendDays) : null // 群青の月の道と基本 PC の日の費用合計は、同じ既存の集計を使う
   const groups = month ? groupEntriesByDate(entriesOfMonth(entries, month), order) : []
@@ -611,6 +619,8 @@ export default function Entries({ data, update }) {
                       onCancel: () => setEditingId(null),
                       onSave: save(e),
                       onDelete: () => remove(e),
+                      marked: markId === e.id,
+                      markRef,
                     }
                     return phone
                       ? <EntryCard key={e.id} {...common} open={openRowId === e.id} onToggle={() => setOpenRowId(openRowId === e.id ? null : e.id)} />

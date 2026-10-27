@@ -707,4 +707,7 @@
   :root[data-theme='basic'] .migration { padding: var(--b-space-2); overflow-wrap: anywhere; }
   :root[data-theme='basic'] .migration > p { font-size: var(--b-phone-font); }
   :root[data-theme='basic'] .migration > button:last-child { border-color: var(--b-navy); background: var(--b-navy); color: var(--b-surface); font-weight: var(--b-weight-bold); }
+  /* 元帳の日付（押すと仕訳の画面のその仕訳へ移る。押せる場所は 44px 以上）と、移った先の目印 */
+  :root[data-theme='basic'] .b-phone-book .b-date-jump { min-width: var(--b-phone-control); min-height: var(--b-phone-control); padding: var(--b-space-0); border: 0; background: none; box-shadow: none; color: var(--b-navy); font: inherit; text-decoration: underline; }
+  :root[data-theme='basic'] .entries .card.jump-mark { background: var(--b-table-head); outline: 2px solid var(--b-navy); outline-offset: -2px; }
 }

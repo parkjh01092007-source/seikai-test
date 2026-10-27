@@ -420,6 +420,8 @@ export default {
   'book.title': '元帳',
   'book.note': '見るだけの画面です。編集・削除は「仕訳」の画面で行います。',
   'book.empty': '仕訳がありません',
+  'book.jumpConfirm': 'この仕訳を直すために、仕訳の画面へ移動しますか。',
+  'book.jumpLabel': '{date} の仕訳を、仕訳の画面で開く',
   'book.kind': '種類',
   'book.heroLabel': '{name}の残高',
   'book.carryOver': '前月までの繰越',

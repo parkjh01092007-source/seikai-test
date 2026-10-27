@@ -453,6 +453,8 @@ export default {
   'book.title': '원장',
   'book.note': '보기만 하는 화면입니다. 편집・삭제는 \'분개\' 화면에서 합니다.',
   'book.empty': '분개가 없습니다',
+  'book.jumpConfirm': '이 분개를 수정하기 위해 분개 화면으로 이동할까요?', // 仮訳（未監修）
+  'book.jumpLabel': '{date} 분개를 분개 화면에서 열기', // 仮訳（未監修）
   'book.heroLabel': '{name} 잔액',
   'book.kind': '종류',
   'book.carryOver': '전월까지의 이월',

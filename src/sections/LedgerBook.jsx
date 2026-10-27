@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import './balance.css'
-import { groupByType, ledgerBook, formatYen, currencyUnit } from '../ledgerLogic.js'
+import { groupByType, ledgerBook, formatYen, currencyUnit, canEditEntry } from '../ledgerLogic.js'
 import { t } from '../text.js'
+import { toHash } from '../route.js'
+import { useConfirm } from './ConfirmDialog.jsx'
 import { usePhone } from '../layout.js'
 import { useGunjoPc } from '../gunjoPc.js'
 import { useBasicPc } from '../basicPc.js'
@@ -17,6 +19,7 @@ import BookArt from './BookArt.jsx'
 const Num = ({ n }) => <span className={n < 0 ? 'neg' : ''}>{formatYen(n)}</span>
 
 export default function LedgerBook({ data }) {
+  const confirm = useConfirm()
   const { accounts, entries } = data
   const [accountId, setAccountId] = useState('')
   const [month, setMonth] = useState('') // 初期は全期間
@@ -28,6 +31,10 @@ export default function LedgerBook({ data }) {
   const basicPhone = useBasicPhone()
   const bandHost = useBandHost()
   const dateText = (d) => (gunjoPc ? d.replaceAll('-', '/') : d) // 群青の PC は、見本どおり 2026/10/02
+  // 基本の PC・スマホ：直せる仕訳（通常の仕訳）の日付を押すと、確認のあと、仕訳の画面のその仕訳へ移る（開始残高・残高調整の行は押せない）
+  const dateCell = (entry, text) => ((basicPc || basicPhone) && canEditEntry(entry)
+    ? <button type="button" className="b-date-jump" aria-label={t('book.jumpLabel', { date: entry.date })} onClick={async () => { if (await confirm({ message: t('book.jumpConfirm') })) location.hash = toHash({ entry: 'ledger', tab: 'entries', detailId: entry.id }) }}>{text}</button>
+    : text)
   const heroValue = book ? `${book.balance < 0 ? '−' : ''}${formatYen(Math.abs(book.balance))}` : ''
 
   return (
@@ -71,7 +78,7 @@ export default function LedgerBook({ data }) {
             )}
             {book.rows.map((r) => (
               <li key={r.entry.id}>
-                <span className="name">{r.entry.date} {name(r.otherId)}</span>
+                <span className="name">{dateCell(r.entry, r.entry.date)} {name(r.otherId)}</span>
                 <span className="value">{r.debit !== null ? t('common.debit') : t('common.credit')} {formatYen(r.debit ?? r.credit)}</span>
                 <span className="sub">
                   <span>{t('common.balance')} <Num n={r.balance} /></span>
@@ -102,7 +109,7 @@ export default function LedgerBook({ data }) {
               )}
               {book.rows.map((r) => (
                 <tr key={r.entry.id}>
-                  <td>{dateText(r.entry.date)}</td>
+                  <td>{dateCell(r.entry, dateText(r.entry.date))}</td>
                   <td className="text wrap">{gunjoPc ? <button type="button" className="lk" onClick={() => setAccountId(r.otherId)}>{name(r.otherId)}</button> : name(r.otherId)}</td>
                   <td>{r.debit !== null && formatYen(r.debit)}</td>
                   <td>{r.credit !== null && formatYen(r.credit)}</td>
