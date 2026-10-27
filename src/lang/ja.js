@@ -418,6 +418,10 @@ export default {
 
   // 元帳（LedgerBook）
   'book.title': '元帳',
+  'book.trendTitle': '{name}の月ごとの推移',
+  'book.trendBalance': '月末の残高',
+  'book.trendIncrease': '当月のふえ',
+  'book.trendDecrease': '当月のへり',
   'book.note': '見るだけの画面です。編集・削除は「仕訳」の画面で行います。',
   'book.empty': '仕訳がありません',
   'book.jumpConfirm': 'この仕訳を直すために、仕訳の画面へ移動しますか。',

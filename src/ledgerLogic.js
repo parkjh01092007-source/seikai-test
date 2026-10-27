@@ -1033,6 +1033,27 @@ export function ledgerBook(accounts, entries, accountId, month = '') {
   return { account, total: own.length, carryOver, rows, balance }
 }
 
+// 科目の月末残高と、残高を増やす・減らす取引の合計。
+export function accountTrend(accounts, entries, accountId, endMonth, count = 12) {
+  const account = accounts.find((a) => a.id === accountId)
+  const own = entries.filter((e) => (e.debitId === accountId || e.creditId === accountId) && e.date.slice(0, 7) <= endMonth)
+  if (!account || !endMonth || count <= 0 || own.length === 0) return []
+  const first = own.reduce((m, e) => e.date.slice(0, 7) < m ? e.date.slice(0, 7) : m, own[0].date.slice(0, 7))
+  const debitIncreases = account.type === 'asset' || account.type === 'expense'
+  const result = []
+  for (let month = endMonth; month >= first && result.length < count; month = previousMonth(month)) {
+    const book = ledgerBook(accounts, own, accountId, month)
+    let increase = 0
+    let decrease = 0
+    for (const row of book.rows) {
+      if ((row.debit !== null) === debitIncreases) increase += row.entry.amount
+      else decrease += row.entry.amount
+    }
+    result.push({ month, balance: book.balance, increase, decrease })
+  }
+  return result
+}
+
 // ---- お気に入りの科目（settings） ----
 // 特別科目（key が opening / adjust-gain / adjust-loss）は、ENTRY_HIDDEN_KEYS で判定する（名前では探さない）。today は引数で受ける
 

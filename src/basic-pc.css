@@ -321,6 +321,19 @@
   :root[data-theme='basic'] .b-book .month-bar select { flex: 0 1 var(--b-setting-field-w); }
   :root[data-theme='basic'] .b-book .month-bar input { width: var(--b-name-w); }
   :root[data-theme='basic'] .b-book .table-box { background: var(--b-surface); }
+  :root[data-theme='basic'] .b-book .b-book-trend { margin: var(--b-space-6) 0 var(--b-space-8); padding: var(--b-space-6); border: 1px solid var(--b-side-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-book .b-book-trend-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--b-space-4); }
+  :root[data-theme='basic'] .b-book .b-book-trend-head h3 { margin: 0; font-size: var(--b-font-home-entry); }
+  :root[data-theme='basic'] .b-book .b-book-trend p { margin: var(--b-space-2) 0; }
+  :root[data-theme='basic'] .b-book .b-book-trend strong { font-size: var(--b-font-heading); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-book .b-trend-chart { width: 100%; margin: var(--b-space-5) 0; }
+  :root[data-theme='basic'] .b-book .b-trend-chart svg { display: block; overflow: visible; }
+  :root[data-theme='basic'] .b-book .b-trend-chart text { fill: var(--b-muted); font-size: var(--b-font-small); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-book .b-trend-chart .b-trend-latest { fill: var(--b-active-bar); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-book .b-trend-zero { stroke: var(--b-muted); stroke-dasharray: 3 4; }
+  :root[data-theme='basic'] .b-book .b-trend-line { fill: none; stroke: var(--b-active-bar); stroke-width: 2; }
+  :root[data-theme='basic'] .b-book .b-trend-dot { fill: var(--b-active-bar); }
+  :root[data-theme='basic'] .b-book .b-book-trend th:not(:first-child), :root[data-theme='basic'] .b-book .b-book-trend td:not(:first-child) { text-align: right; white-space: nowrap; }
 
   /* 科目管理：常時編集の行を維持。メモや変更不可の理由は一行下へ。 */
   :root[data-theme='basic'] .b-accounts > form { gap: var(--b-control-gap); margin-bottom: var(--b-space-8); }

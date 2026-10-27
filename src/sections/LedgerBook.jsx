@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import './balance.css'
-import { groupByType, ledgerBook, formatYen, currencyUnit, canEditEntry } from '../ledgerLogic.js'
+import { groupByType, ledgerBook, accountTrend, formatYen, currencyUnit, canEditEntry } from '../ledgerLogic.js'
+import { today } from '../today.js'
 import { t } from '../text.js'
 import { toHash } from '../route.js'
 import { useConfirm } from './ConfirmDialog.jsx'
@@ -15,6 +16,7 @@ import { KIND_LABELS } from './Entries.jsx'
 import Hint from './Hint.jsx'
 import LedgerPicker from './LedgerPicker.jsx'
 import BookArt from './BookArt.jsx'
+import TrendLine from './TrendLine.jsx'
 
 const Num = ({ n }) => <span className={n < 0 ? 'neg' : ''}>{formatYen(n)}</span>
 
@@ -30,6 +32,7 @@ export default function LedgerBook({ data }) {
   const basicPc = useBasicPc()
   const basicPhone = useBasicPhone()
   const bandHost = useBandHost()
+  const trend = basicPc && book ? accountTrend(accounts, entries, accountId, today().slice(0, 7)) : []
   const dateText = (d) => (gunjoPc ? d.replaceAll('-', '/') : d) // 群青の PC は、見本どおり 2026/10/02
   // 基本の PC・スマホ：直せる仕訳（通常の仕訳）の日付を押すと、確認のあと、仕訳の画面のその仕訳へ移る（開始残高・残高調整の行は押せない）
   const dateCell = (entry, text) => ((basicPc || basicPhone) && canEditEntry(entry)
@@ -62,6 +65,14 @@ export default function LedgerBook({ data }) {
         )}
       {gunjoPc && !book && <><Hint /><BookArt /></>}
       <p className="note">{t('book.note')}</p>
+      {basicPc && trend.length > 0 && <section className="b-book-trend">
+        <div className="b-book-trend-head"><h3>{t('book.trendTitle', { name: book.account.name })}</h3><span className="note">{t('monthly.trendNote')}</span></div>
+        <p>{t('book.trendBalance')} <strong className={trend[0].balance < 0 ? 'neg' : ''}>{formatYen(trend[0].balance)}{currencyUnit(data.settings.currency)}</strong></p>
+        <TrendLine rows={[...trend].reverse()} metric="balance" label={t('common.balance')} currency={data.settings.currency} />
+        <div className="table-box"><table><thead><tr><th>{t('common.month')}</th><th>{t('book.trendBalance')}</th><th>{t('book.trendIncrease')}</th><th>{t('book.trendDecrease')}</th></tr></thead><tbody>
+          {trend.map((row) => <tr key={row.month}><td>{row.month}</td><td><Num n={row.balance} /></td><td><Num n={row.increase} /></td><td><Num n={row.decrease} /></td></tr>)}
+        </tbody></table></div>
+      </section>}
       {basicPc && book && <div className="b-section-head"><h3>{book.account.name} · {t('basicPc.bookDetails')}</h3><span className="note">{t('basicPc.amountUnit', { unit: currencyUnit(data.settings.currency) })}</span></div>}
       {book && book.total === 0 && <p className="note">{t('book.empty')}</p>}
       {book && book.total > 0 && phone && (
