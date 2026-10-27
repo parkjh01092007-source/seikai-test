@@ -3,12 +3,13 @@ import { periodRows, formatYen } from '../ledgerLogic.js'
 import { t } from '../text.js'
 import { usePhone } from '../layout.js'
 import { useGunjoPc } from '../gunjoPc.js'
+import { useBasicPc } from '../basicPc.js'
 import { useBandHost, useBandTop } from './bandHost.js'
 import { BandStat, signedYen } from './PageBand.jsx'
 import { Icon } from './Icon.jsx'
 import { StateTag } from './FlowParts.jsx'
 import CardTimeline from './CardTimeline.jsx'
-import { periodStatus } from '../flowArt.js'
+import { paidInAdvance, periodStatus } from '../flowArt.js'
 import { today } from '../today.js'
 
 const PERIOD_ROWS = 6 // 請求期間の表に出す行（新しい順）。残りは「ほか N 期間」に畳む
@@ -19,6 +20,7 @@ export default function CreditCardDetail({ card, backHref, unit }) {
   const periods = periodRows(card.periods, card.lastClosing, card.payDay)
   const phone = usePhone()
   const gunjoPc = useGunjoPc()
+  const basicPc = useBasicPc()
   const bandHost = useBandHost()
   const bandTop = useBandTop()
   const now = today()
@@ -55,6 +57,7 @@ export default function CreditCardDetail({ card, backHref, unit }) {
           <section className="g-card g-next">
             <span>{t('card.next')}</span>
             <b className={card.next < 0 ? 'neg' : ''}>{signedYen(card.next, formatYen)}{unit}</b>
+            {paidInAdvance(card, now) && <small className="g-next-note">{t('card.paidAhead')}</small>}
           </section>
           <div className="table-box"><table className="g-facts">
             <tbody>
@@ -89,7 +92,7 @@ export default function CreditCardDetail({ card, backHref, unit }) {
   return (
     <>
       <div className="back"><a href={backHref}>{t('card.back')}</a></div>
-      <h2>{card.account.name}{!card.account.active && <span className="note"> {t('common.inactive')}</span>}</h2>
+      {basicPc ? <div className="b-page-head"><h2>{card.account.name}{!card.account.active && <span className="note"> {t('common.inactive')}</span>}</h2><p>{t('basicPc.cardDetailLead')}</p></div> : <h2>{card.account.name}{!card.account.active && <span className="note"> {t('common.inactive')}</span>}</h2>}
       <div className="table-box"><table>
         <tbody>
           <tr><td>{t('card.next')}</td><td><Num n={card.next} />{unit}</td></tr>
@@ -103,7 +106,7 @@ export default function CreditCardDetail({ card, backHref, unit }) {
       <p className="note">
         {t('card.noteFormula', { date: card.lastClosing })} {t('card.noteRules')}
       </p>
-      <h3>{t('card.periodsTitle')}</h3>
+      {basicPc ? <div className="b-section-head"><h3>{t('card.periodsTitle')}</h3></div> : <h3>{t('card.periodsTitle')}</h3>}
       {periods.length === 0 ? <p className="note">{t('card.noUsage')}</p> : phone ? (
         // スマホの幅（spec-mobile.md 第6章）：請求期間ごとに2行。1行目に締め日と利用額、2行目に引き落とし予定日と（未確定）。PC は下の表のまま
         <ul className="rows2">

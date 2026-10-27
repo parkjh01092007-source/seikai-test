@@ -17,6 +17,7 @@ import { Icon, IconButton } from './Icon.jsx'
 import { presetIconId, PRESET_ICON_PICKER } from '../icons.js'
 import IconPicker from './PresetIconPicker.jsx'
 import { useGunjoPc, useFixedEntries } from '../gunjoPc.js'
+import { useBasicPc } from '../basicPc.js'
 import { createPortal } from 'react-dom'
 import { useBandHost, useBandTop, useBandRoad } from './bandHost.js'
 import { BandStat, signedYen } from './PageBand.jsx'
@@ -52,7 +53,9 @@ function Field({ label, className = '', children }) {
 // addPreset：{ list（今のプリセット）, onAdd(input) → 新しいプリセットの id }。新しい仕訳の入力だけが渡す。渡すと「プリセットに追加」の＋付きの星のボタンが出て、押すと入力欄が追加の状態になる（日付の欄は隠れ、記号・名前〔任意〕・保存／やめる。今の借方・貸方・金額・メモを引き継ぐ）
 export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus', onSubmit, onCancel, currentIds, favorites = { debit: [], credit: [] }, variant, onValues, lastEntry, currency, presets, noSpend, addPreset, quickHost, startAdding = false }) {
   const options = entryAccountOptions(accounts, currentIds)
-  const swapOn = useGunjoPc() // 交換ボタンを出す条件（この 1 行）。今は群青の PC だけ。全テーマへ広げるときは true にし、sheet の並び（.sheet-pair）にも差し込む
+  const gunjoPc = useGunjoPc()
+  const basicPc = useBasicPc()
+  const swapOn = gunjoPc || basicPc // 交換の処理は共用し、基本 PC と群青 PC だけに出す
   const [swapNote, setSwapNote] = useState('') // 入れ替えたあとの読み上げ（見えない行）
   const [f, setF] = useState(initial)
   const [error, setError] = useState('')
@@ -86,7 +89,7 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
   const copyPressed = copyValues !== null && applied === 'copy' && sameValues(copyValues)
   const copyTitle = lastEntry ? t('entries.copyLastTitle', { date: lastEntry.date, debit: accounts.find((a) => a.id === lastEntry.debitId)?.name ?? '', credit: accounts.find((a) => a.id === lastEntry.creditId)?.name ?? '', amount: formatMoney(lastEntry.amount, currency) }) : ''
   const copyButton = lastEntry ? (
-    <button type="button" className={copyPressed ? 'copy-last icon-only on' : 'copy-last icon-only'} aria-pressed={copyPressed} aria-label={t('entries.copyLast')} title={copyPressed ? t('entries.undoTitle', { text: copyTitle }) : copyTitle} onClick={() => press('copy', copyValues)}><Icon name="copy" /></button>
+    <button type="button" className={basicPc ? `copy-last${copyPressed ? ' on' : ''}` : copyPressed ? 'copy-last icon-only on' : 'copy-last icon-only'} aria-pressed={copyPressed} aria-label={t('entries.copyLast')} title={copyPressed ? t('entries.undoTitle', { text: copyTitle }) : copyTitle} onClick={() => press('copy', copyValues)}>{basicPc ? t('entries.copyLast') : <Icon name="copy" />}</button>
   ) : null
   const [adding, setAdding] = useState(startAdding) // プリセットの追加の状態（日付の欄は隠れる）。startAdding：スマホの最初の選ぶ画面の「追加」から開いたとき、初めから追加の状態
   const [addDraft, setAddDraft] = useState({ icon: PRESET_ICON_PICKER[0], name: '' })
@@ -131,11 +134,11 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
   // 借方と貸方の交換ボタン。入力の札（variant='card'）では、下の quick-row の先頭（交換→コピー→今日は使っていない。大きさ・間隔はほかのボタンと同じ）、編集の行では、借方と貸方の欄の間（fields.swap）。プリセットの追加の状態には出さない
   const swapButton = swapOn && (
     <>
-      <button type="button" className="swap-accounts icon-only" aria-label={t('entries.swapAccounts')} title={t('entries.swapTitle')} disabled={!f.debitId && !f.creditId} onClick={swap}><Icon name="swap" /></button>
+      <button type="button" className={basicPc ? 'swap-accounts' : 'swap-accounts icon-only'} aria-label={t('entries.swapAccounts')} title={t('entries.swapTitle')} disabled={!f.debitId && !f.creditId} onClick={swap}>{basicPc ? t('entries.swapAccounts') : <Icon name="swap" />}</button>
       <span className="sr-only" aria-live="polite">{swapNote}</span>
     </>
   )
-  const swapQuick = swapOn && variant === 'card'
+  const swapQuick = swapOn && (variant === 'card' || variant === 'basic')
   // 前回と同じ入力（複製の絵）と今日は使っていない（円）を 1 行に。span で包むのは、群青の PC の「隣り合う部品は余白で 12px」規則に巻き込まないため（間は行の gap）
   const quickRow = swapQuick || copyButton || noSpendButton ? (
     <div className="quick-row">{swapQuick && <span>{swapButton}</span>}{copyButton && <span>{copyButton}</span>}{noSpendButton && <span>{noSpendButton}</span>}</div>
@@ -159,7 +162,7 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
     amount: <Field label={t('common.amount')}><AmountInput label={t('common.amount')} value={f.amount} onChange={set('amount')} focusRequest={focusTick} /></Field>,
     debit: <Field label={t('common.debit')}><AccountSelect label={t('common.debit')} value={f.debitId} onChange={setAccount('debitId')} options={options} favoriteIds={favorites.debit} /></Field>,
     credit: <Field label={t('common.credit')}><AccountSelect label={t('common.credit')} value={f.creditId} onChange={setAccount('creditId')} options={options} favoriteIds={favorites.credit} /></Field>,
-    swap: swapOn && variant !== 'card' && <span className="swap-slot">{swapButton}</span>,
+    swap: swapOn && !swapQuick && <span className="swap-slot">{swapButton}</span>,
     living: showLiving && (
       <Field label={t('living.month')} className="living">
         <select aria-label={t('living.month')} value={f.living ?? ''} onChange={(e) => set('living')(e.target.value)}>
@@ -235,6 +238,25 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
     )
   }
 
+  // 基本 PC：既存の欄と送信処理のまま、ラベル付きの横並びにする。
+  if (basicPc) {
+    return (
+      <form className="b-entry-form" ref={formRef} onSubmit={submit}>
+        {fields.date}
+        {fields.debit}
+        {fields.swap}
+        {fields.credit}
+        {fields.amount}
+        <Field label={t('common.memo')} className="b-memo"><input className="memo-input" aria-label={t('common.memo')} value={f.memo} onChange={(e) => set('memo')(e.target.value)} /></Field>
+        <button className="b-primary"><Icon name={submitIcon} />{submitLabel}</button>
+        {onCancel && <button type="button" onClick={onCancel}><Icon name="close" />{t('entries.sheetClose')}</button>}
+        {fields.living}
+        {presetRow}
+        {placeQuick}
+        {error && <span className="error">{error}</span>}
+      </form>
+    )
+  }
   return (
     <form ref={formRef} onSubmit={submit}>
       {fields.date}
@@ -262,6 +284,7 @@ export const KIND_LABELS = {
 
 function EntryRow({ entry, number, accounts, favorites, currency, editing, onEdit, onCancel, onSave, onDelete }) {
   const gunjoPc = useGunjoPc()
+  const basicPc = useBasicPc()
   const name = (id) => accounts.find((a) => a.id === id)?.name ?? ''
   if (editing) {
     return (
@@ -300,6 +323,25 @@ function EntryRow({ entry, number, accounts, favorites, currency, editing, onEdi
               <IconButton icon="trash" label={t('common.delete')} onClick={onDelete} />
             </>
           )}
+        </span>
+      </li>
+    )
+  }
+  if (basicPc) {
+    return (
+      <li className="row b-entry-row">
+        <span className="cell b-entry-memo">
+          {KIND_LABELS[entry.kind] && <span className="note">{t('entries.kindNote', { kind: KIND_LABELS[entry.kind] })}</span>}
+          {entry.memo}
+        </span>
+        <span className="cell">{name(entry.debitId)}</span>
+        <span className="cell">{name(entry.creditId)}</span>
+        <span className="amount">{formatYen(entry.amount)}</span>
+        <span className="b-entry-ops">
+          {canEditEntry(entry) && <>
+            <IconButton icon="edit" label={t('common.edit')} onClick={onEdit} />
+            <IconButton icon="trash" className="b-danger" label={t('common.delete')} onClick={onDelete} />
+          </>}
         </span>
       </li>
     )
@@ -368,6 +410,7 @@ export default function Entries({ data, update }) {
   const [toggled, setToggled] = useState({}) // 日付の枠を押して開閉した分（日付 → 開いているか）。月を変えると初めの状態に戻る。覚えない
   const phone = usePhone()
   const gunjoPc = useGunjoPc() // 群青の PC：月の欄と並べ替えのボタンの間の空白を描かない（間は 12px の余白だけ）
+  const basicPc = useBasicPc()
   const fixedList = useFixedEntries() // 一覧の領域だけが中でスクロールする高さ
   const listRef = useRef(null)
   const bandHost = useBandHost()
@@ -416,7 +459,7 @@ export default function Entries({ data, update }) {
   }
   const changeMonth = (v) => { setMonth(v); setEditingId(null); setOpenRowId(null); setToggled({}) }
   const shiftMonth = (d) => { const [y, m] = month.split('-').map(Number); const x = new Date(y, m - 1 + d, 1); changeMonth(`${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}`) } // 前の月・次の月（群青の PC の帯）
-  const road = gunjoPc && month ? roadDays(accounts, entries, month, today(), data.noSpendDays) : null // 月の道（群青の PC の帯 L）
+  const road = (gunjoPc || basicPc) && month ? roadDays(accounts, entries, month, today(), data.noSpendDays) : null // 群青の月の道と基本 PC の日の費用合計は、同じ既存の集計を使う
   const groups = month ? groupEntriesByDate(entriesOfMonth(entries, month), order) : []
   const tens = month ? groupByTens(groupEntriesByDate(entriesOfMonth(entries, month)), accounts, order) : [] // 10 件を超える月だけ、見出しを出す（以下は今までと同じ）
   const withTens = showTens(tens)
@@ -526,19 +569,32 @@ export default function Entries({ data, update }) {
             <section key={g.date} className="day">
               <h3>
                 <button type="button" className="day-toggle" aria-expanded={open} aria-controls={listId} onClick={() => { if (open && g.entries.some((e) => e.id === openRowId)) setOpenRowId(null); setToggled((s) => ({ ...s, [g.date]: !open })) }}>
-                  <span>{formatDayHead(g.date, g.entries.length)}</span>
+                  {basicPc ? <>
+                    <span>{formatDayLabel(g.date)}</span>
+                    <span className="b-day-total">{t('entries.tensCount', { count: g.entries.length })}{t('common.separator')}{t('entries.dayTotal', { amount: formatYen(road?.days[Number(g.date.slice(8, 10)) - 1]?.amount ?? 0) })}</span>
+                  </> : <span>{formatDayHead(g.date, g.entries.length)}</span>}
                   <span className="mark"><Icon name={open ? 'chevDown' : 'chevRight'} /></span>
                 </button>
               </h3>
               <div id={listId} hidden={!open}>
-                <div className="head">
-                  <span />
-                  <span className="debit">{t('common.debit')}</span>
-                  <span>{t('common.credit')}</span>
-                  <span className="amount">{t('common.amount')}</span>
-                  <span />
-                  <span />
-                </div>
+                {basicPc ? (
+                  <div className="head">
+                    <span>{t('common.memo')}</span>
+                    <span>{t('common.debit')}</span>
+                    <span>{t('common.credit')}</span>
+                    <span className="amount">{t('common.amount')}</span>
+                    <span>{t('basicPc.operations')}</span>
+                  </div>
+                ) : (
+                  <div className="head">
+                    <span />
+                    <span className="debit">{t('common.debit')}</span>
+                    <span>{t('common.credit')}</span>
+                    <span className="amount">{t('common.amount')}</span>
+                    <span />
+                    <span />
+                  </div>
+                )}
                 <ol>
                   {g.entries.map((e, i) => {
                     const common = {
@@ -585,7 +641,8 @@ export default function Entries({ data, update }) {
   const list = !month ? <p className="note">{t('common.chooseMonth')}</p> : groups.length === 0 ? <p className="note">{t('common.noEntriesInMonth')}</p> : withTens ? tens.map(renderTens) : groups.map(renderDay)
 
   return (
-    <div className="entries">
+    <div className={basicPc ? 'entries b-page b-entries' : 'entries'}>
+      {basicPc && <div className="b-page-head"><h2>{t('nav.tab.entries')}</h2><p>{t('basicPc.entriesLead')}</p></div>}
       {/* 群青の PC（見本 E-entries）：帯 L に、月の選び（前の月・今の月・次の月）、10月の費用と今月の仕訳の件数、月の道 */}
       {bandTop && createPortal(
         <div className="g-month">
@@ -631,10 +688,11 @@ export default function Entries({ data, update }) {
       ) : (
         <>
       {/* 入力欄の固定：PC の幅は、入力の行が画面の上に貼り付く（entries.css）。スマホの形は、一覧の上に置かず、右下の「＋」から入力画面を出す */}
-      {!phone && <h2>{t('entries.inputTitle')}</h2>}
+      {!phone && (basicPc ? <div className="b-section-head"><h3>{t('basicPc.entryAdd')}</h3><span className="note">{t('basicPc.entryHint')}</span></div> : <h2>{t('entries.inputTitle')}</h2>)}
       {!phone && (
         <div className="entries-top">
         <EntryForm
+          variant={basicPc ? 'basic' : undefined}
           accounts={accounts}
           favorites={settings.favorites}
           initial={newInitial}
@@ -650,10 +708,11 @@ export default function Entries({ data, update }) {
         <span className="quick-host" ref={setQuickHost} />
         </div>
       )}
-      <h2>{t('entries.listTitle')}</h2>
+      {basicPc ? <div className="b-section-head b-entry-list-head"><h3>{t('entries.listTitle')}</h3></div> : <h2>{t('entries.listTitle')}</h2>}
       {!gunjoPc && <input type="month" aria-label={t('common.month')} value={month} onChange={(e) => changeMonth(e.target.value)} />}{gunjoPc ? null : ' '}
       {/* 押すたびに切り替える。表示は、押したら切り替わる先 */}
       <IconButton icon="sort" label={t('entries.sortLabel', { now: t(ORDER_LABELS[order]), next: t(ORDER_LABELS[order === 'asc' ? 'desc' : 'asc']) })} onClick={() => setOrder(order === 'asc' ? 'desc' : 'asc')} />
+      {basicPc && <p className="note b-entry-unit">{t('monthly.unit', { unit: currencyUnit(settings.currency) })}</p>}
       {list}
         </>
       )}

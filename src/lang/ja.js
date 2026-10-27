@@ -1,10 +1,48 @@
 // 日本語の辞書。キーは「画面.意味」（平らなオブジェクト）。文の中の値は {名前}。データだけで、React は読み込まない。
 // 17(b) で ko.js を足す。辞書にない言葉は日本語で出す（その仕組みは text.js）。
 export default {
+  // 基本 PC 段 1（画像の見本用の文言は入れない）
+  'basicPc.homeLead': '入口を選んでください。',
+  'basicPc.homeDesc.ledger': '仕訳の記録、残高や月次の確認、科目の管理',
+  'basicPc.homeDesc.skills': 'スキルの登録と管理',
+  'basicPc.homeDataNote': '画面右上から、データの書き出し・読み込みができます。',
+  'basicPc.entriesLead': '取引の記録と一覧',
+  'basicPc.entryAdd': '仕訳を追加',
+  'basicPc.entryHint': '借方・貸方と金額を入力',
+  'basicPc.operations': '編集・削除',
+  'basicPc.balanceLead': '現在の残高を確認する',
+  'basicPc.assetsLiabilities': '資産と負債',
+  'basicPc.monthlyLead': '月ごとの集計',
+  'basicPc.expensePart': '費用の部',
+  'basicPc.revenuePart': '収益の部',
+  'basicPc.amountUnit': '金額（{unit}）',
+  'basicPc.difference': '差額',
+  'basicPc.settingsLead': 'アプリの設定を変更する',
+  'basicPc.languageLabel': '表示する言語',
+  'basicPc.currencyLabel': '表示する通貨の単位',
+  'basicPc.deviceThemeNote': 'この端末に設定が保存されます。',
+  // 基本 PC 段 2（操作・計算は既存のまま）
+  'basicPc.skillsList': '登録したスキル',
+  'basicPc.bookDetails': '記録',
+  // 基本 PC 段 3（既存の操作と計算を維持）
+  // 基本 PC 段 6（定期支払い。月の文字表示）
+  'basicPc.subsLead': '毎月の支払いの登録と確認',
+  'basicPc.subsList': '登録した定期支払い',
+  'basicPc.subsLegend': '直近12か月　済＝記入済み　予＝これから　前＝登録前　止＝使わない間',
+  'basicPc.subsDone': '済',
+  'basicPc.subsWait': '予',
+  'basicPc.subsBefore': '前',
+  'basicPc.subsSkip': '止',
+  'basicPc.cardsLead': 'カードの利用額と引き落とし分を確認する',
+  'basicPc.cardDetailLead': '引き落とし分と請求期間ごとの利用額',
+  'basicPc.budgetsLead': '月の予算の確認と登録・履歴の管理',
+  'basicPc.accountsDesc': '科目の追加・名前の変更・使わない設定',
+
   // ホーム・縦タブ
   'home.title': '正解',
   'nav.toHome': 'ホームへ',
   'nav.menu': 'メニュー',
+  'nav.current': '表示中',
 
   // 画面の定義（nav.js の NAV）：入口・グループ・タブの名前
   'nav.entry.skills': 'スキル',
@@ -533,6 +571,7 @@ export default {
   'card.listTitle': 'カード',
   'card.empty': 'カードがありません',
   'card.next': '次の引き落とし分',
+  'card.paidAhead': '引き落とし分は、返済の記録ずみです',
   'card.newNote': '新しいカードは、残高0から始まります。利用は、仕訳で記録します。',
   'card.closingDayHint': '月末締めのカードは、締め日に31を入れてください。',
   'card.back': '一覧へ戻る',

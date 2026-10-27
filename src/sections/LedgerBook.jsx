@@ -5,6 +5,7 @@ import { groupByType, ledgerBook, formatYen, currencyUnit } from '../ledgerLogic
 import { t } from '../text.js'
 import { usePhone } from '../layout.js'
 import { useGunjoPc } from '../gunjoPc.js'
+import { useBasicPc } from '../basicPc.js'
 import { useBandHost } from './bandHost.js'
 import { BandStat } from './PageBand.jsx'
 import { KIND_LABELS } from './Entries.jsx'
@@ -22,20 +23,22 @@ export default function LedgerBook({ data }) {
   const book = accountId ? ledgerBook(accounts, entries, accountId, month) : null
   const phone = usePhone()
   const gunjoPc = useGunjoPc()
+  const basicPc = useBasicPc()
   const bandHost = useBandHost()
   const dateText = (d) => (gunjoPc ? d.replaceAll('-', '/') : d) // 群青の PC は、見本どおり 2026/10/02
   const heroValue = book ? `${book.balance < 0 ? '−' : ''}${formatYen(Math.abs(book.balance))}` : ''
 
   return (
-    <div className={`report${gunjoPc ? ` g-book${book ? '' : ' g-book-empty'}` : ''}`}>
+    <div className={`report${gunjoPc ? ` g-book${book ? '' : ' g-book-empty'}` : basicPc ? ' b-page b-book' : ''}`}>
       {/* 群青の PC：画面の名前は帯のマス。帯に、選んだ科目の残高（マイナスは白地の上で読めるよう、赤にせず「−」を付ける） */}
       {bandHost && book && createPortal(<BandStat label={t('book.heroLabel', { name: book.account.name })} value={heroValue} unit={currencyUnit(data.settings.currency)} />, bandHost)}
-      {!gunjoPc && <h2>{t('book.title')}</h2>}
+      {basicPc ? <div className="b-page-head"><h2>{t('book.title')}</h2></div> : !gunjoPc && <h2>{t('book.title')}</h2>}
       {gunjoPc
         ? <LedgerPicker accounts={accounts} entries={entries} accountId={accountId} month={month} onAccount={setAccountId} onMonth={setMonth} />
         : (
         <div className="month-bar">
-          <select aria-label={t('common.account')} value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+          {basicPc && <label className="b-field-label" htmlFor="b-book-account">{t('common.account')}</label>}
+          <select id={basicPc ? 'b-book-account' : undefined} aria-label={t('common.account')} value={accountId} onChange={(e) => setAccountId(e.target.value)}>
             <option value="">{t('common.chooseAccount')}</option>
             {groupByType(accounts).map((g) => (
               <optgroup key={g.type} label={g.label}>
@@ -43,12 +46,14 @@ export default function LedgerBook({ data }) {
               </optgroup>
             ))}
           </select>
-          <input type="month" aria-label={t('common.month')} value={month} onChange={(e) => setMonth(e.target.value)} />
-          <button type="button" onClick={() => setMonth('')}>{t('common.allPeriod')}</button>
+          {basicPc && <label className="b-field-label" htmlFor="b-book-month">{t('common.month')}</label>}
+          <input id={basicPc ? 'b-book-month' : undefined} type="month" aria-label={t('common.month')} value={month} onChange={(e) => setMonth(e.target.value)} />
+          <button type="button" className={basicPc && !month ? 'b-primary' : undefined} onClick={() => setMonth('')}>{t('common.allPeriod')}</button>
         </div>
         )}
       {gunjoPc && !book && <><Hint /><BookArt /></>}
       <p className="note">{t('book.note')}</p>
+      {basicPc && book && <div className="b-section-head"><h3>{book.account.name} · {t('basicPc.bookDetails')}</h3><span className="note">{t('basicPc.amountUnit', { unit: currencyUnit(data.settings.currency) })}</span></div>}
       {book && book.total === 0 && <p className="note">{t('book.empty')}</p>}
       {book && book.total > 0 && phone && (
         // スマホの幅（spec-mobile.md 第6章）：1件を2行。1行目に日付・相手の科目・「借方 1,200」、2行目に残高・（種類）・メモ（メモは折り返して全部出す）。

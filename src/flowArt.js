@@ -12,12 +12,17 @@ const localDate = (iso) => {
   const d = new Date(iso)
   return Number.isNaN(d.getTime()) ? null : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
-export function subscriptionMoons(sub, today, months) {
+// entries（仕訳）は省いてよい。登録した月（first）だけは、その月に同じ借方・貸方の通常の仕訳が 1 件でもあれば done（登録の月に手で入れた分・自動記入した分）、なければ before。
+// それより前の月は、仕訳があっても before（登録前はさかのぼらない）。保存形式は変えない（仕訳を読むだけ）
+export function subscriptionMoons(sub, today, months, entries = []) {
   const created = (typeof sub.createdAt === 'string' && localDate(sub.createdAt)) || today
   const first = initialLastMonth(sub.day, created) // この月までは、登録のときに「記入済み」の扱い（実際には記入していない）
   const now = today.slice(0, 7)
   return months.map((month) => {
-    if (month <= first) return { month, state: 'before' }
+    if (month <= first) {
+      const entered = month === first && month <= sub.lastMonth && entries.some((e) => e.kind === 'normal' && e.date.slice(0, 7) === month && e.debitId === sub.debitId && e.creditId === sub.creditId)
+      return { month, state: entered ? 'done' : 'before' }
+    }
     if (month <= sub.lastMonth) return { month, state: 'done' }
     if (sub.active && month === now && subscriptionDate(month, sub.day) > today) return { month, state: 'wait' }
     return { month, state: 'skip' }
@@ -26,10 +31,10 @@ export function subscriptionMoons(sub, today, months) {
 
 // 12 か月の輪：月ごとの { month, done（記入の対象になった件数）, total（その月に記入されるはずの件数＝登録後で、使っている分）}。
 // 使わない間の分（skip）と登録前の分（before）は total に入れない（入れると、使わない 1 件のせいで輪が永遠に満ちない）。total が 0 の月は、輪を点線で出す
-export function ringFractions(subs, today, months) {
+export function ringFractions(subs, today, months, entries = []) {
   const rows = months.map((month) => ({ month, done: 0, total: 0 }))
   for (const sub of subs) {
-    subscriptionMoons(sub, today, months).forEach((m, i) => {
+    subscriptionMoons(sub, today, months, entries).forEach((m, i) => {
       if (m.state === 'done') { rows[i].done++; rows[i].total++ } else if (m.state === 'wait') rows[i].total++
     })
   }
@@ -140,6 +145,10 @@ export function fixBars(rows) {
   const pct = (n) => Math.max(0, n) / max * 100
   return rows.map((r) => ({ ...r, recorded: pct(r.current), after: pct(r.actual), down: r.actual < r.current }))
 }
+
+// 引き落としの返済を、先に記録してある：次の引き落とし分が 0 以下で、最後の締め日の期（確定）に利用があり、引き落とし予定日がまだ先。
+// 次の引き落とし分は「残高 − 未請求」で、返済の記録（日付に関係なく）が引かれる。札は日付だけの目安なので、記録と見え方が食い違う。この 1 行の説明のための判定（計算は変えない）。card は cardReport の結果
+export const paidInAdvance = (card, today) => card.next <= 0 && card.payDate > today && card.periods.some((p) => p.closingDate === card.lastClosing && p.amount > 0)
 
 // レーンの状態：open（まだ締まっていない）／paid（引き落とし予定日が今日以前。日付だけの目安）／closed（締まっていて、まだ引き落とし前）
 export const periodStatus = (lane) => (lane.open ? 'open' : lane.paid ? 'paid' : 'closed')

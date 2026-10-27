@@ -1,0 +1,541 @@
+/* 基本の PC の形（docs/plan-basic-pc-impl.md 段 0 の骨組み＋段 1 の 5 画面）。
+   当てるのは、基本 かつ PC の形のときだけ。ほかのプリセット・基本のスマホの形・群青は、この中の規則も変数も届かない（変えない）。
+   PC の条件は、layout.js の PHONE_QUERY の反対側（gunjo-pc.css と同じ。basicPc.check.js が確かめる）。画面だけ（@media screen）。印刷にはかからない。 */
+@media screen and (not (max-width: 959.98px)) and (not ((pointer: coarse) and (hover: none))) {
+  /* ---- 変数（画像案 Documents\seikai-basic-pc-principles-20261027 の色。文字の組は 4.5:1 以上。basicPc.check.js が確かめる） ---- */
+  :root[data-theme='basic'] {
+    --b-bg: #f6f6f3; /* ページの地 */
+    --b-surface: #ffffff; /* ヘッダー・表の面 */
+    --b-text: #1c211f;
+    --b-muted: #46534b;
+    --b-header-line: #b8bdb9; /* ヘッダーの下の線 */
+    --b-side-bg: #ecefeb; /* 縦タブの地 */
+    --b-side-line: #c7cec8;
+    --b-active-bg: #e4edf7; /* 今いる画面 */
+    --b-active-bar: #22518a;
+    --b-header-h: 52px;
+    --b-side-w: 190px;
+    --b-content-w: 1282px; /* 本文の幅 1244px＋左右の余白 38px。左寄せ（右に余白が残る。案 1A） */
+  }
+
+  :root[data-theme='basic'] { background: var(--b-bg); }
+  :root[data-theme='basic'] body { background: var(--b-bg); }
+
+  /* ---- ヘッダー：書き出し・読み込みの帯。縦タブの上の帯（下の menu-head）と、同じ高さ・同じ線でつなぐ ---- */
+  :root[data-theme='basic'] .main-col > header { box-sizing: border-box; height: var(--b-header-h); align-items: center; padding: 0 30px; background: var(--b-surface); border-bottom: 1px solid var(--b-header-line); }
+
+  :root[data-theme='basic'] .main-col > header .b-brand { margin-right: auto; font-size: 1.15em; font-weight: bold; color: var(--b-text); }
+
+  /* ---- 本文：左寄せ（ホームも） ---- */
+  :root[data-theme='basic'] .content { box-sizing: border-box; max-width: var(--b-content-w); margin: 0; padding: 24px 38px 48px; }
+  :root[data-theme='basic'] .home { text-align: left; }
+  :root[data-theme='basic'] .home .entries { justify-content: flex-start; }
+
+  /* ---- 縦タブ：いつも開いている（SideTabs.jsx が open にする）。☰ は出さない。上の帯に「正解」と入口名 ---- */
+  :root[data-theme='basic'] .sidetabs { box-sizing: border-box; width: var(--b-side-w); background: var(--b-side-bg); border-right: 1px solid var(--b-side-line); }
+  :root[data-theme='basic'] .sidetabs .toggle { display: none; }
+  :root[data-theme='basic'] .sidetabs .panel { position: static; width: auto; height: 100%; padding: var(--b-header-h) 0 0; background: transparent; border-right: 0; }
+  :root[data-theme='basic'] .sidetabs .menu-head { position: absolute; top: 0; left: 0; right: -1px; box-sizing: border-box; height: var(--b-header-h); flex-direction: row; align-items: center; gap: 14px; padding: 0 0 0 30px; background: var(--b-surface); border-bottom: 1px solid var(--b-header-line); }
+  :root[data-theme='basic'] .sidetabs .b-entry { padding-left: 14px; border-left: 1px solid var(--b-header-line); color: var(--b-muted); font-size: 0.85em; }
+  :root[data-theme='basic'] .sidetabs nav { padding-top: 24px; }
+  :root[data-theme='basic'] .sidetabs h3 { margin: 18px 0 4px; padding: 0 22px; color: var(--b-muted); font-size: 0.75em; }
+  :root[data-theme='basic'] .sidetabs a { min-height: 33px; padding: 0 22px; color: var(--b-text); font-size: 0.9em; }
+  :root[data-theme='basic'] .sidetabs .menu-head .menu-title { min-height: 0; padding: 0; color: var(--b-text); font-size: 1.15em; } /* 上の「.sidetabs a」より後に置く（帯の中の「正解」には、タブの余白をかけない） */
+  :root[data-theme='basic'] .sidetabs a[aria-current='page'] { border-left: 0; background: var(--b-active-bg); box-shadow: inset 3px 0 0 var(--b-active-bar); }
+  :root[data-theme='basic'] .sidetabs .b-current { margin-left: 8px; font-weight: normal; font-size: 0.85em; }
+  :root[data-theme='basic'] .sidetabs .menu-last { padding: 0 22px; color: var(--b-muted); font-size: 0.75em; }
+  :root[data-theme='basic'] .sidetabs .bottom { margin: 8px 14px 16px; }
+
+  /* ---- 段 1：この変数を使う規則は、5 画面の b-* の枝だけ ---- */
+  :root[data-theme='basic'] {
+    --b-font-ui: 'Yu Gothic UI', 'Meiryo', sans-serif;
+    --b-font-size: 14px;
+    --b-font-small: 12px;
+    --b-font-label: 13px;
+    --b-font-heading: 24px;
+    --b-font-home-entry: 18px;
+    --b-font-large: 24px;
+    --b-weight-normal: 400;
+    --b-weight-bold: 700;
+    --b-line-height: 1.6;
+    --b-space-0: 0;
+    --b-space-1: 4px;
+    --b-space-2: 8px;
+    --b-space-3: 10px;
+    --b-space-4: 12px;
+    --b-space-5: 16px;
+    --b-space-6: 20px;
+    --b-space-7: 22px;
+    --b-space-8: 28px;
+    --b-space-9: 30px;
+    --b-space-10: 38px;
+    --b-navy: #203b5c;
+    --b-negative: #b42318;
+    --b-positive: #28604d;
+    --b-line: #a3afa6;
+    --b-table-head: #ecf0ed;
+    --b-total-bg: #f0f3f0;
+    --b-shadow: none;
+    --b-clear: transparent;
+    --b-page-w: 1244px;
+    --b-home-w: 880px;
+    --b-home-label-w: 190px;
+    --b-home-row-h: 72px;
+    --b-settings-w: 850px;
+    --b-setting-label-w: 214px;
+    --b-setting-field-w: 230px;
+    --b-field-w: 160px;
+    --b-date-w: 145px;
+    --b-amount-w: 130px;
+    --b-control-h: 38px;
+    --b-icon-h: 36px;
+    --b-entry-ops-w: 118px;
+    --b-entry-cols: minmax(0, 1.65fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.65fr) var(--b-entry-ops-w);
+  }
+
+  /* 1920 でも左寄せ。段 0 の最大幅は他画面に残し、段 1 の本文だけ 1244px まで使う。 */
+  :root[data-theme='basic'] .content:has(> main > .b-page) { max-width: calc(var(--b-page-w) + var(--b-space-10) * 2); }
+  :root[data-theme='basic'] .b-page,
+  :root[data-theme='basic'] .b-home { font-family: var(--b-font-ui); font-size: var(--b-font-size); line-height: var(--b-line-height); color: var(--b-text); }
+  :root[data-theme='basic'] .b-page { padding-top: var(--b-space-3); }
+  :root[data-theme='basic'] .b-page-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--b-space-6); padding-bottom: var(--b-space-3); margin-bottom: var(--b-space-6); border-bottom: 2px solid var(--b-text); }
+  :root[data-theme='basic'] .b-page-head h2 { margin: var(--b-space-0); font-size: var(--b-font-heading); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-page-head p { margin: var(--b-space-0); font-size: var(--b-font-label); color: var(--b-muted); }
+  :root[data-theme='basic'] .b-page .note { color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-page .error,
+  :root[data-theme='basic'] .b-page .neg { color: var(--b-negative); }
+  :root[data-theme='basic'] .b-page button,
+  :root[data-theme='basic'] .b-page input,
+  :root[data-theme='basic'] .b-page select,
+  :root[data-theme='basic'] .b-page textarea { box-sizing: border-box; max-width: 100%; min-width: 0; min-height: var(--b-control-h); padding: var(--b-space-2) var(--b-space-4); border: 1px solid var(--b-line); border-radius: 0; background: var(--b-surface); color: var(--b-text); font-family: var(--b-font-ui); font-size: var(--b-font-size); box-shadow: var(--b-shadow); }
+  :root[data-theme='basic'] .b-page button { cursor: pointer; }
+  :root[data-theme='basic'] .b-page button:disabled { cursor: default; }
+  :root[data-theme='basic'] .b-page .icon-only { display: inline-flex; align-items: center; justify-content: center; width: var(--b-icon-h); height: var(--b-icon-h); min-height: var(--b-icon-h); padding: var(--b-space-2); }
+  :root[data-theme='basic'] .b-page .icon-only .icon { width: var(--b-space-5); height: var(--b-space-5); }
+  :root[data-theme='basic'] .b-page .b-primary,
+  :root[data-theme='basic'] .b-page .view-toggle button[aria-pressed='true'],
+  :root[data-theme='basic'] .b-entries .copy-last.on,
+  :root[data-theme='basic'] .b-entries .no-spend.on,
+  :root[data-theme='basic'] .b-entries .preset-chip.on { background: var(--b-navy); border-color: var(--b-navy); color: var(--b-surface); }
+  :root[data-theme='basic'] .b-entries .preset-row .preset-add { border-style: dashed; background: transparent; } /* 上の汎用のボタンの縁（border の一括指定）が、追加ボタンの点線を消さないように。entries.css と同じ値（preset-add-form の確かめが見る） */
+  :root[data-theme='basic'] .b-page .b-danger { color: var(--b-negative); }
+  :root[data-theme='basic'] .b-page button:focus-visible,
+  :root[data-theme='basic'] .b-page input:focus-visible,
+  :root[data-theme='basic'] .b-page select:focus-visible,
+  :root[data-theme='basic'] .b-page textarea:focus-visible,
+  :root[data-theme='basic'] .b-home a:focus-visible { outline: 2px solid var(--b-active-bar); outline-offset: 2px; }
+  :root[data-theme='basic'] .b-section-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--b-space-4); margin: var(--b-space-0) var(--b-space-0) var(--b-space-3); padding-bottom: var(--b-space-2); border-bottom: 1px solid var(--b-line); }
+  :root[data-theme='basic'] .b-section-head h2,
+  :root[data-theme='basic'] .b-section-head h3 { margin: var(--b-space-0); font-size: var(--b-font-size); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-section-head > .note { margin-left: auto; }
+
+  /* ホーム：左端は content の 38px。入口は同じ幅の行。 */
+  :root[data-theme='basic'] .b-home { max-width: var(--b-home-w); margin-top: var(--b-space-8); }
+  :root[data-theme='basic'] .b-home h1 { margin: var(--b-space-0); font-size: var(--b-font-heading); }
+  :root[data-theme='basic'] .b-home-lead { margin: var(--b-space-1) var(--b-space-0) var(--b-space-8); color: var(--b-muted); font-size: var(--b-font-label); }
+  :root[data-theme='basic'] .b-home .entries { display: block; margin: var(--b-space-0); border-top: 2px solid var(--b-text); }
+  :root[data-theme='basic'] .b-home .entries li { padding: var(--b-space-0); margin: var(--b-space-0); border: 0; }
+  :root[data-theme='basic'] .b-home .entry-button { display: grid; grid-template-columns: minmax(0, var(--b-home-label-w)) minmax(0, 1fr) auto; align-items: center; gap: var(--b-space-3); min-width: 0; min-height: var(--b-home-row-h); box-sizing: border-box; padding: var(--b-space-6) var(--b-space-3); border: 0; border-bottom: 1px solid var(--b-side-line); background: var(--b-surface); color: var(--b-text); }
+  :root[data-theme='basic'] .b-home .entry-button b { font-size: var(--b-font-home-entry); }
+  :root[data-theme='basic'] .b-home .entry-button > span { color: var(--b-muted); font-size: var(--b-font-label); }
+  :root[data-theme='basic'] .b-home .entry-button .icon { width: var(--b-font-label); height: var(--b-font-label); }
+  :root[data-theme='basic'] .b-home-note { margin: var(--b-space-8) var(--b-space-0) var(--b-space-0); color: var(--b-muted); font-size: var(--b-font-label); }
+
+  /* 仕訳：入力の固定・プリセット・対象月の機能は既存のまま。 */
+  :root[data-theme='basic'] .b-entries { --cols: var(--b-entry-cols); }
+  :root[data-theme='basic'] .b-entries > .entries-top { padding: var(--b-space-6) var(--b-space-7); border: 1px solid var(--b-side-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-entries .b-entry-form { align-items: flex-end; gap: var(--b-space-4); margin: var(--b-space-0); }
+  :root[data-theme='basic'] .b-entries .b-entry-form .field,
+  :root[data-theme='basic'] .b-entries .preset-add-form .field { display: flex; flex: 1 1 var(--b-field-w); flex-direction: column; gap: var(--b-space-1); min-width: 0; }
+  :root[data-theme='basic'] .b-entries .field:has(> input[type='date']) { flex-basis: var(--b-date-w); }
+  :root[data-theme='basic'] .b-entries .field:has(> .amount-wrap) { flex-basis: var(--b-amount-w); }
+  :root[data-theme='basic'] .b-entries .b-entry-form .field-label,
+  :root[data-theme='basic'] .b-entries .preset-add-form .field-label { display: block; color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-entries .field > :not(.field-label) { width: 100%; }
+  :root[data-theme='basic'] .b-entries .field.b-memo { flex-grow: 1.3; }
+  :root[data-theme='basic'] .b-entries .field.living { flex-basis: 100%; align-items: flex-start; }
+  :root[data-theme='basic'] .b-entries .field.living select { width: auto; }
+  :root[data-theme='basic'] .b-entries .amount-wrap input { width: 100%; text-align: right; }
+  :root[data-theme='basic'] .b-entries .b-entry-form > .b-primary { display: inline-flex; align-items: center; gap: var(--b-space-1); }
+  :root[data-theme='basic'] .b-entries .b-entry-form > .b-primary .icon { width: var(--b-space-5); height: var(--b-space-5); }
+  :root[data-theme='basic'] .b-entries .b-entry-form > .error { flex-basis: 100%; }
+  :root[data-theme='basic'] .b-entries .quick-host { margin-top: var(--b-space-4); }
+  :root[data-theme='basic'] .b-entries .quick-row,
+  :root[data-theme='basic'] .b-entries .preset-row { gap: var(--b-space-4); }
+  :root[data-theme='basic'] .b-entries .preset-label { font-size: var(--b-font-small); color: var(--b-muted); }
+  :root[data-theme='basic'] .b-entries .b-entry-list-head { margin-top: var(--b-space-8); }
+  :root[data-theme='basic'] .b-entries > .b-section-head > .note { margin-left: var(--b-space-0); }
+  :root[data-theme='basic'] .b-entry-unit { float: right; margin: var(--b-space-2) var(--b-space-0); }
+  :root[data-theme='basic'] .b-entries .day { clear: both; padding: var(--b-space-0); margin-top: var(--b-space-4); border: 0; border-top: 1px solid var(--b-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-entries .day h3 { margin: var(--b-space-0); }
+  :root[data-theme='basic'] .b-entries .day-toggle { min-height: var(--b-control-h); padding: var(--b-space-2) var(--b-space-4); background: var(--b-table-head); border: 0; border-bottom: 1px solid var(--b-line); text-align: left; font-size: var(--b-font-label); }
+  :root[data-theme='basic'] .b-entries .b-day-total { margin-left: auto; }
+  :root[data-theme='basic'] .b-entries .day-toggle .mark { margin-left: var(--b-space-0); }
+  :root[data-theme='basic'] .b-entries .day .head { padding: var(--b-space-2) var(--b-space-4); background: var(--b-table-head); border-bottom: 1px solid var(--b-line); color: var(--b-muted); }
+  :root[data-theme='basic'] .b-entries .day .head > span { font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-entries .day ol { margin: var(--b-space-0); }
+  :root[data-theme='basic'] .b-entries .day li { padding: var(--b-space-3) var(--b-space-4); border: 0; border-bottom: 1px solid var(--b-side-line); }
+  :root[data-theme='basic'] .b-entries .day li:last-child { border-bottom: 1px solid var(--b-side-line); }
+  :root[data-theme='basic'] .b-entries .day .cell { white-space: normal; overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-entry-ops { display: flex; flex-wrap: wrap; gap: var(--b-space-2); }
+  :root[data-theme='basic'] .b-entries .tens-toggle { background: var(--b-total-bg); color: var(--b-text); }
+  :root[data-theme='basic'] .b-entries .tens-toggle[aria-expanded='true'] { background: var(--b-total-bg); }
+  :root[data-theme='basic'] .b-entries .tens:has(> h3 > .tens-toggle[aria-expanded='true']) { border-left-color: var(--b-active-bar); }
+
+  /* 残高・月次：左に表、右に集計。画面が狭い PC でも列の中だけ横へ送れる。 */
+  :root[data-theme='basic'] .b-report-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: var(--b-space-10); }
+  :root[data-theme='basic'] .b-report-main,
+  :root[data-theme='basic'] .b-report-side { min-width: 0; }
+  :root[data-theme='basic'] .b-report-grid section + section { margin-top: var(--b-space-8); }
+  :root[data-theme='basic'] .b-page .table-box { max-width: 100%; overflow-x: auto; }
+  :root[data-theme='basic'] .b-page table { width: 100%; border-collapse: collapse; }
+  :root[data-theme='basic'] .b-page th,
+  :root[data-theme='basic'] .b-page td { padding: var(--b-space-2) var(--b-space-4); border-bottom: 1px solid var(--b-side-line); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-page th { padding-top: var(--b-space-3); padding-bottom: var(--b-space-3); border-top: 1px solid var(--b-line); border-bottom: 1px solid var(--b-line); background: var(--b-table-head); color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-report-main table { background: var(--b-surface); }
+  :root[data-theme='basic'] .b-page tr.total td { border-top: 2px solid var(--b-line); border-bottom: 2px solid var(--b-line); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-report-main tr.total td { background: var(--b-total-bg); }
+  :root[data-theme='basic'] .b-report-side .view-toggle { gap: var(--b-space-3); margin: var(--b-space-0) var(--b-space-0) var(--b-space-6); }
+  :root[data-theme='basic'] .b-amounts { margin: var(--b-space-0); }
+  :root[data-theme='basic'] .b-amounts > div { display: flex; justify-content: space-between; align-items: baseline; gap: var(--b-space-4); padding: var(--b-space-4) var(--b-space-0); border-bottom: 1px solid var(--b-side-line); }
+  :root[data-theme='basic'] .b-amounts dt { min-width: 0; overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-amounts dd { margin: var(--b-space-0); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  :root[data-theme='basic'] .b-amounts dd.b-large { font-size: var(--b-font-large); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-amounts dd.b-gap { font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-monthly .month-bar { margin: var(--b-space-0) var(--b-space-0) var(--b-space-5); gap: var(--b-space-3); }
+  :root[data-theme='basic'] .b-monthly .month-bar button:last-child { margin-left: auto; }
+  :root[data-theme='basic'] .b-monthly .b-report-side > section:first-child tr:first-child td:first-child { color: var(--b-positive); }
+  :root[data-theme='basic'] .b-monthly .b-report-side > section:first-child tr:nth-child(2) td:first-child { color: var(--b-negative); }
+  :root[data-theme='basic'] .b-report-more { margin-top: var(--b-space-9); border: 1px solid var(--b-side-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-report-more details { margin: var(--b-space-0); }
+  :root[data-theme='basic'] .b-report-more details + details { border-top: 1px solid var(--b-side-line); }
+  :root[data-theme='basic'] .b-report-more summary { display: flex; align-items: center; gap: var(--b-space-5); padding: var(--b-space-4) var(--b-space-5); list-style: none; }
+  :root[data-theme='basic'] .b-report-more summary::-webkit-details-marker { display: none; }
+  :root[data-theme='basic'] .b-report-more summary h2 { margin: var(--b-space-0); font-size: var(--b-font-size); }
+  :root[data-theme='basic'] .b-report-more summary .chev { display: inline-flex; }
+  :root[data-theme='basic'] .b-report-more summary .icon { width: var(--b-font-small); height: var(--b-font-small); }
+  :root[data-theme='basic'] .b-report-more details[open] summary .chev { transform: rotate(90deg); }
+  :root[data-theme='basic'] .b-report-more details > :not(summary) { margin-left: var(--b-space-5); margin-right: var(--b-space-5); }
+
+  /* 設定：一般の枝だけ。記帳・照会・データは、既存の CSS と DOM のまま。 */
+  :root[data-theme='basic'] .b-settings .tabs { justify-content: flex-start; margin: var(--b-space-0) var(--b-space-0) var(--b-space-7); border-bottom: 1px solid var(--b-line); }
+  :root[data-theme='basic'] .b-settings .tabs .tab { flex: none; min-height: var(--b-control-h); padding: var(--b-space-2) var(--b-space-6); border: 1px solid var(--b-clear); background: var(--b-clear); color: var(--b-text); }
+  :root[data-theme='basic'] .b-settings .tabs .tab[aria-selected='true'] { border-color: var(--b-line); border-bottom-color: var(--b-bg); background: var(--b-bg); color: var(--b-active-bar); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-settings .set-panel { max-width: var(--b-settings-w); }
+  :root[data-theme='basic'] .b-setting-row { display: grid; grid-template-columns: var(--b-setting-label-w) minmax(0, 1fr); align-items: start; gap: var(--b-space-6); padding: var(--b-space-6) var(--b-space-1); border-bottom: 1px solid var(--b-side-line); }
+  :root[data-theme='basic'] .b-setting-row .set-title { margin: var(--b-space-0); font-size: var(--b-font-size); }
+  :root[data-theme='basic'] .b-setting-control { min-width: 0; }
+  :root[data-theme='basic'] .b-setting-control > p { margin: var(--b-space-0) var(--b-space-0) var(--b-space-1); font-size: var(--b-font-label); }
+  :root[data-theme='basic'] .b-setting-control select { width: var(--b-setting-field-w); }
+  :root[data-theme='basic'] .b-setting-control .display-row { margin: var(--b-space-0); }
+  :root[data-theme='basic'] .b-setting-control .display-row > label { display: flex; flex-direction: column; gap: var(--b-space-1); font-size: var(--b-font-label); }
+  :root[data-theme='basic'] .b-setting-control > p.note { margin-top: var(--b-space-3); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-settings .app-version { margin-top: var(--b-space-3); }
+
+  /* ---- 段 2：共通の間隔。既に gap のある親はその仕組みを使い、
+     inline のままの場所だけ隣り合う部品に余白を足す。
+     段 1 の b-page・タブ・電卓・プリセットの記号の格子には足さない。 ---- */
+  :root[data-theme='basic'] {
+    --b-control-gap: var(--b-space-2);
+    --b-tag-w: 68px; /* 札（取り分け・取り崩し・적립・인출）の幅。日本語 4 字が入る最小幅で固定（文字の幅が違っても四角をそろえる） */
+    --b-name-w: 180px;
+    --b-level-w: 84px;
+    --b-unit-w: 32px;
+
+  }
+  :root[data-theme='basic'] .subscriptions .sub-actions,
+  :root[data-theme='basic'] .settings .backup-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--b-control-gap); }
+  :root[data-theme='basic'] .subscriptions form,
+  :root[data-theme='basic'] .ledger:not(.b-page) form,
+  :root[data-theme='basic'] .adjustment:not(.b-page) form,
+  :root[data-theme='basic'] .report:not(.b-page) .month-bar,
+  :root[data-theme='basic'] .b-budgets .month-bar,
+  :root[data-theme='basic'] .report:not(.b-page) .view-toggle,
+  :root[data-theme='basic'] .report .card-form,
+  :root[data-theme='basic'] .budgets form,
+  :root[data-theme='basic'] .budgets li,
+  :root[data-theme='basic'] .settings form,
+  :root[data-theme='basic'] .settings .pset,
+  :root[data-theme='basic'] .settings .save-settings .row { gap: var(--b-control-gap); }
+  :root[data-theme='basic'] .settings .fav-item > button + button,
+  :root[data-theme='basic'] .settings .presets > li > button + button { margin-inline-start: var(--b-control-gap); }
+  :root[data-theme='basic'] .settings .open-mode,
+  :root[data-theme='basic'] .settings form > label,
+  :root[data-theme='basic'] .report .card-form > label { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--b-control-gap); }
+  :root[data-theme='basic'] .settings .set-panel section > div:has(> input[type='month']) { display: flex; flex-wrap: wrap; align-items: center; gap: var(--b-control-gap); }
+
+  /* ヘッダーの inline style を外すためだけに !important を使う。
+     帯の高さ・下線・縦タブは段 0 のまま。更新や保存の札は別扱い。 */
+  :root[data-theme='basic'] .main-col > header > div > label:has(> input[type='file']) { margin-inline-start: var(--b-space-6); }
+  :root[data-theme='basic'] .main-col > header > div > button:not(.autosave-problem),
+  :root[data-theme='basic'] .main-col > header > div > label > span[role='button'] { border: 0 !important; border-radius: 0 !important; padding: var(--b-space-0) !important; background: var(--b-clear); color: var(--b-muted); box-shadow: var(--b-shadow); font-family: var(--b-font-ui); font-size: var(--b-font-small); cursor: pointer; }
+  :root[data-theme='basic'] .main-col > header > div > button:not(.autosave-problem):focus-visible,
+  :root[data-theme='basic'] .main-col > header > div > label:focus-within { outline: 2px solid var(--b-active-bar); outline-offset: var(--b-space-1); }
+
+
+  /* スキル：名前・レベルをその場で編集する既存の操作を残す。 */
+  :root[data-theme='basic'] .b-skill-new,
+  :root[data-theme='basic'] .b-accounts > form,
+  :root[data-theme='basic'] .b-adjustment > form,
+  :root[data-theme='basic'] .b-book > .month-bar { padding: var(--b-space-5) var(--b-space-6); border: 1px solid var(--b-side-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-skill-new { margin-bottom: var(--b-space-8); }
+  :root[data-theme='basic'] .b-skill-new form,
+  :root[data-theme='basic'] .b-account-row,
+  :root[data-theme='basic'] .b-skill-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--b-control-gap); }
+  :root[data-theme='basic'] .b-skills > ul { list-style: none; padding: var(--b-space-0); margin: var(--b-space-0); }
+  :root[data-theme='basic'] .b-skill-row { padding: var(--b-space-5) var(--b-space-6); border-bottom: 1px solid var(--b-side-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-skill-new input,
+  :root[data-theme='basic'] .b-skill-row > input:first-child,
+  :root[data-theme='basic'] .b-account-row > input:first-child { width: var(--b-name-w); }
+  :root[data-theme='basic'] .b-skill-row > input:not(:first-child) { width: var(--b-level-w); text-align: right; font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-skill-row .lv { margin-inline-start: var(--b-space-5); color: var(--b-muted); font-size: var(--b-font-label); }
+  :root[data-theme='basic'] .b-skill-row > div,
+  :root[data-theme='basic'] .b-skill-row > ol { flex-basis: 100%; min-width: 0; margin: var(--b-space-0); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-skill-row > ol > li { margin-top: var(--b-space-4); padding: var(--b-space-4); border: 1px solid var(--b-side-line); }
+  :root[data-theme='basic'] .b-skill-row textarea { vertical-align: middle; }
+  :root[data-theme='basic'] .b-skill-row textarea + button,
+  :root[data-theme='basic'] .b-skill-row > ol button + button { margin-inline-start: var(--b-control-gap); }
+
+  /* 開始残高：資産・負債を縦に並べ、科目と入力欄の列をそろえる。 */
+  :root[data-theme='basic'] .b-opening > .note { margin: var(--b-space-1) var(--b-space-0); }
+  :root[data-theme='basic'] .b-opening > form { margin-top: var(--b-space-6); gap: var(--b-space-6); }
+  :root[data-theme='basic'] .b-opening .date { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--b-control-gap); font-size: var(--b-font-label); }
+  :root[data-theme='basic'] .b-opening .b-opening-columns,
+  :root[data-theme='basic'] .b-opening .row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, var(--b-amount-w)) var(--b-unit-w); column-gap: var(--b-control-gap); align-items: center; padding: var(--b-space-3) var(--b-space-4); border-bottom: 1px solid var(--b-side-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-opening .b-opening-columns { border-top: 1px solid var(--b-line); border-bottom-color: var(--b-line); background: var(--b-table-head); color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-opening .b-opening-columns > span:last-child { text-align: right; }
+  :root[data-theme='basic'] .b-opening .row > input { width: 100%; }
+  :root[data-theme='basic'] .b-opening .row > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+
+  /* 残高調整：一科目ずつ選んで記録する既存のフォーム。 */
+  :root[data-theme='basic'] .b-adjustment > form { gap: var(--b-control-gap); margin: var(--b-space-6) var(--b-space-0); }
+  :root[data-theme='basic'] .b-field-label { font-size: var(--b-font-label); color: var(--b-muted); }
+  :root[data-theme='basic'] .b-adjustment .b-field-label { flex-basis: 100%; }
+  :root[data-theme='basic'] .b-adjustment form > select { flex: 1 1 var(--b-name-w); }
+  :root[data-theme='basic'] .b-adjustment form > label:not(.b-field-label) { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--b-control-gap); font-size: var(--b-font-label); }
+  :root[data-theme='basic'] .b-adjustment form input { width: var(--b-amount-w); }
+  :root[data-theme='basic'] .b-adjustment form > .error,
+  :root[data-theme='basic'] .b-adjustment form > .note { flex-basis: 100%; }
+
+  /* 元帳：選択欄と表は既存のまま。月の未指定＝全期間。 */
+  :root[data-theme='basic'] .b-book > .month-bar { flex-wrap: wrap; gap: var(--b-control-gap); margin-bottom: var(--b-space-5); }
+  :root[data-theme='basic'] .b-book .month-bar select { flex: 0 1 var(--b-setting-field-w); }
+  :root[data-theme='basic'] .b-book .month-bar input { width: var(--b-name-w); }
+  :root[data-theme='basic'] .b-book .table-box { background: var(--b-surface); }
+
+  /* 科目管理：常時編集の行を維持。メモや変更不可の理由は一行下へ。 */
+  :root[data-theme='basic'] .b-accounts > form { gap: var(--b-control-gap); margin-bottom: var(--b-space-8); }
+  :root[data-theme='basic'] .b-accounts > section { margin-top: var(--b-space-8); }
+  :root[data-theme='basic'] .b-accounts li.b-account-row { padding: var(--b-space-4); margin: var(--b-space-0); border: 0; border-bottom: 1px solid var(--b-side-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-account-row > div { flex-basis: 100%; min-width: 0; overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-account-row > label { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--b-control-gap); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-account-row input[type='checkbox'] { width: auto; min-height: 0; padding: var(--b-space-0); }
+  :root[data-theme='basic'] .b-account-row.inactive { color: var(--b-muted); }
+
+  /* ---- 段 3：機能・操作を残し、カードと予算の面・罫線をそろえる。 ---- */
+  :root[data-theme='basic'] {
+    --b-day-w: 76px;
+    --b-adjust-cols: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr);
+    --b-muted-opacity: 0.6;
+  }
+  :root[data-theme='basic'] .b-page label.b-field { display: flex; flex-direction: column; align-items: stretch; gap: var(--b-space-1); font-size: var(--b-font-label); color: var(--b-muted); }
+  :root[data-theme='basic'] .b-page .b-field > input,
+  :root[data-theme='basic'] .b-page .b-field > select { width: 100%; }
+  :root[data-theme='basic'] .b-cards .table-box,
+  :root[data-theme='basic'] .b-card-detail .table-box,
+  :root[data-theme='basic'] .b-budgets .table-box { background: var(--b-surface); }
+  :root[data-theme='basic'] .b-cards > .b-section-head,
+  :root[data-theme='basic'] .b-card-detail > .b-section-head,
+  :root[data-theme='basic'] .b-budgets .tab-panel > .b-section-head { margin-top: var(--b-space-8); }
+  :root[data-theme='basic'] .b-cards > .b-page-head + .b-section-head { margin-top: var(--b-space-0); }
+  :root[data-theme='basic'] .b-card-adjust-link,
+  :root[data-theme='basic'] .b-card-detail .back a,
+  :root[data-theme='basic'] .b-card-adjust .back a { display: inline-flex; align-items: center; min-height: var(--b-control-h); box-sizing: border-box; padding: var(--b-space-2) var(--b-space-4); border: 1px solid var(--b-line); background: var(--b-surface); color: var(--b-text); font-size: var(--b-font-label); text-decoration: none; }
+  :root[data-theme='basic'] .b-card-adjust-link { margin-left: auto; }
+  :root[data-theme='basic'] .b-cards a:focus-visible,
+  :root[data-theme='basic'] .b-card-detail .back a:focus-visible,
+  :root[data-theme='basic'] .b-card-adjust .back a:focus-visible,
+  :root[data-theme='basic'] .b-card-adjust summary:focus-visible,
+  :root[data-theme='basic'] .b-budgets summary:focus-visible { outline: 2px solid var(--b-active-bar); outline-offset: var(--b-space-1); }
+
+  /* 一覧は従来のリンク。非使用の印・負の額・常時表示の追加欄も残す。 */
+  :root[data-theme='basic'] .b-cards .cards { gap: var(--b-space-0); margin: var(--b-space-0) var(--b-space-0) var(--b-space-8); border-top: 1px solid var(--b-line); }
+  :root[data-theme='basic'] .b-cards .card-button { flex-wrap: wrap; gap: var(--b-control-gap); padding: var(--b-space-5) var(--b-space-4); border: 0; border-bottom: 1px solid var(--b-side-line); background: var(--b-surface); color: var(--b-text); font-family: var(--b-font-ui); font-size: var(--b-font-size); }
+  :root[data-theme='basic'] .b-cards .card-button > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-cards .card-button.inactive { color: var(--b-muted); }
+  :root[data-theme='basic'] .b-cards .card-button .amount { margin-left: auto; }
+  :root[data-theme='basic'] .b-cards .card-form { align-items: flex-end; margin: var(--b-space-0); padding: var(--b-space-5) var(--b-space-6); border: 1px solid var(--b-side-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-cards .card-form > .b-field { flex: 1 1 var(--b-name-w); }
+  :root[data-theme='basic'] .b-cards .card-form input.day { width: var(--b-day-w); }
+  :root[data-theme='basic'] .b-cards .card-form > .error { flex-basis: 100%; }
+  :root[data-theme='basic'] .b-card-detail .back,
+  :root[data-theme='basic'] .b-card-adjust .back { margin-bottom: var(--b-space-5); }
+  :root[data-theme='basic'] .b-card-detail .b-page-head h2 { overflow-wrap: anywhere; min-width: 0; }
+  :root[data-theme='basic'] .b-card-detail .open-period { color: var(--b-muted); }
+  :root[data-theme='basic'] .b-card-detail > .b-page-head + .table-box tr:first-child td { font-weight: var(--b-weight-bold); }
+
+  /* 残高調整：既存の折り畳み・2 行・確認処理を再利用。右の図は基本では描かない。 */
+  :root[data-theme='basic'] .b-card-adjust .g-ck { margin: var(--b-space-0) var(--b-space-0) var(--b-space-6); border: 1px solid var(--b-side-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-card-adjust .g-ck > summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--b-control-gap); padding: var(--b-space-4) var(--b-space-5); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-card-adjust .g-ck > summary::after { content: ''; flex: none; align-self: center; width: var(--b-space-2); height: var(--b-space-2); border: solid var(--b-muted); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  :root[data-theme='basic'] .b-card-adjust .g-ck[open] > summary::after { transform: rotate(-135deg); }
+  :root[data-theme='basic'] .b-card-adjust .g-ck[open] > summary { border-bottom: 1px solid var(--b-line); }
+  :root[data-theme='basic'] .b-card-adjust .g-ck > summary .nm { font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-card-adjust .sm2 { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: var(--b-control-gap); margin-inline-start: var(--b-space-5); color: var(--b-muted); font-size: var(--b-font-label); }
+  :root[data-theme='basic'] .b-card-adjust .sm2 b { color: var(--b-text); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-card-adjust .g-ckbody { padding: var(--b-space-0) var(--b-space-5) var(--b-space-5); }
+  :root[data-theme='basic'] .b-card-adjust .g-ckrow { display: grid; grid-template-columns: var(--b-adjust-cols); align-items: start; gap: var(--b-space-5); padding: var(--b-space-5) var(--b-space-0); border-bottom: 1px solid var(--b-side-line); }
+  :root[data-theme='basic'] .b-card-adjust .g-ckrow > * { min-width: 0; }
+  :root[data-theme='basic'] .b-card-adjust .l1 { display: flex; flex-direction: column; gap: var(--b-space-1); }
+  :root[data-theme='basic'] .b-card-adjust .l1 .t { font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-card-adjust .l1 .d,
+  :root[data-theme='basic'] .b-card-adjust .rec,
+  :root[data-theme='basic'] .b-card-adjust .l2 .lab { font-size: var(--b-font-small); color: var(--b-muted); }
+  :root[data-theme='basic'] .b-card-adjust .rec b { margin-inline-start: var(--b-space-2); color: var(--b-text); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-card-adjust .l2 { display: flex; flex-direction: column; gap: var(--b-space-1); }
+  :root[data-theme='basic'] .b-card-adjust .g-amount-row { display: flex; align-items: center; gap: var(--b-control-gap); }
+  :root[data-theme='basic'] .b-card-adjust .g-amount-row > .amount-wrap { flex: 1 1 auto; display: flex; min-width: 0; }
+  :root[data-theme='basic'] .b-card-adjust .g-amount-row input { width: 100%; text-align: right; font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-card-adjust .g-amount-row input[aria-invalid='true'],
+  :root[data-theme='basic'] .b-card-adjust .g-ckrow:has(.err) input { border-color: var(--b-negative); outline: 1px solid var(--b-negative); }
+  :root[data-theme='basic'] .b-card-adjust .l3 { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: flex-end; gap: var(--b-control-gap); padding-top: var(--b-space-6); color: var(--b-muted); font-size: var(--b-font-label); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-card-adjust .l3 .ba { color: var(--b-text); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-card-adjust .l3 .df { font-weight: var(--b-weight-bold); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-card-adjust .is-up { color: var(--b-positive); }
+  :root[data-theme='basic'] .b-card-adjust .is-down,
+  :root[data-theme='basic'] .b-card-adjust .err { color: var(--b-negative); }
+  :root[data-theme='basic'] .b-card-adjust .g-tag { padding: var(--b-space-1) var(--b-space-2); border: 1px solid currentColor; font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-card-adjust .g-ckacts { display: flex; flex-wrap: wrap; align-items: center; gap: var(--b-control-gap); margin-top: var(--b-space-5); }
+  :root[data-theme='basic'] .b-card-adjust .g-ckacts > p { flex: 1 1 var(--b-setting-field-w); margin: var(--b-space-0); font-size: var(--b-font-label); }
+  :root[data-theme='basic'] .b-card-adjust .g-ckacts > button { background: var(--b-navy); border-color: var(--b-navy); color: var(--b-surface); }
+  :root[data-theme='basic'] .b-card-adjust .g-ckacts > button[aria-disabled='true'] { opacity: var(--b-muted-opacity); cursor: default; }
+
+  /* この確認内容だけに当てる。ほかの確認画面の見た目・操作は変えない。 */
+  :root[data-theme='basic'] dialog.confirm:has(.g-ca-pop) { font-family: var(--b-font-ui); font-size: var(--b-font-size); color: var(--b-text); background: var(--b-surface); border-color: var(--b-line); }
+  :root[data-theme='basic'] dialog.confirm .g-ca-pop { max-width: 100%; overflow-x: auto; }
+  :root[data-theme='basic'] dialog.confirm .g-ca-pop table { width: 100%; border-collapse: collapse; }
+  :root[data-theme='basic'] dialog.confirm .g-ca-pop th,
+  :root[data-theme='basic'] dialog.confirm .g-ca-pop td { padding: var(--b-space-2) var(--b-space-3); border-bottom: 1px solid var(--b-side-line); text-align: left; overflow-wrap: anywhere; }
+  :root[data-theme='basic'] dialog.confirm .g-ca-pop th { color: var(--b-muted); background: var(--b-table-head); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] dialog.confirm .g-ca-pop .n { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] dialog.confirm .g-ca-pop .scope { color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] dialog.confirm .g-ca-pop .sumln { font-size: var(--b-font-label); }
+
+  /* 予算：月／登録・履歴のタブ、達成率・判定・未設定・合計を省略しない。 */
+  :root[data-theme='basic'] .b-budgets .tabs { justify-content: flex-start; margin: var(--b-space-0) var(--b-space-0) var(--b-space-7); border-bottom: 1px solid var(--b-line); }
+  :root[data-theme='basic'] .b-budgets .tabs .tab { flex: none; min-height: var(--b-control-h); padding: var(--b-space-2) var(--b-space-6); border: 1px solid var(--b-clear); background: var(--b-clear); color: var(--b-text); }
+  :root[data-theme='basic'] .b-budgets .tabs .tab[aria-selected='true'] { border-color: var(--b-line); border-bottom-color: var(--b-bg); background: var(--b-bg); color: var(--b-active-bar); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-budgets .month-bar { flex-wrap: wrap; align-items: flex-end; margin-bottom: var(--b-space-6); }
+  :root[data-theme='basic'] .b-budgets .budget-table { margin-bottom: var(--b-space-6); }
+  :root[data-theme='basic'] .b-budgets tr.over td { color: var(--b-negative); }
+  :root[data-theme='basic'] .b-budgets tr.total td { background: var(--b-total-bg); }
+  :root[data-theme='basic'] .b-budgets .panel-manage > form { align-items: flex-end; margin: var(--b-space-0); padding: var(--b-space-5) var(--b-space-6); border: 1px solid var(--b-side-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-budgets .panel-manage > form > .b-field { flex: 1 1 var(--b-field-w); min-width: 0; }
+  :root[data-theme='basic'] .b-budgets .panel-manage > form > .error { flex-basis: 100%; }
+  :root[data-theme='basic'] .b-budgets .panel-manage > details { margin-top: var(--b-space-4); border: 1px solid var(--b-side-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-budgets .panel-manage > details > summary { padding: var(--b-space-4) var(--b-space-5); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-budgets details.inactive summary { color: var(--b-muted); }
+  :root[data-theme='basic'] .b-budgets .panel-manage ul { margin: var(--b-space-0); padding: var(--b-space-0) var(--b-space-5); }
+  :root[data-theme='basic'] .b-budgets .panel-manage li { padding: var(--b-space-4) var(--b-space-0); border-bottom-color: var(--b-side-line); }
+  :root[data-theme='basic'] .b-budgets .panel-manage li:last-child { border-bottom: 0; }
+  :root[data-theme='basic'] .b-budgets li .start,
+  :root[data-theme='basic'] .b-budgets li .amount { min-width: var(--b-amount-w); }
+  :root[data-theme='basic'] .b-budgets li input { width: var(--b-amount-w); }
+  :root[data-theme='basic'] .b-budgets li .error { flex-basis: 100%; }
+
+  /* ---- 段 4：設定の記帳・照会・データ。一般と同じ枠（b-settings）。機能・操作は今のまま、面・罫線・間隔だけそろえる。 ---- */
+  :root[data-theme='basic'] .b-settings .set-panel > .b-section-head,
+  :root[data-theme='basic'] .b-settings .set-panel > .set-danger > .b-section-head { margin-top: var(--b-space-8); }
+  :root[data-theme='basic'] .b-settings .set-panel > .b-section-head:first-child { margin-top: var(--b-space-0); }
+  :root[data-theme='basic'] .b-settings .set-panel > .set-danger { margin: var(--b-space-8) var(--b-space-0) var(--b-space-0); padding: var(--b-space-0) var(--b-space-6) var(--b-space-6); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-settings .set-panel > .set-danger > .b-section-head { margin-top: var(--b-space-4); }
+  :root[data-theme='basic'] .b-settings .open-mode { display: grid; grid-template-columns: minmax(0, 1fr) var(--b-setting-field-w); align-items: center; gap: var(--b-space-6); padding: var(--b-space-4) var(--b-space-1); border-bottom: 1px solid var(--b-side-line); }
+  :root[data-theme='basic'] .b-settings .open-mode select { width: 100%; }
+  :root[data-theme='basic'] .b-settings .bullet-set { gap: var(--b-space-6); }
+  :root[data-theme='basic'] .b-fav-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--b-space-8); }
+  :root[data-theme='basic'] .b-fav-cols section { min-width: 0; }
+  :root[data-theme='basic'] .b-settings .sub-title { margin: var(--b-space-4) var(--b-space-0) var(--b-space-2); font-size: var(--b-font-size); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-settings .set-panel ol { margin: var(--b-space-0); padding: var(--b-space-0); list-style: none; }
+  :root[data-theme='basic'] .b-settings li.fav-item { display: flex; flex-wrap: wrap; align-items: center; gap: var(--b-control-gap); padding: var(--b-space-2) var(--b-space-1); border-bottom: 1px solid var(--b-side-line); }
+  :root[data-theme='basic'] .b-settings li.fav-item .name { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-settings li.fav-item > button { margin: var(--b-space-0); }
+  :root[data-theme='basic'] .b-settings li.fav-item .pset-line { flex: 1 1 100%; margin: var(--b-space-0); }
+  :root[data-theme='basic'] .b-settings form.fav-add { margin-top: var(--b-space-3); }
+  :root[data-theme='basic'] .b-settings .card-list { list-style: none; margin: var(--b-space-0); padding: var(--b-space-0); }
+  :root[data-theme='basic'] .b-settings .card-row { padding: var(--b-space-3) var(--b-space-4); background: var(--b-surface); border-bottom: 1px solid var(--b-side-line); }
+  :root[data-theme='basic'] .b-settings .card-row form { display: flex; flex-wrap: wrap; align-items: center; gap: var(--b-control-gap) var(--b-space-4); }
+  :root[data-theme='basic'] .b-settings .save-settings .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--b-control-gap); padding: var(--b-space-4) var(--b-space-1); border-bottom: 1px solid var(--b-side-line); }
+  :root[data-theme='basic'] .b-settings .save-settings .row > :last-child:not(:first-child) { margin-inline-start: auto; }
+  :root[data-theme='basic'] .b-settings .save-settings .row > button:only-child { margin-inline-start: auto; }
+
+  /* ---- 段 5：補助画面（確認・セーブ・ロード・食い違い・電卓・通知・移行）。CSS だけ。機能・文言・DOM は今のまま。 ---- */
+  :root[data-theme='basic'] dialog.confirm,
+  :root[data-theme='basic'] dialog.saveload,
+  :root[data-theme='basic'] dialog.keypad,
+  :root[data-theme='basic'] .calc-band { box-sizing: border-box; border: 1px solid var(--b-line); border-radius: 0; background: var(--b-surface); color: var(--b-text); box-shadow: var(--b-shadow); font-family: var(--b-font-ui); font-size: var(--b-font-size); line-height: var(--b-line-height); }
+  :root[data-theme='basic'] dialog.confirm,
+  :root[data-theme='basic'] dialog.saveload { padding: var(--b-space-7); }
+  :root[data-theme='basic'] dialog.confirm .message { margin-bottom: var(--b-space-5); }
+  :root[data-theme='basic'] dialog.confirm .actions { gap: var(--b-control-gap); }
+  :root[data-theme='basic'] dialog.confirm .typed input { margin-top: var(--b-space-2); }
+  :root[data-theme='basic'] dialog.confirm .rename-list .note,
+  :root[data-theme='basic'] dialog.saveload .note { color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] dialog.confirm.conflict .sides { gap: var(--b-space-7); margin-bottom: var(--b-space-5); }
+  :root[data-theme='basic'] dialog.confirm.conflict .side { padding: var(--b-space-0); border: 0; }
+  :root[data-theme='basic'] dialog.confirm.conflict .side h3 { margin: var(--b-space-0) var(--b-space-0) var(--b-space-2); padding-bottom: var(--b-space-2); border-bottom: 1px solid var(--b-line); font-size: var(--b-font-size); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] dialog.confirm.conflict .side p { padding: var(--b-space-2) var(--b-space-1); border-bottom: 1px solid var(--b-side-line); }
+  :root[data-theme='basic'] dialog.confirm.conflict .note-line { color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] dialog.saveload .head { padding-bottom: var(--b-space-3); margin-bottom: var(--b-space-4); border-bottom: 1px solid var(--b-line); }
+  :root[data-theme='basic'] dialog.saveload h2 { font-size: var(--b-font-heading); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] dialog.saveload h3 { font-size: var(--b-font-size); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] dialog.saveload .slot { border: 0; border-bottom: 1px solid var(--b-side-line); padding: var(--b-space-3) var(--b-space-1); margin-bottom: var(--b-space-0); }
+  :root[data-theme='basic'] dialog.saveload .slot-pick[aria-current='true'] { background: var(--b-active-bg); }
+  :root[data-theme='basic'] .calc-band { padding: var(--b-space-2) var(--b-space-4); }
+  :root[data-theme='basic'] dialog.keypad { padding: var(--b-space-0); }
+  :root[data-theme='basic'] .keypad-keys { gap: var(--b-control-gap); }
+  :root[data-theme='basic'] .keypad .key.insert { border: 1px solid var(--b-navy); background: var(--b-navy); color: var(--b-surface); }
+  :root[data-theme='basic'] .update-notice,
+  :root[data-theme='basic'] .notice-rows .notice-row,
+  :root[data-theme='basic'] .migration,
+  :root[data-theme='basic'] .newer-data,
+  :root[data-theme='basic'] .warning { border: 1px solid var(--b-line); border-radius: 0; font-family: var(--b-font-ui); font-size: var(--b-font-label); }
+  :root[data-theme='basic'] .migration,
+  :root[data-theme='basic'] .newer-data,
+  :root[data-theme='basic'] .warning { padding: var(--b-space-4) var(--b-space-5); }
+  :root[data-theme='basic'] .notice-rows { gap: var(--b-control-gap); margin-bottom: var(--b-space-5); }
+
+  /* ---- 段 6：定期支払い。今の登録欄（1 行）と一覧を残し、面・罫線をそろえる。12 か月は月と 1 文字（済・予・前・止）で 1 行。 ---- */
+  :root[data-theme='basic'] .b-subs > .note { margin: var(--b-space-0) var(--b-space-0) var(--b-space-5); }
+  :root[data-theme='basic'] .b-subs > .b-section-head { margin-top: var(--b-space-8); }
+  :root[data-theme='basic'] .b-subs > .b-page-head + .note + .b-section-head { margin-top: var(--b-space-0); }
+  :root[data-theme='basic'] .b-subs > form { flex-wrap: nowrap; align-items: center; margin: var(--b-space-0); }
+  :root[data-theme='basic'] .b-subs > form > input:not(.day),
+  :root[data-theme='basic'] .b-subs > form > select { flex: 1 1 0; width: auto; min-width: 0; }
+  :root[data-theme='basic'] .b-subs > form > button { flex: none; white-space: nowrap; }
+  :root[data-theme='basic'] .b-subs > ul { list-style: none; margin: var(--b-space-0); padding: var(--b-space-0); }
+  :root[data-theme='basic'] .b-subs > ul > li { margin: var(--b-space-0); padding: var(--b-space-3) var(--b-space-4); border: 0; border-bottom: 1px solid var(--b-side-line); border-radius: 0; background: var(--b-surface); }
+  :root[data-theme='basic'] .b-subs > ul > li.inactive { color: var(--b-muted); }
+  :root[data-theme='basic'] .b-subs .sub-actions { margin-top: var(--b-space-2); }
+  :root[data-theme='basic'] .b-moons { display: flex; flex-wrap: nowrap; gap: var(--b-space-1); margin-top: var(--b-space-3); }
+  :root[data-theme='basic'] .b-m { flex: 1 1 0; min-width: 0; display: inline-flex; align-items: baseline; justify-content: center; gap: var(--b-space-1); padding: var(--b-space-1) var(--b-space-0); border: 1px solid var(--b-side-line); font-size: var(--b-font-small); white-space: nowrap; }
+  :root[data-theme='basic'] .b-m i { font-style: normal; color: var(--b-muted); }
+  :root[data-theme='basic'] .b-m b { font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-m.wait { border-style: dashed; }
+  :root[data-theme='basic'] .b-m.before { border-style: dotted; }
+  :root[data-theme='basic'] .b-m.before b,
+  :root[data-theme='basic'] .b-m.skip b { color: var(--b-muted); font-weight: var(--b-weight-normal); }
+  :root[data-theme='basic'] .b-m.now { border-color: var(--b-active-bar); }
+  :root[data-theme='basic'] .b-m.now i { color: var(--b-text); font-weight: var(--b-weight-bold); }
+
+  /* ---- 段 6B：貯蓄。科目ごとの履歴の表（今のまま）に、面・罫線をそろえ、金額に「取り分け／取り崩し」の札（文字＋枠。色だけに頼らない）。 ---- */
+  :root[data-theme='basic'] .b-savings .table-box { background: var(--b-surface); }
+  :root[data-theme='basic'] .b-savings > section > .b-section-head { margin-top: var(--b-space-8); }
+  :root[data-theme='basic'] .b-savings > .b-page-head + section > .b-section-head { margin-top: var(--b-space-0); }
+  :root[data-theme='basic'] .b-savings th:nth-child(-n + 3),
+  :root[data-theme='basic'] .b-savings td:nth-child(-n + 3) { text-align: left; }
+  :root[data-theme='basic'] .b-savings th:nth-child(n + 4),
+  :root[data-theme='basic'] .b-savings td:nth-child(n + 4) { text-align: right; white-space: nowrap; }
+  :root[data-theme='basic'] .b-savings > .note { margin-top: var(--b-space-6); }
+  :root[data-theme='basic'] .b-tag { float: left; display: block; box-sizing: border-box; width: var(--b-tag-w); margin-right: var(--b-space-3); padding: var(--b-space-0); text-align: center; white-space: nowrap; border: 1px solid currentColor; font-size: var(--b-font-small); line-height: var(--b-line-height); color: var(--b-positive); }
+  :root[data-theme='basic'] .b-tag.out { color: var(--b-negative); }
+}

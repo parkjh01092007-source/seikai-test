@@ -4,6 +4,7 @@ import { t } from '../text.js'
 import { HOME, toHash } from '../route.js'
 import { usePhone } from '../layout.js'
 import { useGunjoPc, useCanPin } from '../gunjoPc.js'
+import { useBasicPc } from '../basicPc.js'
 import { useModalLayer } from '../modalLayer.js'
 import { lastSaveLine } from './lastSave.js'
 import { Icon } from './Icon.jsx'
@@ -26,6 +27,7 @@ function Mark({ text }) {
 export default function SideTabs({ entry, currentTab, onOpenPanel, notices = [] }) {
   const phone = usePhone()
   const gunjoPc = useGunjoPc() // 群青の PC のときだけ描く部品（閉じた形の「正解」の円、見出しの英字）
+  const basicPc = useBasicPc() // 基本の PC は、縦タブをいつも開いておく（basic-pc.css）
   const canPin = useCanPin() // 群青の PC は、幅 1100px 未満では固定しない（☰ は乗せる・Tab で開くだけ）
   const [pinned, setPinned] = useState(false)
   const [hover, setHover] = useState(false)
@@ -36,7 +38,7 @@ export default function SideTabs({ entry, currentTab, onOpenPanel, notices = [] 
   const asideRef = useRef(null)
   const toggleRef = useRef(null)
   const focusFirst = useRef(false) // ☰ を押して開いたとき、最初のタブへフォーカスを移す印
-  const open = phone ? phoneOpen : pinned || hover || kbFocus
+  const open = phone ? phoneOpen : basicPc || pinned || hover || kbFocus
   useEffect(() => { if (!canPin) setPinned(false) }, [canPin]) // 固定していて、幅が 1100px 未満になったら外す
 
   // 幅が境目をまたいだら、閉じた状態に戻す
@@ -133,7 +135,8 @@ export default function SideTabs({ entry, currentTab, onOpenPanel, notices = [] 
         <div className="panel" {...(phone ? { role: 'dialog', 'aria-modal': 'true', 'aria-label': entryName } : {})}>
           <div className="menu-head">
             <a className="menu-title" href={toHash(HOME)} onClick={closePhone}>{gunjoPc ? <Mark text={t('home.title')} /> : t('home.title')}</a>
-            {lastSave && <span className="menu-last">{gunjoPc ? lastSave.split(/(?<=[\uFF1A:])/).flatMap((part, i) => (i ? [<br key="br" />, part] : [part])) : lastSave}</span>}
+            {basicPc && <span className="b-entry">{entryName}</span>}
+            {lastSave && !basicPc && <span className="menu-last">{gunjoPc ? lastSave.split(/(?<=[\uFF1A:])/).flatMap((part, i) => (i ? [<br key="br" />, part] : [part])) : lastSave}</span>}
           </div>
           <nav aria-label={entryName}>
             {entry.groups.map((g) => (
@@ -142,13 +145,14 @@ export default function SideTabs({ entry, currentTab, onOpenPanel, notices = [] 
                 <ul>
                   {g.tabs.map((tb) => (
                     <li key={tb.id}>
-                      <a href={toHash({ entry: entry.id, tab: tb.id, detailId: null })} aria-current={tb.id === currentTab ? 'page' : undefined} onClick={closePhone}>{t(tb.label)}</a>
+                      <a href={toHash({ entry: entry.id, tab: tb.id, detailId: null })} aria-current={tb.id === currentTab ? 'page' : undefined} onClick={closePhone}>{t(tb.label)}{basicPc && tb.id === currentTab && <small className="b-current">{t('nav.current')}</small>}</a>
                     </li>
                   ))}
                 </ul>
               </section>
             ))}
           </nav>
+          {basicPc && lastSave && <span className="menu-last">{lastSave}</span>}
           <div className="bottom">
             <button type="button" onClick={() => openPanel('save')}><Icon name="save" />{t('save.title')}</button>
             <button type="button" onClick={() => openPanel('load')}><Icon name="load" />{t('save.load')}</button>

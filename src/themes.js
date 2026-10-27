@@ -173,7 +173,15 @@ const browserStorage = () => {
     return null
   }
 }
-export const loadTheme = () => (browserStorage() ? readTheme(browserStorage()) : defaultTheme())
+// 本番で隠すプリセット（群青・最深部。見た目・コードは残す）。ビルド時の目印 VITE_HIDE_RESTRICTED=1 のとき（写し先の .env.production）だけ隠す。目印がなければ、全部出す（確かめ・基準画像は今のまま）
+export const HIDDEN_PRESETS = ['gunjo', 'shinbu']
+export const HIDE_RESTRICTED = import.meta.env?.VITE_HIDE_RESTRICTED === '1'
+export const visiblePresets = (hide = HIDE_RESTRICTED) => (hide ? PRESETS.filter((p) => !HIDDEN_PRESETS.includes(p.id)) : PRESETS)
+// 隠すとき、覚えてあるのが隠すプリセットなら、基本で開く。覚えてある値（localStorage）は書き換えない
+export function loadTheme(hide = HIDE_RESTRICTED) {
+  const theme = browserStorage() ? readTheme(browserStorage()) : defaultTheme()
+  return hide && HIDDEN_PRESETS.includes(theme.preset) ? { ...theme, preset: DEFAULT_PRESET } : theme
+}
 export const rememberTheme = (theme) => { if (browserStorage()) saveTheme(browserStorage(), theme) }
 
 // html 要素（root）に反映する。getStyle(root) は、CSS の今の値を読む物（既定はブラウザの getComputedStyle。テストでは偽物）。

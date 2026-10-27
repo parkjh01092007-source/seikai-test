@@ -7,6 +7,7 @@ import { today } from '../today.js'
 import { t } from '../text.js'
 import { usePhone } from '../layout.js'
 import { useGunjoPc } from '../gunjoPc.js'
+import { useBasicPc } from '../basicPc.js'
 import { useBandHost, useBandTop, useBandRoad } from './bandHost.js'
 import { signedYen } from './PageBand.jsx'
 import { loadNoSpendShape } from '../entryView.js'
@@ -96,7 +97,7 @@ function BalanceSheetStack({ sheet }) {
 }
 
 // 生活費のやりくり（仕様 5.14）：数えた収入を1件ずつ（日付・科目・金額・先月入金／今月入金）、収入合計、支出合計。通常の表示だけ（印刷用表示には出さない）
-function LivingTable({ living, currency }) {
+function LivingTable({ living, currency, showDifference = false }) {
   const day = (date) => date.slice(5).replace('-', '/')
   const paid = (l) => t(l === 'next' ? 'living.prevPaid' : 'living.thisPaid')
   return (
@@ -111,6 +112,7 @@ function LivingTable({ living, currency }) {
         ))}
         <tr className="total"><td>{t('monthly.livingIncomeTotal')}</td><td className={cls(living.incomeTotal)}>{formatMoney(living.incomeTotal, currency)}</td><td /></tr>
         <tr className="total"><td>{t('monthly.livingExpenseTotal')}</td><td>{formatMoney(living.expenseTotal, currency)}</td><td /></tr>
+        {showDifference && <tr className="total"><td>{t('basicPc.difference')}</td><td className={cls(living.result)}>{formatMoney(living.result, currency)}</td><td /></tr>}
       </tbody>
     </table></div>
   )
@@ -218,6 +220,7 @@ export default function Monthly({ data }) {
   const adj = report?.adjustment
   const living = month ? livingBalance(entries, accounts, month) : null
   const gunjoPc = useGunjoPc()
+  const basicPc = useBasicPc()
   const bandHost = useBandHost()
   const bandTop = useBandTop()
   const bandRoad = useBandRoad()
@@ -253,6 +256,100 @@ export default function Monthly({ data }) {
         </>, bandHost)}
         {bandRoad && road && createPortal(<MonthRoad road={road} currency={currency} shape={loadNoSpendShape()} />, bandRoad)}
         {!month ? <p className="note">{t('common.chooseMonth')}</p> : <GunjoBody month={month} report={report} living={living} sheet={sheet} currency={currency} />}
+      </div>
+    )
+  }
+
+  if (basicPc && !printView) {
+    return (
+      <div className="report b-page b-monthly">
+        <div className="b-page-head">
+          <h2>{t('monthly.title')}</h2>
+          <p>{t('basicPc.monthlyLead')}</p>
+        </div>
+        <div className="month-bar no-print">
+          <input type="month" aria-label={t('common.month')} value={month} onChange={(e) => setMonth(e.target.value)} />
+          <button type="button" onClick={() => setMonth(today().slice(0, 7))}>{t('common.thisMonth')}</button>
+          <button type="button" onClick={() => setMonth(previousMonth(today()))}>{t('common.lastMonth')}</button>
+          <button type="button" onClick={() => setPrintView(true)}>{t('monthly.printView')}</button>
+        </div>
+        {!month ? <p className="note">{t('common.chooseMonth')}</p> : (
+          <>
+            <div className="b-report-grid">
+              <div className="b-report-main">
+                <section>
+                  <div className="b-section-head">
+                    <h3>{t('basicPc.expensePart')}</h3>
+                    <span className="note">{t('monthly.unit', { unit: currencyUnit(currency) })}</span>
+                  </div>
+                  <div className="table-box"><table>
+                    <thead><tr><th>{t('common.account')}</th><th>{t('basicPc.amountUnit', { unit: currencyUnit(currency) })}</th></tr></thead>
+                    <tbody>
+                      {report.expense.map((r) => (
+                        <tr key={r.account.id}>
+                          <td className="user-text">{r.account.name}</td>
+                          <td className={cls(r.amount)}>{formatYen(r.amount)}</td>
+                        </tr>
+                      ))}
+                      <tr className="total"><td>{t('monthly.expenseTotal')}</td><td className={cls(report.expenseTotal)}>{formatYen(report.expenseTotal)}</td></tr>
+                    </tbody>
+                  </table></div>
+                </section>
+                <section>
+                  <div className="b-section-head">
+                    <h3>{t('basicPc.revenuePart')}</h3>
+                    <span className="note">{t('monthly.unit', { unit: currencyUnit(currency) })}</span>
+                  </div>
+                  <div className="table-box"><table>
+                    <thead><tr><th>{t('common.account')}</th><th>{t('basicPc.amountUnit', { unit: currencyUnit(currency) })}</th></tr></thead>
+                    <tbody>
+                      {report.revenue.map((r) => (
+                        <tr key={r.account.id}>
+                          <td className="user-text">{r.account.name}</td>
+                          <td className={cls(r.amount)}>{formatYen(r.amount)}</td>
+                        </tr>
+                      ))}
+                      <tr className="total"><td>{t('monthly.revenueTotal')}</td><td className={cls(report.revenueTotal)}>{formatYen(report.revenueTotal)}</td></tr>
+                    </tbody>
+                  </table></div>
+                </section>
+              </div>
+              <div className="b-report-side">
+                <section>
+                  <div className="b-section-head"><h3>{t('monthly.summaryTitle', { month })}</h3></div>
+                  <div className="table-box"><table><tbody>
+                    <Line name={t('monthly.revenueTotal')} amount={report.revenueTotal} currency={currency} />
+                    <Line name={t('monthly.expenseTotal')} amount={report.expenseTotal} currency={currency} />
+                    {(adj.gain !== 0 || adj.loss !== 0) && <Line name={t('monthly.adjustmentLine')} amount={adj.net} currency={currency} />}
+                    <tr className="total"><td>{t('monthly.result')}</td><td className={cls(report.result)}>{formatMoney(report.result, currency)}</td></tr>
+                  </tbody></table></div>
+                  <p className="note">{t('monthly.noteSummary')}</p>
+                </section>
+                <section>
+                  <div className="b-section-head"><h3>{t('monthly.livingTitle')}</h3></div>
+                  {living.items.length === 0 && <p className="note">{t('monthly.livingNone')}</p>}
+                  <LivingTable living={living} currency={currency} showDifference />
+                  <p className="note">{t('monthly.livingNote')}</p>
+                </section>
+              </div>
+            </div>
+            <div className="b-report-more">
+              <Section title={t('monthly.plTitle', { month })}>
+                <p className="note">{t('monthly.unit', { unit: currencyUnit(currency) })}</p>
+                <ProfitLossTable report={report} />
+              </Section>
+              <Section
+                title={t('monthly.bsTitle', { month })}
+                extra={!sheet.balanced && <span className="value error">{t('monthly.bsUnbalancedBadge')}</span>}
+              >
+                <p className="note">{t('monthly.unit', { unit: currencyUnit(currency) })}</p>
+                <BalanceSheetTable sheet={sheet} />
+                {sheet.balanced ? <p className="note">{t('monthly.bsBalanced')}</p> : <p className="error">{t('monthly.bsUnbalanced')}</p>}
+                <p className="note">{t('monthly.bsNote')}</p>
+              </Section>
+            </div>
+          </>
+        )}
       </div>
     )
   }

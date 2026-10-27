@@ -24,9 +24,9 @@ function RingMoon({ f, total, pulse }) {
 
 // 右の青い面の中身（案A：12 か月の輪）。時計の配置（12 月が真上・3 月が真右・6 月が真下・9 月が真左）。月ごとの「記入された件数／記入されるはずの件数」で玉が満ちる。今月は輪で囲み、中央に今月の件数。
 // 面の枠（.g-side-panel）は gunjo-pc.css。文字は辞書（subscriptions.ring*）、計算は flowArt.js の ringFractions
-export default function SubscriptionRing({ subs, today }) {
+export default function SubscriptionRing({ subs, today, entries }) {
   const months = monthWindow(today).map((m) => m.ym)
-  const rows = ringFractions(subs, today, months)
+  const rows = ringFractions(subs, today, months, entries)
   const now = rows[rows.length - 1]
   const none = now.total === 0 // 今月は記入の対象がない（0 件・登録前・使わない間）：0／0 ではなく、文で言う
   const label = none ? t('subscriptions.ringNone') : `${t('subscriptions.ringNow')} ${now.done}${t('subscriptions.ringOf', { total: now.total })} ${t('subscriptions.ringDone')}`

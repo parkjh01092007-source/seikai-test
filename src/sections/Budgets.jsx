@@ -11,6 +11,7 @@ import { t } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import { usePhone } from '../layout.js'
 import { useGunjoPc } from '../gunjoPc.js'
+import { useBasicPc } from '../basicPc.js'
 import { useBandHost } from './bandHost.js'
 import { AmountInput } from './Calculator.jsx'
 import { BandStat, signedYen } from './PageBand.jsx'
@@ -162,6 +163,7 @@ export default function Budgets({ data, update }) {
   const confirm = useConfirm()
   const phone = usePhone()
   const gunjoPc = useGunjoPc()
+  const basicPc = useBasicPc()
   const bandHost = useBandHost()
   const [tab, setTab] = useState('month') // 開いているタブ（月の予算・登録・履歴）。初めは月の予算。覚えない（画面を移ると戻る）。追加・変更・削除のあとも変えない
 
@@ -177,20 +179,23 @@ export default function Budgets({ data, update }) {
 
   const budgeted = accounts.filter((a) => hasBudget(a, budgets))
 
+  // 表示ラベルだけを基本 PC に補う。入力と処理はほかの形と同じ。
+  const field = (label, control) => basicPc ? <label className="b-field"><span>{label}</span>{control}</label> : control
+
   // 予算を追加する欄（「登録・履歴」のタブ。開閉せず、開いた形。PC もスマホも同じ）
   const addForm = (
     <>
       <form onSubmit={add}>
-        <select aria-label={t('budgets.kind')} value={kind} onChange={(e) => { setKind(e.target.value); setAccountId('') }}>
+        {field(t('budgets.kind'), <select aria-label={t('budgets.kind')} value={kind} onChange={(e) => { setKind(e.target.value); setAccountId('') }}>
           {Object.entries(BUDGET_RULES).map(([k, rule]) => <option key={k} value={k}>{rule.label}</option>)}
-        </select>
-        <select aria-label={t('common.account')} value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+        </select>)}
+        {field(t('common.account'), <select aria-label={t('common.account')} value={accountId} onChange={(e) => setAccountId(e.target.value)}>
           <option value="">{t('common.chooseAccount')}</option>
           {budgetAccountOptions(accounts, kind).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-        </select>
-        <input inputMode="numeric" placeholder={t('common.amount')} aria-label={t('common.amount')} value={amount} onChange={(e) => setAmount(e.target.value)} />
-        <label>{t('budgets.startMonth')}{' '}<input type="month" aria-label={t('budgets.startMonth')} value={startMonth} onChange={(e) => setStartMonth(e.target.value)} /></label>
-        <button><Icon name="plus" />{t('common.add')}</button>
+        </select>)}
+        {field(t('common.amount'), <input inputMode="numeric" placeholder={t('common.amount')} aria-label={t('common.amount')} value={amount} onChange={(e) => setAmount(e.target.value)} />)}
+        <label className={basicPc ? 'b-field' : undefined}>{basicPc ? <span>{t('budgets.startMonth')}</span> : <>{t('budgets.startMonth')}{' '}</>}<input type="month" aria-label={t('budgets.startMonth')} value={startMonth} onChange={(e) => setStartMonth(e.target.value)} /></label>
+        <button className={basicPc ? 'b-primary' : undefined}><Icon name="plus" />{t('common.add')}</button>
         {error && <span className="error">{error}</span>}
       </form>
       <p className="note">{t('budgets.note')}</p>
@@ -204,18 +209,18 @@ export default function Budgets({ data, update }) {
       ? (month && <BandStat label={t('budgets.heroFree')} value={signedYen(budgetFreeAmount(accounts, entries, budgets, month).total, formatYen)} unit={heroUnit} />)
       : <BandStat label={t('budgets.heroCount')} value={budgeted.length} unit={t('settings.countUnit')} />,
     bandHost)
-  const heading = (title, en) => (gunjoPc ? <h2 className="g-h">{title}<small lang="en">{en}</small></h2> : <h3>{title}</h3>)
+  const heading = (title, en) => (gunjoPc ? <h2 className="g-h">{title}<small lang="en">{en}</small></h2> : basicPc ? <div className="b-section-head"><h3>{title}</h3></div> : <h3>{title}</h3>)
 
   return (
-    <div className={`report budgets${gunjoPc ? ' g-rep' : ''}`}>
+    <div className={`report budgets${gunjoPc ? ' g-rep' : basicPc ? ' b-page b-budgets' : ''}`}>
       {hero}
-      {!gunjoPc && <h2>{t('budgets.title')}</h2>}
+      {basicPc ? <div className="b-page-head"><h2>{t('budgets.title')}</h2><p>{t('basicPc.budgetsLead')}</p></div> : !gunjoPc && <h2>{t('budgets.title')}</h2>}
       <Tabs label={t('budgets.title')} tabs={[{ id: 'month', title: t('budgets.tabMonth') }, { id: 'manage', title: t('budgets.tabManage') }]} current={tab} onChange={setTab} prefix="budgets" />
       <div role="tabpanel" id={panelDomId('budgets', tab)} aria-labelledby={tabDomId('budgets', tab)} className={tab === 'manage' ? 'tab-panel panel-manage' : 'tab-panel'}>
         {tab === 'month' ? (
           <>
             <div className="month-bar">
-              <input type="month" aria-label={t('common.month')} value={month} onChange={(e) => setMonth(e.target.value)} />
+              {field(t('common.month'), <input type="month" aria-label={t('common.month')} value={month} onChange={(e) => setMonth(e.target.value)} />)}
               <button type="button" onClick={() => setMonth(today().slice(0, 7))}>{t('common.thisMonth')}</button>
               <button type="button" onClick={() => setMonth(previousMonth(today()))}>{t('common.lastMonth')}</button>
             </div>
@@ -280,7 +285,7 @@ export default function Budgets({ data, update }) {
               </section>
             ) : (
               <>
-                <h3>{t('budgets.addTitle')}</h3>
+                {heading(t('budgets.addTitle'), t('budgets.addEn'))}
                 {addForm}
               </>
             )}

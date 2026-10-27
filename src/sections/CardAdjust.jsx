@@ -8,10 +8,11 @@ import { today } from '../today.js'
 import { t } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import { useBandTop } from './bandHost.js'
+import { useBasicPc } from '../basicPc.js'
 import { Icon } from './Icon.jsx'
 import { StateTag, EmptyCard } from './FlowParts.jsx'
 
-// クレカ残高調整ページ（群青の PC だけ。#/ledger/card/adjust。見本 E26。手順 docs/plan-card-adjust.md）。
+// クレカ残高調整ページ（群青・基本の PC。#/ledger/card/adjust。見本 E26。手順 docs/plan-card-adjust.md）。
 // カードごとの折り畳み。開くと「確定分」と「今期」の 2 行（記録上の額・実際の残高の入力欄・差額）。2 本の仕訳は 1 回の確認で、1 回の update で記録する。
 // 計算は ledgerLogic.js の planCardAdjustment（保存はしない）。ここでは新しい計算をしない
 
@@ -169,6 +170,7 @@ function FixPanel({ report, texts, data, now, unit }) {
 
 export default function CardAdjust({ data, update }) {
   const bandTop = useBandTop()
+  const basicPc = useBasicPc()
   const now = today()
   const unit = currencyUnit(data.settings.currency)
   const reports = cardReports(data.accounts, data.entries, now)
@@ -180,12 +182,13 @@ export default function CardAdjust({ data, update }) {
   const textsOf = (id) => ({ closed: '', open: '', ...texts[id] })
 
   return (
-    <div className="report g-rep g-card-list g-cardpage g-adjpage">
+    <div className={basicPc ? 'report b-page b-card-adjust' : 'report g-rep g-card-list g-cardpage g-adjpage'}>
       {bandTop && createPortal(<a className="g-back" href={listHash}><Icon name="back" />{t('cardAdjust.back')}</a>, bandTop)}
+      {basicPc && <><div className="back"><a href={listHash}>{t('cardAdjust.back')}</a></div><div className="b-page-head"><h2>{t('cardAdjust.linkLabel')}</h2><p>{t('cardAdjust.note')}</p></div></>}
       <div className="g-card-col">
         <section>
-          <h2 className="g-h">{t('cardAdjust.heading')}<small lang="en">{t('cardAdjust.headingEn')}</small></h2>
-          {ordered.length === 0 ? <EmptyCard title={t('card.emptyTitle')}>{t('card.emptyBody')}</EmptyCard> : ordered.map((r, i) => (
+          {basicPc ? <div className="b-section-head"><h3>{t('cardAdjust.heading')}</h3></div> : <h2 className="g-h">{t('cardAdjust.heading')}<small lang="en">{t('cardAdjust.headingEn')}</small></h2>}
+          {ordered.length === 0 ? (basicPc ? <p className="note">{t('card.empty')}</p> : <EmptyCard title={t('card.emptyTitle')}>{t('card.emptyBody')}</EmptyCard>) : ordered.map((r, i) => (
             <CardBlock
               key={r.account.id} data={data} update={update} report={r} index={i} texts={textsOf(r.account.id)}
               setText={(x, v) => setTexts((s) => ({ ...s, [r.account.id]: { ...textsOf(r.account.id), ...s[r.account.id], [x]: v } }))}
@@ -194,7 +197,7 @@ export default function CardAdjust({ data, update }) {
           ))}
         </section>
       </div>
-      {ordered.length > 0 && <FixPanel report={picked} texts={picked ? textsOf(picked.account.id) : {}} data={data} now={now} unit={unit} />}
+      {!basicPc && ordered.length > 0 && <FixPanel report={picked} texts={picked ? textsOf(picked.account.id) : {}} data={data} now={now} unit={unit} />}
     </div>
   )
 }

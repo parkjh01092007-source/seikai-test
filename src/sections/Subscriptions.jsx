@@ -11,6 +11,7 @@ import { monthWindow } from '../bookPicker.js'
 import { t } from '../text.js'
 import { usePhone } from '../layout.js'
 import { useGunjoPc } from '../gunjoPc.js'
+import { useBasicPc } from '../basicPc.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import { useBandHost } from './bandHost.js'
 import { BandStat } from './PageBand.jsx'
@@ -30,6 +31,18 @@ function MoonLegend() {
           <span className="g-moons"><span className="m"><svg viewBox="-10 -10 20 20" aria-hidden="true"><Moon state={state} /></svg></span></span>
           {t(key)}
         </span>
+      ))}
+    </div>
+  )
+}
+
+// 基本の PC：直近 12 か月の記入の状態を、月と 1 文字で 1 行に（色だけに頼らない。計算は subscriptionMoons のまま）
+const BASIC_STATE_KEYS = { done: 'basicPc.subsDone', wait: 'basicPc.subsWait', before: 'basicPc.subsBefore', skip: 'basicPc.subsSkip' }
+function BasicMonths({ moons, current }) {
+  return (
+    <div className="b-moons" role="group" aria-label={t('subscriptions.moonsLabel')}>
+      {moons.map((m) => (
+        <span key={m.month} className={`b-m ${m.state}${m.month === current ? ' now' : ''}`}><i>{Number(m.month.slice(5))}{t('common.month')}</i><b>{t(BASIC_STATE_KEYS[m.state])}</b></span>
       ))}
     </div>
   )
@@ -107,6 +120,7 @@ function SubscriptionForm({ accounts, initial, submitLabel, submitIcon = 'plus',
 function SubscriptionRow({ sub, accounts, currency, editing, moons, current, onEdit, onCancel, onSave, onToggle, onDelete }) {
   const phone = usePhone()
   const gunjoPc = useGunjoPc()
+  const basicPc = useBasicPc()
   const name = (id) => accounts.find((a) => a.id === id)?.name ?? ''
   if (editing) {
     return (
@@ -158,15 +172,17 @@ function SubscriptionRow({ sub, accounts, currency, editing, moons, current, onE
       {sub.memo && <div className="note">{sub.memo}</div>}
       <div className="note">{t('subscriptions.lastMonth', { month: sub.lastMonth })}</div>
       {actions}
+      {basicPc && moons && <BasicMonths moons={moons} current={current} />}
     </li>
   )
 }
 
 export default function Subscriptions({ data, update }) {
-  const { accounts, subscriptions } = data
+  const { accounts, subscriptions, entries } = data
   const [editingId, setEditingId] = useState(null)
   const confirm = useConfirm()
   const gunjoPc = useGunjoPc()
+  const basicPc = useBasicPc()
   const bandHost = useBandHost() // 群青の PC の帯の、要点を入れる場所（ほかのときは null）
   const now = today()
   const nowMonth = now.slice(0, 7)
@@ -198,7 +214,7 @@ export default function Subscriptions({ data, update }) {
           key={s.id}
           sub={s}
           accounts={accounts}
-          moons={gunjoPc ? subscriptionMoons(s, now, months) : undefined}
+          moons={gunjoPc || basicPc ? subscriptionMoons(s, now, months, entries) : undefined}
           current={nowMonth}
           editing={editingId === s.id}
           onEdit={() => setEditingId(s.id)}
@@ -241,7 +257,19 @@ export default function Subscriptions({ data, update }) {
           <MoonLegend />
           {list}
         </div>
-        <SubscriptionRing subs={subscriptions} today={now} />
+        <SubscriptionRing subs={subscriptions} today={now} entries={entries} />
+      </div>
+    )
+  }
+  if (basicPc) {
+    return (
+      <div className="subscriptions b-page b-subs">
+        <div className="b-page-head"><h2>{t('subscriptions.title')}</h2><p>{t('basicPc.subsLead')}</p></div>
+        {notes}
+        <div className="b-section-head"><h3>{t('subscriptions.new')}</h3></div>
+        {form}
+        <div className="b-section-head"><h3>{t('basicPc.subsList')}</h3><p className="note">{t('basicPc.subsLegend')}</p></div>
+        {list}
       </div>
     )
   }

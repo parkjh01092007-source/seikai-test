@@ -5,6 +5,7 @@ import './themes.css'
 import './fonts.css'
 import App from './App.jsx'
 import './gunjo-pc.css' // 群青の PC の規則は、画面ごとの CSS（App が読む）より後に置く。同じ強さのとき、後ろが勝つ
+import './basic-pc.css' // 基本の PC の規則も、同じ理由で App より後（basicPc.check.js が確かめる）
 import { applyDocumentLanguage } from './text.js'
 import { applyTheme, loadTheme } from './themes.js'
 import { registerServiceWorker } from './pwa.js'

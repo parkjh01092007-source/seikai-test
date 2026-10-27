@@ -8,6 +8,7 @@ import { today } from '../today.js'
 import { t } from '../text.js'
 import { usePhone } from '../layout.js'
 import { useGunjoPc } from '../gunjoPc.js'
+import { useBasicPc } from '../basicPc.js'
 import { useBandHost, useBandRoad } from './bandHost.js'
 import { signedYen } from './PageBand.jsx'
 import MonthRoad from './MonthRoad.jsx'
@@ -27,6 +28,7 @@ export default function Balance({ data }) {
   const { rows, balanced } = accountBalances(accounts, entries)
   const phone = usePhone()
   const gunjoPc = useGunjoPc()
+  const basicPc = useBasicPc()
   const bandHost = useBandHost()
   const bandRoad = useBandRoad()
   const viewButtons = BALANCE_VIEWS.map((v) => (
@@ -118,6 +120,79 @@ export default function Balance({ data }) {
               <div className="g-gap-lab">{t('balance.gap')}</div>
               <div className="g-gap-num">{yen(gap)}<span className="g-gap-unit">{unit}</span></div>
             </div>
+          </div>
+        </div>
+        <p className="note">{t('balance.note')}</p>
+      </div>
+    )
+  }
+
+  if (basicPc) {
+    const amount = view === 'actual' ? free.total : budgeted.total
+    const gap = assetLiabilityGap(rows)
+    return (
+      <div className="report b-page b-balance">
+        <div className="b-page-head"><h2>{t('balance.title')}</h2><p>{t('basicPc.balanceLead')}</p></div>
+        {!balanced && <p className="error">{t('balance.unbalanced')}</p>}
+        <div className="b-report-grid">
+          <div className="b-report-main">
+            {['asset', 'liability'].map((type) => {
+              const total = typeTotals(rows, type)
+              return (
+                <section key={type}>
+                  <div className="b-section-head"><h3>{TYPE_LABELS[type]}</h3><span className="note">{t('monthly.unit', { unit })}</span></div>
+                  <div className="table-box"><table>
+                    <thead>
+                      <tr><th>{t('common.account')}</th><th>{t('balance.debitTotal')}</th><th>{t('balance.creditTotal')}</th><th>{t('common.balance')}</th></tr>
+                    </thead>
+                    <tbody>
+                      {rows.filter((r) => r.account.type === type && (r.account.active || r.used)).map((r) => (
+                        <tr key={r.account.id} className={r.account.active ? '' : 'inactive'}>
+                          <td className="wrap">{r.account.name}{!r.account.active && <span className="note"> {t('common.inactive')}</span>}</td>
+                          <td>{formatYen(r.debit)}</td>
+                          <td>{formatYen(r.credit)}</td>
+                          <td className={r.balance < 0 ? 'neg' : ''}>{formatYen(r.balance)}</td>
+                        </tr>
+                      ))}
+                      <tr className="total">
+                        <td>{t('common.total')}</td>
+                        <td>{formatYen(total.debit)}</td>
+                        <td>{formatYen(total.credit)}</td>
+                        <td className={total.balance < 0 ? 'neg' : ''}>{formatYen(total.balance)}</td>
+                      </tr>
+                    </tbody>
+                  </table></div>
+                </section>
+              )
+            })}
+          </div>
+          <div className="b-report-side">
+            <section>
+              <div className="b-section-head"><h3>{t('balance.freeTitle')}</h3></div>
+              <div className="view-toggle" role="group" aria-label={t('balance.viewLabel')}>{viewButtons}</div>
+              <dl className="b-amounts">
+                <div><dt>{t('balance.freeTitle')}</dt><dd className={`b-large${amount < 0 ? ' neg' : ''}`}>{formatYen(amount)} {unit}</dd></div>
+                {view === 'actual' ? (
+                  free.items.map((item) => (
+                    <div key={item.id}><dt>{item.name}</dt><dd><Num n={item.balance} /> {unit}</dd></div>
+                  ))
+                ) : (
+                  <>
+                    <div><dt>{t('balance.freeTitle')}</dt><dd><Num n={budgeted.free} /> {unit}</dd></div>
+                    <div><dt>{t('balance.budgetReserved')}</dt><dd><Num n={budgeted.reserved === 0 ? 0 : -budgeted.reserved} /> {unit}</dd></div>
+                    {budgeted.items.map((item) => (
+                      <div key={item.id}><dt>{item.name}</dt><dd><Num n={item.amount} /> {unit}</dd></div>
+                    ))}
+                  </>
+                )}
+              </dl>
+            </section>
+            <section>
+              <div className="b-section-head"><h3>{t('basicPc.assetsLiabilities')}</h3></div>
+              <dl className="b-amounts">
+                <div><dt>{t('balance.gap')}</dt><dd className={`b-gap${gap < 0 ? ' neg' : ''}`}>{formatYen(gap)} {unit}</dd></div>
+              </dl>
+            </section>
           </div>
         </div>
         <p className="note">{t('balance.note')}</p>

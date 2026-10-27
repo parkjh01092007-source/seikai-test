@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { t } from '../text.js'
 import {
-  PRESETS, ACCENTS, ACCENT_LABELS, ACCENT_COLORS, OPACITY_MIN, OPACITY_MAX, presetOf, menuOpacity, chosenColor, quickAccent,
+  visiblePresets, ACCENTS, ACCENT_LABELS, ACCENT_COLORS, OPACITY_MIN, OPACITY_MAX, presetOf, menuOpacity, chosenColor, quickAccent,
   setPreset, setColor, resetColor, setQuickAccent, setOpacity, resetOpacity, loadTheme, rememberTheme, applyTheme,
 } from '../themes.js'
 
@@ -28,7 +28,7 @@ export default function DisplaySettings() {
         <label>
           {t('theme.preset')}{' '}
           <select value={theme.preset} onChange={(e) => change(setPreset(theme, e.target.value))}>
-            {PRESETS.map((p) => <option key={p.id} value={p.id}>{t(p.label)}</option>)}
+            {visiblePresets().map((p) => <option key={p.id} value={p.id}>{t(p.label)}</option>)}
           </select>
         </label>
       </p>

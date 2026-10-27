@@ -8,6 +8,7 @@ import { t } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import { usePhone } from '../layout.js'
 import { useGunjoPc } from '../gunjoPc.js'
+import { useBasicPc } from '../basicPc.js'
 import { useBandHost } from './bandHost.js'
 import BalanceArt from './BalanceArt.jsx'
 
@@ -67,6 +68,7 @@ export default function Adjustment({ data, update }) {
   const [stamp, setStamp] = useState(0) // 群青の PC：記録した直後に「調整済」の判子を押す。回数（押すたびに、動きを最初からやり直す）。入力を変えたら 0（判子は消す）
   const phone = usePhone()
   const gunjoPc = useGunjoPc()
+  const basicPc = useBasicPc()
   const bandHost = useBandHost()
   const rows = adjustmentRows(accounts, entries)
   const balances = new Map(rows.map((r) => [r.account.id, r.balance]))
@@ -175,11 +177,12 @@ export default function Adjustment({ data, update }) {
   }
 
   return (
-    <div className="adjustment">
-      <h2>{t('adjustment.title')}</h2>
+    <div className={basicPc ? 'adjustment b-page b-adjustment' : 'adjustment'}>
+      {basicPc ? <div className="b-page-head"><h2>{t('adjustment.title')}</h2></div> : <h2>{t('adjustment.title')}</h2>}
       <p className="note">{t('adjustment.note')}</p>
       <form onSubmit={save}>
-        <select aria-label={t('common.account')} value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+        {basicPc && <label className="b-field-label" htmlFor="b-adjustment-account">{t('common.account')}</label>}
+        <select id={basicPc ? 'b-adjustment-account' : undefined} aria-label={t('common.account')} value={accountId} onChange={(e) => setAccountId(e.target.value)}>
           <option value="">{t('common.chooseAccount')}</option>
           {groupByType(rows.map((r) => r.account)).map((g) => (
             <optgroup key={g.type} label={g.label}>
@@ -194,7 +197,7 @@ export default function Adjustment({ data, update }) {
         <label>
           {t('adjustment.actual')}{' '}<input inputMode="numeric" aria-label={t('adjustment.actual')} value={actual} onChange={(e) => setActual(e.target.value)} />{currencyUnit(currency)}
         </label>
-        <button>{t('adjustment.submit')}</button>
+        <button className={basicPc ? 'b-primary' : undefined}>{t('adjustment.submit')}</button>
         {error && <span className="error">{error}</span>}
         {message && <span className="note">{message}</span>}
       </form>

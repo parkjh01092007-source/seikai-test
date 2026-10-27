@@ -22,6 +22,7 @@ import Tabs from './Tabs.jsx'
 import { versionLabel, BUILT_AT, CURRENT_BUILD } from '../pwa.js'
 import { usePhone } from '../layout.js'
 import { useGunjoPc } from '../gunjoPc.js'
+import { useBasicPc } from '../basicPc.js'
 import { Icon, IconButton } from './Icon.jsx'
 
 const SIDE_KEYS = { debit: 'common.debit', credit: 'common.credit' } // 借方・貸方の名前（辞書のキー）
@@ -285,6 +286,7 @@ export default function Settings({ driveSync, data, update, openPanel, replaceDa
   }
   const phone = usePhone()
   const gunjoPc = useGunjoPc()
+  const basicPc = useBasicPc()
 
   // 項目の中身（id → 中身）。並びと見出しは settingsSections.js。項目を足すときは、そちらと、ここの両方に足す（settingsSections.check.js が合っているか見る）
   const BODIES = {
@@ -320,6 +322,11 @@ export default function Settings({ driveSync, data, update, openPanel, replaceDa
             <FavoriteSide side="debit" data={data} update={update} />
             <FavoriteSide side="credit" data={data} update={update} />
           </div>
+        ) : basicPc ? (
+          <div className="b-fav-cols">
+            <FavoriteSide side="debit" data={data} update={update} />
+            <FavoriteSide side="credit" data={data} update={update} />
+          </div>
         ) : (
           <>
             <FavoriteSide side="debit" data={data} update={update} />
@@ -345,12 +352,27 @@ export default function Settings({ driveSync, data, update, openPanel, replaceDa
   // 見た目は、クラス（set-title・sub-title・sub-sub）で決める（タグの大きさに頼らない）
   const items = SETTINGS_SECTIONS.filter((s) => s.group === tab && (phone || !s.phoneOnly)) // スマホの形だけの項目（書き出し・読み込み）は、PC では出さない
   return (
-    <div className="settings">
-      {!gunjoPc && <h2>{t('settings.title')}</h2>}
+    <div className={basicPc ? 'settings b-page b-settings' : 'settings'}>
+      {basicPc ? (
+        <div className="b-page-head"><h2>{t('settings.title')}</h2><p>{t('basicPc.settingsLead')}</p></div>
+      ) : !gunjoPc && <h2>{t('settings.title')}</h2>}
       <Tabs label={t('settings.title')} tabs={SETTINGS_GROUPS.map((g) => ({ id: g.id, title: t(g.title) }))} current={tab} onChange={onTab} prefix="settings" />
       <div role="tabpanel" id={panelDomId(tab)} aria-labelledby={tabDomId(tab)} className="set-panel">
         {items.map(({ id, title, en, danger }) => {
-          const item = <><h3 className="set-title">{t(title)}{gunjoPc && <small lang="en">{t(en)}</small>}</h3>{BODIES[id]()}</>
+          if (basicPc && tab === 'general') {
+            return (
+              <div key={id} className="b-setting-row">
+                <h3 className="set-title">{t(title)}</h3>
+                <div className="b-setting-control">
+                  {id === 'language' && <p>{t('basicPc.languageLabel')}</p>}
+                  {id === 'currency' && <p>{t('basicPc.currencyLabel')}</p>}
+                  {BODIES[id]()}
+                  {id === 'display' && <p className="note">{t('basicPc.deviceThemeNote')}</p>}
+                </div>
+              </div>
+            )
+          }
+          const item = <>{basicPc ? <div className="b-section-head"><h3 className="set-title">{t(title)}</h3></div> : <h3 className="set-title">{t(title)}{gunjoPc && <small lang="en">{t(en)}</small>}</h3>}{BODIES[id]()}</>
           // 危ない操作（仕訳の一括削除・全体の初期化）は、エラーの色の枠で囲む（ボタンの動き・確認画面は変えない）。ほかの項目は、枠も囲みも足さない
           return danger ? <div key={id} className="set-danger">{item}</div> : <Fragment key={id}>{item}</Fragment>
         })}

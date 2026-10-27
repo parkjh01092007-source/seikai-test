@@ -778,6 +778,9 @@
   :root[data-theme='gunjo'] .g-back .icon { width: 16px; height: 16px; }
   :root[data-theme='gunjo'] .g-stat-num .user-text { font-size: 28px; font-weight: 500; line-height: 1.15; } /* カード名（自分の入力）は、システムのゴシック */
   :root[data-theme='gunjo'] .g-next { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; margin-bottom: 14px; }
+  :root[data-theme='gunjo'] .g-next { flex-wrap: wrap; }
+  :root[data-theme='gunjo'] .g-next > .g-next-note { flex: 0 0 100%; margin-top: 4px; font-family: var(--font-gothic); font-size: 12px; color: var(--color-muted); } /* 引き落としの返済を先に記録ずみのとき（次の引き落とし分が 0）の 1 行 */
+  :root[data-theme='gunjo'] .g-paid-note { font-family: var(--font-gothic); font-size: 12px; color: var(--color-muted); }
   :root[data-theme='gunjo'] .g-next > span { font-family: var(--font-mincho); font-size: 16px; }
   :root[data-theme='gunjo'] .g-next > b { font-family: var(--font-num); font-size: 28px; font-weight: 500; color: var(--color-accent); }
   :root[data-theme='gunjo'] .g-next > b.neg { color: var(--color-error); }

@@ -15,6 +15,7 @@ import { BandHostContext, BandTopContext, BandRoadContext } from './sections/ban
 // 群青の PC のホームの帯（メニューはホームでは出さない）
 const HOME_BAND = { label: 'home.title', en: 'home.titleEn', band: 'S' }
 import { useGunjoPc } from './gunjoPc.js'
+import { useBasicPc } from './basicPc.js'
 import { ConfirmContext, ConfirmDialog } from './sections/ConfirmDialog.jsx'
 import SaveLoadPanel from './sections/SaveLoadPanel.jsx'
 import ConflictDialog from './sections/ConflictDialog.jsx'
@@ -308,6 +309,7 @@ export default function App() {
   // 食い違いの確認画面（4.4）：食い違いが見つかったとき、ほかの画面・入力が開いていなければ、自動で開く（そうでなければ、帯を押すと開く）。「あとで決める」で閉じても、帯は残る。解決すると閉じる
   const [conflictOpen, setConflictOpen] = useState(false)
   const gunjoPc = useGunjoPc() // 群青の PC のときだけ、画面の上に帯（PageBand）を描く
+  const basicPc = useBasicPc() // 基本の PC のホームだけ、ヘッダーの左に「正解」を出す（入口のある画面は、縦タブの上の帯に出る）
   const [bandHost, setBandHost] = useState(null) // 帯の中の、画面の要点を入れる場所
   const [bandTop, setBandTop] = useState(null) // 帯の上の段の、ボタンを入れる場所
   const [bandRoad, setBandRoad] = useState(null) // 帯 L の一番下の、月の道を入れる場所
@@ -359,6 +361,7 @@ export default function App() {
         {band && <PageBand name={adjustPage ? t('cardAdjust.title') : t(band.label)} en={adjustPage ? t('cardAdjust.titleEn') : band.en ? t(band.en) : ''} kind={band.band} hostRef={setBandHost} topRef={setBandTop} roadRef={setBandRoad} />}
         {/* 右上の書き出し・読み込みの帯。スマホの形では出さない（同じ機能は 設定 → データ。index.css） */}
         {!newer && <header>
+          {basicPc && !entry && <span className="b-brand">{t('home.title')}</span>}
           <div>
             {/* 群青の PC：知らせは、書き出し・読み込みの下に、縦に並べる（月の選びと重ならない。帯 S・L とも同じ場所。gunjo-pc.css の g-notices） */}
             {gunjoPc ? <div className="g-notices">{updateNotice}{notice}</div> : <>{updateNotice}{notice}</>}

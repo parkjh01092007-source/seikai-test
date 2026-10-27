@@ -7,6 +7,7 @@ import { t } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import { usePhone } from '../layout.js'
 import { useGunjoPc } from '../gunjoPc.js'
+import { useBasicPc } from '../basicPc.js'
 import { AmountInput } from './Calculator.jsx'
 import { useBandHost } from './bandHost.js'
 import { BandStat } from './PageBand.jsx'
@@ -33,6 +34,7 @@ export default function Opening({ data, update }) {
   const [message, setMessage] = useState('')
   const phone = usePhone()
   const gunjoPc = useGunjoPc()
+  const basicPc = useBasicPc()
   const bandHost = useBandHost()
   const [place, setPlace] = useState('bottom') // 押した保存ボタン（'top' か 'bottom'）。知らせとエラーは、その横に出す
   const pressed = useRef('bottom') // 押したボタン（クリックの直後の submit で読む）。入力欄で Enter を押したときは、最初のボタン
@@ -95,8 +97,8 @@ export default function Opening({ data, update }) {
   }
 
   return (
-    <div className="opening">
-      <h2>{t('opening.title')}</h2>
+    <div className={basicPc ? 'opening b-page b-opening' : 'opening'}>
+      {basicPc ? <div className="b-page-head"><h2>{t('opening.title')}</h2></div> : <h2>{t('opening.title')}</h2>}
       <p className="note">{t('opening.noteEarmark')}</p>
       <p className="note">{t('opening.noteCard')}</p>
       <p className="note">{t('opening.noteEmpty')}</p>
@@ -117,7 +119,12 @@ export default function Opening({ data, update }) {
         )}
         {groupByType(openingAccounts(accounts)).map((g) => (
           <section key={g.type}>
-            <h3>{g.label}</h3>
+            {basicPc ? (
+              <>
+                <div className="b-section-head"><h3>{g.label}</h3><span className="note">{t('basicPc.amountUnit', { unit: currencyUnit(data.settings.currency) })}</span></div>
+                <div className="b-opening-columns"><span>{t('common.account')}</span><span>{t('opening.title')}</span></div>
+              </>
+            ) : <h3>{g.label}</h3>}
             {g.accounts.map((a) => (
               <label key={a.id} className="row">
                 <span>{a.name}</span>
@@ -139,7 +146,7 @@ export default function Opening({ data, update }) {
           </div>
         ) : (
           <>
-            <button><Icon name="check" />{t('common.save')}</button>
+            <button className={basicPc ? 'b-primary' : undefined}><Icon name="check" />{t('common.save')}</button>
             {error && <span className="error" role="alert">{error}</span>}
             {message && <span className="note" role="status">{message}</span>}
           </>

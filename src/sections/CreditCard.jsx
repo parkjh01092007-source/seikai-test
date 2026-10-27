@@ -4,11 +4,12 @@ import './balance.css'
 import './creditcard.css'
 import CreditCardDetail from './CreditCardDetail.jsx'
 import { cardReports, cardMonthTotal, addCard, previousMonth, formatYen, currencyUnit } from '../ledgerLogic.js'
-import { cardLanes, periodStatus, nextPayLane, lanePos, previewLine, shortDate } from '../flowArt.js'
+import { cardLanes, paidInAdvance, periodStatus, nextPayLane, lanePos, previewLine, shortDate } from '../flowArt.js'
 import { toHash } from '../route.js'
 import { today } from '../today.js'
 import { t } from '../text.js'
 import { useGunjoPc } from '../gunjoPc.js'
+import { useBasicPc } from '../basicPc.js'
 import { useBandHost } from './bandHost.js'
 import { BandStat, signedYen } from './PageBand.jsx'
 import { Icon } from './Icon.jsx'
@@ -46,6 +47,7 @@ function AddCardForm({ data, update, now }) {
   const [pay, setPay] = useState('')
   const [error, setError] = useState('')
   const gunjoPc = useGunjoPc()
+  const basicPc = useBasicPc()
 
   const submit = (e) => {
     e.preventDefault()
@@ -75,10 +77,10 @@ function AddCardForm({ data, update, now }) {
   return (
     <>
     <form className="card-form" onSubmit={submit}>
-      <input placeholder={t('card.name')} aria-label={t('card.name')} value={name} onChange={(e) => setName(e.target.value)} />
+      {basicPc ? <label className="b-field"><span>{t('card.name')}</span><input placeholder={t('card.name')} aria-label={t('card.name')} value={name} onChange={(e) => setName(e.target.value)} /></label> : <input placeholder={t('card.name')} aria-label={t('card.name')} value={name} onChange={(e) => setName(e.target.value)} />}
       <label>{t('card.closingDay')}{' '}<input className="day" inputMode="numeric" aria-label={t('card.closingDay')} value={closing} onChange={(e) => setClosing(e.target.value)} />{' '}{t('card.dayUnit')}</label>
       <label>{t('card.payDay')}{' '}<input className="day" inputMode="numeric" aria-label={t('card.payDay')} value={pay} onChange={(e) => setPay(e.target.value)} />{' '}{t('card.dayUnit')}</label>
-      <button><Icon name="plus" />{t('card.add')}</button>
+      <button className={basicPc ? 'b-primary' : undefined}><Icon name="plus" />{t('card.add')}</button>
       {error && <span className="error">{error}</span>}
     </form>
     <p className="note">{t('card.closingDayHint')}</p>
@@ -92,6 +94,7 @@ function CardTile({ report: r, now, unit }) {
   const last = lanes.find((l) => l.closingDate === r.lastClosing) // 次の引き落とし分の期
   const open = lanes.find((l) => l.open)
   const paid = periodStatus(last) === 'paid'
+  const ahead = paidInAdvance(r, now) // 引き落としの返済を先に記録ずみ（次の引き落とし分が 0）：1 行の説明
   return (
     <li>
       <a className={`card-button g-cardtile${r.account.active ? '' : ' inactive'}`} href={cardHash(r.account.id)}>
@@ -106,6 +109,7 @@ function CardTile({ report: r, now, unit }) {
           paid={paid}
         />
         <span className="g-sub-row">
+          {ahead && <span className="g-paid-note">{t('card.paidAhead')}</span>}
           {open.amount > 0 && <span>{t('card.periodUsage', { amount: `${formatYen(open.amount)}${unit}` })}</span>}
           <span className="g-sub-tag">
             {paid ? <StateTag tone="stamp" title={t('card.statusPaidHint')}>{t('card.statusPaid')}</StateTag> : <StateTag tone="live">{t('card.statusClosed')}</StateTag>}
@@ -119,9 +123,10 @@ function CardTile({ report: r, now, unit }) {
 // detailId は # から来る（App が渡す）。null なら一覧
 export default function CreditCard({ data, update, detailId = null }) {
   const gunjoPc = useGunjoPc()
+  const basicPc = useBasicPc()
   const bandHost = useBandHost()
   const [formOpen, setFormOpen] = useState(false) // 群青の PC：「カードを追加」の札を開いているか（カードが 0 枚のときは、いつも開く）
-  if (gunjoPc && detailId === 'adjust') return <CardAdjust data={data} update={update} /> // クレカ残高調整ページ。ほかの形では 'adjust' は一覧と同じ（selected が見つからない）
+  if ((gunjoPc || basicPc) && detailId === 'adjust') return <CardAdjust data={data} update={update} /> // 既存の URL と処理を使い、基本 PC にも表示する。スマホ・ほかのテーマは従来どおり
   const now = today()
   const unit = currencyUnit(data.settings.currency)
   const reports = cardReports(data.accounts, data.entries, now)
@@ -130,7 +135,7 @@ export default function CreditCard({ data, update, detailId = null }) {
   // カードが消えたら（削除など）selected が見つからないので、一覧に戻る（# の書き換えは App がする）
   if (selected) {
     return (
-      <div className={gunjoPc ? 'report g-rep' : 'report'}>
+      <div className={gunjoPc ? 'report g-rep' : basicPc ? 'report b-page b-card-detail' : 'report'}>
         <CreditCardDetail card={selected} backHref={cardHash(null)} unit={unit} />
       </div>
     )
@@ -183,9 +188,9 @@ export default function CreditCard({ data, update, detailId = null }) {
   }
 
   return (
-    <div className="report">
-      <h2>{t('card.title')}</h2>
-      <h3>{t('card.totalTitle')}</h3>
+    <div className={basicPc ? 'report b-page b-cards' : 'report'}>
+      {basicPc ? <div className="b-page-head"><h2>{t('card.title')}</h2><p>{t('basicPc.cardsLead')}</p><a className="b-card-adjust-link" href={cardHash('adjust')}>{t('cardAdjust.linkLabel')}</a></div> : <h2>{t('card.title')}</h2>}
+      {basicPc ? <div className="b-section-head"><h3>{t('card.totalTitle')}</h3></div> : <h3>{t('card.totalTitle')}</h3>}
       <div className="table-box"><table>
         <tbody>
           <tr><td>{t('card.thisMonthRow', { month: thisMonth.month })}</td><td><Num n={thisMonth.amount} />{unit}</td></tr>
@@ -193,7 +198,7 @@ export default function CreditCard({ data, update, detailId = null }) {
         </tbody>
       </table></div>
       <p className="note">{t('card.totalNote')}</p>
-      <h3>{t('card.listTitle')}</h3>
+      {basicPc ? <div className="b-section-head"><h3>{t('card.listTitle')}</h3></div> : <h3>{t('card.listTitle')}</h3>}
       {reports.length === 0 ? <p className="note">{t('card.empty')}</p> : (
         <ul className="cards">
           {reports.map((r) => (
@@ -206,7 +211,7 @@ export default function CreditCard({ data, update, detailId = null }) {
           ))}
         </ul>
       )}
-      <h3>{t('card.add')}</h3>
+      {basicPc ? <div className="b-section-head"><h3>{t('card.add')}</h3></div> : <h3>{t('card.add')}</h3>}
       <AddCardForm data={data} update={update} />
       <p className="note">{t('card.newNote')}</p>
     </div>

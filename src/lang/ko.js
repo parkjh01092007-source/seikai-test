@@ -1,6 +1,43 @@
 // 韓国語の辞書。キーと {名前} は ja.js と同じにする（食い違いは text.check.js が見つける）。ここにないキーは、日本語で出る（仕様 6.2）。
 // 訳は、母の韓国語版（gagyebu-public）の言葉を元にする。口調は 합니다체。科目の名前（データ）と「円」は日本語のまま（17(c) で扱う）。
 export default {
+  // 基本 PC：以下の basicPc.* は、本人が監修済み（2026-10-27）。
+  'basicPc.homeLead': '입구를 선택해 주세요.',
+  'basicPc.homeDesc.ledger': '분개 기록, 잔액과 월별 확인, 계정과목 관리',
+  'basicPc.homeDesc.skills': '스킬 등록과 관리',
+  'basicPc.homeDataNote': '화면 오른쪽 위에서 데이터를 내보내거나 가져올 수 있습니다.',
+  'basicPc.entriesLead': '거래 기록과 목록',
+  'basicPc.entryAdd': '분개 추가',
+  'basicPc.entryHint': '차변・대변과 금액 입력',
+  'basicPc.operations': '편집・삭제',
+  'basicPc.balanceLead': '현재 잔액 확인',
+  'basicPc.assetsLiabilities': '자산과 부채',
+  'basicPc.monthlyLead': '월별 집계',
+  'basicPc.expensePart': '비용의 부',
+  'basicPc.revenuePart': '수익의 부',
+  'basicPc.amountUnit': '금액({unit})',
+  'basicPc.difference': '차액',
+  'basicPc.settingsLead': '앱 설정 변경',
+  'basicPc.languageLabel': '표시할 언어',
+  'basicPc.currencyLabel': '표시할 통화 단위',
+  'basicPc.deviceThemeNote': '이 기기에 설정이 저장됩니다.',
+  // 基本 PC 段 2（本人が監修済み。2026-10-27）
+  'basicPc.skillsList': '등록한 스킬',
+  'basicPc.bookDetails': '기록',
+  // 基本 PC 段 3（本人が監修済み。2026-10-27）
+  // 基本 PC 段 6（本人が監修済み。2026-10-27）
+  'basicPc.subsLead': '매월 지출의 등록과 확인',
+  'basicPc.subsList': '등록한 정기 지출',
+  'basicPc.subsLegend': '최근 12개월　완=기록 완료　예=예정　전=등록 전　휴=사용 안 함',
+  'basicPc.subsDone': '완',
+  'basicPc.subsWait': '예',
+  'basicPc.subsBefore': '전',
+  'basicPc.subsSkip': '휴',
+  'basicPc.cardsLead': '카드 이용액과 출금 확인',
+  'basicPc.cardDetailLead': '출금과 청구 기간별 이용액',
+  'basicPc.budgetsLead': '월 예산 확인과 등록・이력 관리',
+  'basicPc.accountsDesc': '계정과목 추가・이름 변경・사용하지 않음 설정',
+
   'language.title': '언어',
   'balanceView.title': '자유롭게 쓸 수 있는 돈의 처음 표시',
 
@@ -40,6 +77,7 @@ export default {
   'home.title': '정해(正解)', // 漢字を含む。text.check.js の KANJI_KEYS_IN_KO で許している
   'nav.toHome': '홈으로',
   'nav.menu': '메뉴',
+  'nav.current': '표시 중',
 
   // 画面の定義（nav.js の NAV）：入口・グループ・タブの名前
   'nav.entry.skills': '스킬',
@@ -566,6 +604,7 @@ export default {
   'card.listTitle': '카드',
   'card.empty': '카드가 없습니다',
   'card.next': '다음 결제분',
+  'card.paidAhead': '결제분은 상환이 이미 기록되어 있습니다',
   'card.newNote': '새 카드는 잔액 0에서 시작합니다. 사용 내역은 분개로 기록합니다.',
   'card.closingDayHint': '말일 마감 카드는 마감일에 31을 입력해 주세요.',
   'card.back': '목록으로 돌아가기',

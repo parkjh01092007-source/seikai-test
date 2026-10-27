@@ -10,6 +10,7 @@ import { useConfirm } from './ConfirmDialog.jsx'
 import { usePhone } from '../layout.js'
 import { Icon, IconButton } from './Icon.jsx'
 import { useGunjoPc } from '../gunjoPc.js'
+import { useBasicPc } from '../basicPc.js'
 import { useBandHost } from './bandHost.js'
 import { BandStat } from './PageBand.jsx'
 
@@ -89,7 +90,8 @@ function AccountEditor({ account, accounts, entries, subscriptions, budgets, ent
 }
 
 function AccountRow(props) {
-  return <li className={props.account.active ? '' : 'inactive'}><AccountEditor {...props} /></li>
+  const basicPc = useBasicPc()
+  return <li className={basicPc ? `b-account-row${props.account.active ? '' : ' inactive'}` : props.account.active ? '' : 'inactive'}><AccountEditor {...props} /></li>
 }
 
 // スマホの幅（spec-mobile.md 第6章）：一覧には科目名と役割だけ。行を押すと、その科目の編集の欄が開く（開いているのは1つだけ）。閉じると、入力途中の名前は捨てる
@@ -115,6 +117,7 @@ function AddForm({ accounts, onAdd }) {
   const [role, setRole] = useState('cash')
   const [error, setError] = useState('')
   const gunjoPc = useGunjoPc()
+  const basicPc = useBasicPc()
 
   const submit = (e) => {
     e.preventDefault()
@@ -130,7 +133,7 @@ function AddForm({ accounts, onAdd }) {
       <TypeSelect value={type} onChange={setType} />
       {type === 'asset' && <RoleSelect value={role} onChange={setRole} />}
       <input placeholder={t('ledger.namePlaceholder')} value={name} onChange={(e) => setName(e.target.value)} />
-      <button className={gunjoPc ? 'primary large' : undefined}><Icon name="plus" />{t('common.add')}</button>
+      <button className={gunjoPc ? 'primary large' : basicPc ? 'b-primary' : undefined}><Icon name="plus" />{t('common.add')}</button>
       {error && <span className="error">{error}</span>}
     </form>
   )
@@ -141,6 +144,7 @@ export default function Ledger({ data, update }) {
   const setAccounts = (next) => update({ ...data, accounts: next })
   const phone = usePhone()
   const gunjoPc = useGunjoPc()
+  const basicPc = useBasicPc()
   const bandHost = useBandHost()
   const typeEn = { asset: t('typeEn.asset'), liability: t('typeEn.liability'), revenue: t('typeEn.revenue'), expense: t('typeEn.expense'), equity: t('typeEn.equity') }
   const [openId, setOpenId] = useState(null) // スマホの幅で開いている科目（1つだけ）
@@ -149,13 +153,14 @@ export default function Ledger({ data, update }) {
 
   // 群青の PC（見本 E-accounts）：画面の名前は帯のマス。帯に科目の件数。節の見出しは「資産 ASSETS」の形（見本は単数 ASSET。開始残高にそろえて複数）
   return (
-    <div className={gunjoPc ? 'ledger g-accounts' : 'ledger'}>
+    <div className={gunjoPc ? 'ledger g-accounts' : basicPc ? 'ledger b-page b-accounts' : 'ledger'}>
       {bandHost && createPortal(<BandStat label={t('ledger.count')} value={accounts.length} unit={t('settings.countUnit')} />, bandHost)}
-      {!gunjoPc && <h2>{t('ledger.title')}</h2>}
+      {basicPc ? <div className="b-page-head"><h2>{t('ledger.title')}</h2><p>{t('basicPc.accountsDesc')}</p></div> : !gunjoPc && <h2>{t('ledger.title')}</h2>}
+      {basicPc && <div className="b-section-head"><h3>{t('common.add')}</h3></div>}
       <AddForm accounts={accounts} onAdd={(a) => setAccounts([...accounts, a])} />
       {TYPES.map((type) => (
         <section key={type}>
-          {gunjoPc ? <h2 className="g-h">{TYPE_LABELS[type]}<small lang="en">{typeEn[type]}</small></h2> : <h3>{TYPE_LABELS[type]}</h3>}
+          {gunjoPc ? <h2 className="g-h">{TYPE_LABELS[type]}<small lang="en">{typeEn[type]}</small></h2> : basicPc ? <div className="b-section-head"><h3>{TYPE_LABELS[type]}</h3></div> : <h3>{TYPE_LABELS[type]}</h3>}
           <ul className={phone ? 'accts' : ''}>
             {accounts.filter((a) => a.type === type).map((a) => {
               const props = {
