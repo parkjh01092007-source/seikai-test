@@ -3,12 +3,13 @@
 // 文言は描くときに取る（読み込み時に固めない）。言語を変えたら、App が全体を描き直す（一番外側の key に言語を入れる）。
 // 言語は、ブラウザごとに覚える（localStorage の別のキー。保存データ・書き出し・セーブファイルには入れない）。初期値はブラウザの言語（韓国語なら韓国語、それ以外は日本語）。覚えるのは、選んだときだけ。
 import ja from './lang/ja.js'
+import jo from './lang/jo.js'
 import ko from './lang/ko.js'
 
-export const LANGUAGES = ['ja', 'ko']
+export const LANGUAGES = ['ja', 'jo', 'ko'] // jo＝お嬢様語（日本語の言い回しを変えた辞書。書いていないキーは日本語が出る）
 export const DEFAULT_LANGUAGE = 'ja'
 export const LANGUAGE_KEY = 'orenoyome-language' // 保存データのキー（orenoyome）とは別
-export const dictionaries = { ja, ko }
+export const dictionaries = { ja, jo, ko }
 
 export const parseLanguage = (value) => (LANGUAGES.includes(value) ? value : DEFAULT_LANGUAGE)
 
@@ -69,5 +70,6 @@ export function setLanguage(language) {
 // html の lang を、今の言語に合わせる。document がなければ（node など）何もしない
 export function applyDocumentLanguage() {
   if (typeof document === 'undefined') return
-  document.documentElement.lang = current
+  document.documentElement.lang = current === 'jo' ? 'ja' : current // jo は言語の記号ではない。読み上げは日本語
+  document.documentElement.dataset.lang = current // お嬢様語（jo）だけ、言葉の切れ目で折り返す（index.css）
 }

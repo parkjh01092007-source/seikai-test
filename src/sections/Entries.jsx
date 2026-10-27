@@ -91,7 +91,7 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
   const copyPressed = copyValues !== null && applied === 'copy' && sameValues(copyValues)
   const copyTitle = lastEntry ? t('entries.copyLastTitle', { date: lastEntry.date, debit: accounts.find((a) => a.id === lastEntry.debitId)?.name ?? '', credit: accounts.find((a) => a.id === lastEntry.creditId)?.name ?? '', amount: formatMoney(lastEntry.amount, currency) }) : ''
   const copyButton = !basicPhone && lastEntry ? (
-    <button type="button" className={basicPc ? `copy-last${copyPressed ? ' on' : ''}` : copyPressed ? 'copy-last icon-only on' : 'copy-last icon-only'} aria-pressed={copyPressed} aria-label={t('entries.copyLast')} title={copyPressed ? t('entries.undoTitle', { text: copyTitle }) : copyTitle} onClick={() => press('copy', copyValues)}>{basicPc ? t('entries.copyLast') : <Icon name="copy" />}</button>
+    <button type="button" className={copyPressed ? 'copy-last icon-only on' : 'copy-last icon-only'} aria-pressed={copyPressed} aria-label={t('entries.copyLast')} title={copyPressed ? t('entries.undoTitle', { text: copyTitle }) : copyTitle} onClick={() => press('copy', copyValues)}><Icon name="copy" /></button>
   ) : null
   const [adding, setAdding] = useState(startAdding) // プリセットの追加の状態（日付の欄は隠れる）。startAdding：スマホの最初の選ぶ画面の「追加」から開いたとき、初めから追加の状態
   const [addDraft, setAddDraft] = useState({ icon: PRESET_ICON_PICKER[0], name: '' })
@@ -127,16 +127,16 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
     const date = f.date === noSpend.today ? t('entries.noSpendDateToday', { md }) : md // ボタンが日付の欄から離れたので、対象の日を、title・読み上げにいつも出す（今日は「10/22（今日）」）
     const why = { hasEntries: 'entries.noSpendHasEntries', future: 'entries.noSpendRange', old: 'entries.noSpendRange', invalid: 'entries.noSpendRange' }[can.reason]
     noSpendButton = (
-      <button type="button" className={shown ? 'no-spend on' : 'no-spend'} aria-pressed={shown} disabled={!shown && !can.ok}
+      <button type="button" className={`no-spend${basicPc ? ' icon-only' : ''}${shown ? ' on' : ''}`} aria-pressed={shown} disabled={!shown && !can.ok}
         aria-label={shown ? t('entries.noSpendDoneAria', { date }) : t('entries.noSpendAria', { date })}
         title={shown ? t('entries.noSpendUndoTitle', { date }) : can.ok ? t('entries.noSpendTitle', { date }) : t(why, { days: NO_SPEND_BACK_DAYS })}
-        onClick={() => noSpend.onToggle(f.date)}><Icon name={shown ? 'circleScribble' : 'circle'} />{shown ? (f.date === noSpend.today ? t('entries.noSpendDone') : t('entries.noSpendDoneDate', { md })) : label}</button>
+        onClick={() => noSpend.onToggle(f.date)}><Icon name={shown ? 'circleScribble' : 'circle'} />{basicPc ? null : shown ? (f.date === noSpend.today ? t('entries.noSpendDone') : t('entries.noSpendDoneDate', { md })) : label}</button>
     )
   }
   // 借方と貸方の交換ボタン。入力の札（variant='card'）では、下の quick-row の先頭（交換→コピー→今日は使っていない。大きさ・間隔はほかのボタンと同じ）、編集の行では、借方と貸方の欄の間（fields.swap）。プリセットの追加の状態には出さない
   const swapButton = swapOn && (
     <>
-      <button type="button" className={basicPc ? 'swap-accounts' : 'swap-accounts icon-only'} aria-label={t('entries.swapAccounts')} title={t('entries.swapTitle')} disabled={!f.debitId && !f.creditId} onClick={swap}>{basicPc ? t('entries.swapAccounts') : <Icon name="swap" />}</button>
+      <button type="button" className="swap-accounts icon-only" aria-label={t('entries.swapAccounts')} title={t('entries.swapTitle')} disabled={!f.debitId && !f.creditId} onClick={swap}><Icon name="swap" /></button>
       <span className="sr-only" aria-live="polite">{swapNote}</span>
     </>
   )

@@ -547,6 +547,48 @@
   :root[data-theme='basic'] .b-phone-monthly .statement.bs td:nth-child(4) { white-space: nowrap; overflow-wrap: normal; }
   :root[data-theme='basic'] .b-phone-monthly .print-section { margin-top: var(--b-space-6); }
 
+  /* 基本スマホの月次。印刷用には使わない。 */
+  :root[data-theme='basic'] .b-month-redesign .b-month-header { display: flex; align-items: center; justify-content: space-between; gap: var(--b-space-2); margin: var(--b-space-4) 0; }
+  :root[data-theme='basic'] .b-month-redesign .b-month-header h2 { margin: 0; font-size: var(--b-font-home-entry); }
+  :root[data-theme='basic'] .b-month-redesign .b-month-picker { display: flex; align-items: center; gap: var(--b-space-1); }
+  :root[data-theme='basic'] .b-month-redesign .b-month-picker input { width: 155px; }
+  :root[data-theme='basic'] .b-month-redesign .b-month-combined, :root[data-theme='basic'] .b-month-redesign .b-month-card, :root[data-theme='basic'] .b-month-redesign .b-month-books { background: var(--b-surface); border: 1px solid var(--b-side-line); }
+  :root[data-theme='basic'] .b-month-redesign .b-month-card { padding: var(--b-space-4); }
+  :root[data-theme='basic'] .b-month-redesign .b-month-combined .b-month-card { border: 0; }
+  :root[data-theme='basic'] .b-month-redesign .b-month-spending { border-top: 1px solid var(--b-side-line) !important; }
+  :root[data-theme='basic'] .b-month-redesign .b-month-card h3 { margin: 0; padding: 0; border: 0; font-size: var(--b-font-size); }
+  :root[data-theme='basic'] .b-month-redesign .b-month-card p { margin: var(--b-space-1) 0; }
+  :root[data-theme='basic'] .b-month-redesign .b-month-heading { display: flex; align-items: baseline; justify-content: space-between; gap: var(--b-space-2); margin-bottom: var(--b-space-2); }
+  :root[data-theme='basic'] .b-month-redesign .b-result { display: block; font-size: var(--b-font-heading); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-month-redesign .b-result-label { color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-month-redesign .b-expense-row { display: grid; grid-template-columns: minmax(60px, 1fr) minmax(30px, 1fr) auto; gap: var(--b-space-2); align-items: center; margin: var(--b-space-2) 0; font-size: var(--b-font-size); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-month-redesign .b-bar-track { display: block; height: var(--b-space-2); background: var(--b-table-head); }
+  :root[data-theme='basic'] .b-month-redesign .b-bar-fill { display: block; height: 100%; background: var(--b-active-bar); }
+  :root[data-theme='basic'] .b-month-redesign .b-expense-rest .b-bar-fill { background: var(--b-line); }
+  :root[data-theme='basic'] .b-month-redesign .chev { display: inline-block; margin-right: var(--b-space-2); }
+  :root[data-theme='basic'] .b-month-redesign .tabs { display: flex; margin: var(--b-space-4) 0 0; }
+  :root[data-theme='basic'] .b-month-redesign .tabs .tab { flex: 1; font-size: var(--b-font-size); }
+  :root[data-theme='basic'] .b-month-redesign .tabs .tab[aria-selected='true'] { color: var(--b-active-bar); font-weight: var(--b-weight-bold); border-bottom: 3px solid var(--b-active-bar); }
+  :root[data-theme='basic'] .b-month-redesign .b-trend-switch { display: flex; border-bottom: 1px solid var(--b-line); margin-top: var(--b-space-2); }
+  :root[data-theme='basic'] .b-month-redesign .b-trend-switch button { flex: 1; font-size: var(--b-font-size); border: 0; border-bottom: 3px solid var(--b-clear); background: var(--b-clear); }
+  :root[data-theme='basic'] .b-month-redesign .b-trend-switch button[aria-pressed='true'] { color: var(--b-active-bar); font-weight: var(--b-weight-bold); border-bottom-color: var(--b-active-bar); }
+  :root[data-theme='basic'] .b-month-redesign .b-trend-chart { width: 100%; margin-top: var(--b-space-3); }
+  :root[data-theme='basic'] .b-month-redesign .b-trend-chart svg { display: block; overflow: visible; }
+  :root[data-theme='basic'] .b-month-redesign .b-trend-chart text { fill: var(--b-muted); font-size: var(--b-font-small); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-month-redesign .b-trend-chart .b-trend-latest { fill: var(--b-active-bar); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-month-redesign .b-trend-zero { stroke: var(--b-muted); stroke-dasharray: 3 4; }
+  :root[data-theme='basic'] .b-month-redesign .b-trend-line { fill: none; stroke: var(--b-active-bar); stroke-width: 2; }
+  :root[data-theme='basic'] .b-month-redesign .b-trend-dot { fill: var(--b-active-bar); }
+  :root[data-theme='basic'] .b-phone-monthly .b-trend-net { display: flex; align-items: baseline; justify-content: space-between; gap: var(--b-space-2); margin: var(--b-space-2) 0 var(--b-space-0); }
+  :root[data-theme='basic'] .b-phone-monthly .b-trend-change { margin: var(--b-space-0); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-month-redesign .b-trend-table { overflow-x: auto; }
+  :root[data-theme='basic'] .b-month-redesign .b-trend-table th:not(:first-child), :root[data-theme='basic'] .b-month-redesign .b-trend-table td:not(:first-child) { text-align: right; white-space: nowrap; }
+  :root[data-theme='basic'] .b-month-redesign .b-month-books { margin-top: var(--b-space-4); }
+  :root[data-theme='basic'] .b-month-redesign .b-month-books > summary { display: flex; align-items: center; }
+  :root[data-theme='basic'] .b-month-redesign .b-month-books > summary small { display: block; color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-month-redesign .b-month-books > details, :root[data-theme='basic'] .b-month-redesign .b-books-actions { margin: var(--b-space-3) var(--b-space-4); }
+  :root[data-theme='basic'] .b-month-redesign .b-books-actions { display: flex; flex-wrap: wrap; gap: var(--b-space-2); }
+
   /* 貯蓄：PCと同じ固定幅・中央寄せ・currentColorの枠。表示対象と金額はスマホのまま。 */
   :root[data-theme='basic'] .b-phone-savings .b-phone-tag { float: left; display: block; box-sizing: border-box; width: var(--b-tag-w); margin-right: var(--b-space-3); padding: var(--b-space-0); text-align: center; white-space: nowrap; border: 1px solid currentColor; font-size: var(--b-font-size); line-height: var(--b-line-height); color: var(--b-positive); }
   :root[data-theme='basic'] .b-phone-savings .b-phone-tag.out { color: var(--b-negative); }

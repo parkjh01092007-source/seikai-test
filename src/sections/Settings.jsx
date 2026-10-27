@@ -7,7 +7,7 @@ import DriveSettings from './DriveSettings.jsx'
 import DriveBackups from './DriveBackups.jsx'
 import DisplaySettings from './DisplaySettings.jsx'
 import PresetSettings from './PresetSettings.jsx'
-import { t, LANGUAGES } from '../text.js'
+import { t, LANGUAGES, dictionaries } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import { BALANCE_VIEWS, BALANCE_VIEW_LABELS, loadBalanceView, rememberBalanceView } from '../storage.js'
 import {
@@ -292,7 +292,7 @@ export default function Settings({ driveSync, data, update, openPanel, replaceDa
   const BODIES = {
     language: () => (
       <select aria-label={t('language.title')} value={language} onChange={(e) => changeLanguage(e.target.value)}>
-        {LANGUAGES.map((code) => <option key={code} value={code}>{t(LANGUAGE_KEYS[code])}</option>)}
+        {LANGUAGES.map((code) => <option key={code} value={code}>{LANGUAGE_KEYS[code] ? t(LANGUAGE_KEYS[code]) : dictionaries[code]['language.' + code]}</option>)}
       </select>
     ),
     currency: () => (

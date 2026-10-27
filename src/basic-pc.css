@@ -51,6 +51,7 @@
     --b-amount-w: 130px;
     --b-control-h: 38px;
     --b-icon-h: 36px;
+    --b-tap-h: 44px;
     --b-entry-ops-w: 118px;
     --b-entry-cols: minmax(0, 1.65fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.65fr) var(--b-entry-ops-w);
   }
@@ -122,6 +123,8 @@
   :root[data-theme='basic'] .b-entries .b-entry-form > .b-primary .icon { width: var(--b-space-5); height: var(--b-space-5); }
   :root[data-theme='basic'] .b-entries .b-entry-form > .error { flex-basis: 100%; }
   :root[data-theme='basic'] .b-entries .quick-host { margin-top: var(--b-space-4); }
+  :root[data-theme='basic'] .b-entries .quick-row .icon-only { width: var(--b-tap-h); height: var(--b-tap-h); min-height: var(--b-tap-h); } /* 入れ替え・前回と同じ入力・今日は使っていない：文字をやめて絵だけ。押せる大きさは 44px */
+  :root[data-theme='basic'] .b-entries .quick-row .icon-only .icon { width: var(--b-font-large); height: var(--b-font-large); }
   :root[data-theme='basic'] .b-entries .quick-row,
   :root[data-theme='basic'] .b-entries .preset-row { gap: var(--b-space-4); }
   :root[data-theme='basic'] .b-entries .preset-label { font-size: var(--b-font-small); color: var(--b-muted); }
@@ -178,6 +181,41 @@
   :root[data-theme='basic'] .b-report-more summary .icon { width: var(--b-font-small); height: var(--b-font-small); }
   :root[data-theme='basic'] .b-report-more details[open] summary .chev { transform: rotate(90deg); }
   :root[data-theme='basic'] .b-report-more details > :not(summary) { margin-left: var(--b-space-5); margin-right: var(--b-space-5); }
+
+  /* 月次の作り直し：この画面だけ。 */
+  :root[data-theme='basic'] .b-month-redesign .b-month-header { display: flex; align-items: center; gap: var(--b-space-8); border-bottom: 2px solid var(--b-text); padding-bottom: var(--b-space-4); margin-bottom: var(--b-space-6); }
+  :root[data-theme='basic'] .b-month-redesign .b-month-header h2 { margin: 0; font-size: var(--b-font-heading); }
+  :root[data-theme='basic'] .b-month-redesign .b-month-picker { display: flex; gap: var(--b-space-2); align-items: center; }
+  :root[data-theme='basic'] .b-month-redesign .b-month-columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--b-space-6); align-items: start; }
+  :root[data-theme='basic'] .b-month-redesign .b-month-card { background: var(--b-surface); border: 1px solid var(--b-side-line); padding: var(--b-space-6); margin-bottom: var(--b-space-4); }
+  :root[data-theme='basic'] .b-month-redesign .b-month-card h3 { font-size: var(--b-font-home-entry); margin: 0; }
+  :root[data-theme='basic'] .b-month-redesign .b-month-card p { margin: var(--b-space-2) 0; }
+  :root[data-theme='basic'] .b-month-redesign .b-month-heading { display: flex; align-items: baseline; justify-content: space-between; gap: var(--b-space-3); margin-bottom: var(--b-space-4); }
+  :root[data-theme='basic'] .b-month-redesign .b-result { display: block; font-size: var(--b-font-heading); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-month-redesign .b-expense-row { display: grid; grid-template-columns: minmax(70px, 1fr) minmax(40px, 2fr) auto; align-items: center; gap: var(--b-space-3); margin: var(--b-space-3) 0; font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-month-redesign .b-bar-track { display: block; height: var(--b-space-2); background: var(--b-table-head); }
+  :root[data-theme='basic'] .b-month-redesign .b-bar-fill { display: block; height: 100%; background: var(--b-active-bar); }
+  :root[data-theme='basic'] .b-month-redesign .b-expense-rest .b-bar-fill { background: var(--b-line); }
+  :root[data-theme='basic'] .b-month-redesign summary { cursor: pointer; }
+  :root[data-theme='basic'] .b-month-redesign .chev { display: inline-block; margin-right: var(--b-space-2); }
+  :root[data-theme='basic'] .b-month-redesign details[open] > summary .chev { transform: rotate(90deg); }
+  :root[data-theme='basic'] .b-month-redesign .b-trend-switch { display: flex; border-bottom: 1px solid var(--b-line); margin-top: var(--b-space-5); }
+  :root[data-theme='basic'] .b-month-redesign .b-trend-switch button { flex: 1; border: 0; border-bottom: 3px solid var(--b-clear); background: var(--b-clear); }
+  :root[data-theme='basic'] .b-month-redesign .b-trend-switch button[aria-pressed='true'] { color: var(--b-active-bar); font-weight: var(--b-weight-bold); border-bottom-color: var(--b-active-bar); }
+  :root[data-theme='basic'] .b-month-redesign .b-trend-chart { width: 100%; margin: var(--b-space-5) 0; }
+  :root[data-theme='basic'] .b-month-redesign .b-trend-chart svg { display: block; overflow: visible; }
+  :root[data-theme='basic'] .b-month-redesign .b-trend-chart text { fill: var(--b-muted); font-size: var(--b-font-small); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-month-redesign .b-trend-chart .b-trend-latest { fill: var(--b-active-bar); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-month-redesign .b-trend-zero { stroke: var(--b-muted); stroke-dasharray: 3 4; }
+  :root[data-theme='basic'] .b-month-redesign .b-trend-line { fill: none; stroke: var(--b-active-bar); stroke-width: 2; }
+  :root[data-theme='basic'] .b-month-redesign .b-trend-dot { fill: var(--b-active-bar); }
+  :root[data-theme='basic'] .b-month-redesign .b-trend-table { overflow-x: auto; }
+  :root[data-theme='basic'] .b-month-redesign .b-trend-table th:not(:first-child), :root[data-theme='basic'] .b-month-redesign .b-trend-table td:not(:first-child) { text-align: right; white-space: nowrap; }
+  :root[data-theme='basic'] .b-month-redesign .b-month-books { border: 1px solid var(--b-side-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-month-redesign .b-month-books > summary { display: flex; align-items: center; padding: var(--b-space-4) var(--b-space-5); }
+  :root[data-theme='basic'] .b-month-redesign .b-month-books > summary small { display: block; color: var(--b-muted); }
+  :root[data-theme='basic'] .b-month-redesign .b-month-books > details, :root[data-theme='basic'] .b-month-redesign .b-books-actions { margin: var(--b-space-4) var(--b-space-5); }
+  :root[data-theme='basic'] .b-month-redesign .b-books-actions { display: flex; gap: var(--b-space-2); }
 
   /* 設定：一般の枝だけ。記帳・照会・データは、既存の CSS と DOM のまま。 */
   :root[data-theme='basic'] .b-settings .tabs { justify-content: flex-start; margin: var(--b-space-0) var(--b-space-0) var(--b-space-7); border-bottom: 1px solid var(--b-line); }

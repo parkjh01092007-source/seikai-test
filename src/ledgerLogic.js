@@ -786,6 +786,22 @@ export function balanceSheet(accounts, entries, month) {
   return { month, assets, assetTotal, liabilities, liabilityTotal, equity, profit, equityTotal, liabilityEquityTotal, balanced: assetTotal === liabilityEquityTotal }
 }
 
+// 月末の資産・負債と、その月の収支。記録のない月より前は出さない。
+export function balanceTrend(accounts, entries, endMonth, today, count = 12) {
+  if (!entries.length || !endMonth || !today || count <= 0) return []
+  const first = entries.reduce((m, e) => e.date.slice(0, 7) < m ? e.date.slice(0, 7) : m, entries[0].date.slice(0, 7))
+  let month = endMonth < today.slice(0, 7) ? endMonth : today.slice(0, 7)
+  const result = []
+  while (month >= first && result.length < count) {
+    const sheet = balanceSheet(accounts, entries, month)
+    const rows = accountBalances(accounts, entries.filter((e) => e.date.slice(0, 7) <= month)).rows
+    const earmarkTotal = sum(rows.filter((r) => r.account.type === 'asset' && r.account.role === 'earmark'), (r) => r.balance)
+    result.push({ month, assetTotal: sheet.assetTotal, liabilityTotal: sheet.liabilityTotal, netTotal: sheet.assetTotal - sheet.liabilityTotal, earmarkTotal, result: monthReport(accounts, entries, month).result })
+    month = previousMonth(month)
+  }
+  return result
+}
+
 // B/S の勘定式の並び（左：資産の部、右：負債の部と純資産の部）。結果は balanceSheet のものを並べるだけ。
 // セルは { kind: 'head' | 'item' | 'subtotal', name, amount }（head の amount は null）。下の合計は leftTotal（資産合計）と rightTotal（負債・純資産合計）
 export function balanceSheetColumns(sheet) {

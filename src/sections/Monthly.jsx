@@ -2,7 +2,11 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import './balance.css'
 import '../print.css'
-import { monthReport, livingBalance, balanceSheet, balanceSheetColumns, profitLossRows, previousMonth, issuedLabel, formatYen, formatMoney, currencyUnit, roadDays, expenseBreakdown } from '../ledgerLogic.js'
+import { monthReport, livingBalance, balanceSheet, balanceTrend, balanceSheetColumns, profitLossRows, previousMonth, nextMonth, issuedLabel, formatYen, formatMoney, currencyUnit, roadDays, expenseBreakdown } from '../ledgerLogic.js'
+import { expenseBars } from '../monthlyView.js'
+import TrendLine from './TrendLine.jsx'
+import Tabs from './Tabs.jsx'
+import { panelDomId, tabDomId } from '../tabs.js'
 import { today } from '../today.js'
 import { t } from '../text.js'
 import { usePhone } from '../layout.js'
@@ -210,6 +214,64 @@ function GunjoBody({ month, report, living, sheet, currency }) {
   )
 }
 
+function BasicMonthly({ accounts, entries, currency, month, setMonth, report, living, sheet, phone, onPrint }) {
+  const [metric, setMetric] = useState('netTotal')
+  const [tab, setTab] = useState('trend')
+  const metrics = [
+    { id: 'assetTotal', label: t('monthly.trendAsset') },
+    { id: 'liabilityTotal', label: t('monthly.trendLiability') },
+    { id: 'netTotal', label: t('monthly.trendNet') },
+  ]
+  const trendRows = month ? balanceTrend(accounts, entries, month, today()) : []
+  const current = trendRows[0]?.month === month ? trendRows[0] : null
+  const previous = current && trendRows[1]
+  const expenses = report ? expenseBars(report.expense) : null
+  const money = (n) => formatMoney(n, currency)
+  const bars = (rows, rest = false) => rows.map((r) => <div className={`b-expense-row${rest ? ' b-expense-rest' : ''}`} key={r.account.id}>
+    <span className="user-text">{r.account.name}</span><span className="b-bar-track"><span className="b-bar-fill" style={{ width: `${r.bar}%` }} /></span><span className={cls(r.amount)}>{money(r.amount)}</span>
+  </div>)
+  const summary = report && <section className="b-month-card b-month-summary">
+    {phone ? <div className="b-month-heading"><h3>{t('monthly.currentResult')}</h3><strong className={`b-result ${cls(report.result)}`}>{money(report.result)}</strong></div> : <><h3>{t('monthly.currentResult')}</h3><p className="b-result-label">{t('monthly.result')}</p><strong className={`b-result ${cls(report.result)}`}>{money(report.result)}</strong></>}
+    {!phone && <div className="b-summary-bars">{bars(expenseBars([{ account: { id: 'income', name: t('monthly.income') }, amount: report.revenueTotal }, { account: { id: 'expense', name: t('monthly.expense') }, amount: report.expenseTotal }]).top)}</div>}
+  </section>
+  const spending = report && <section className="b-month-card b-month-spending">
+    <div className="b-month-heading"><h3>{t('monthly.expense')}</h3><strong className={cls(report.expenseTotal)}>{money(report.expenseTotal)}</strong></div>
+    {expenses.top.length ? bars(expenses.top) : <p className="note">{t('monthly.expenseNone')}</p>}
+    {expenses.rest.length > 0 && <details className="b-expense-more"><summary><span className="chev">›</span>{t('monthly.expenseRest', { count: expenses.rest.length, amount: money(expenses.restTotal) })}</summary>{bars(expenses.rest, true)}</details>}
+  </section>
+  const livingPart = living && <section className="b-month-card b-month-living">
+    <div className="b-month-heading"><h3>{t('monthly.livingTitle')}</h3><strong className={cls(living.result)}>{money(living.result)}</strong></div>
+    <p>{t('monthly.livingFormula', { income: money(living.incomeTotal), expense: money(living.expenseTotal) })}</p>
+    {living.items.length === 0 ? <p className="note">{t('monthly.livingNone')}</p> : phone ? <LivingList living={living} currency={currency} /> : <LivingTable living={living} currency={currency} />}
+    {phone ? <details className="b-living-difference"><summary>{t('monthly.livingDifferenceTitle')}</summary><p>{t('monthly.livingDifference')}</p></details> : <p className="note">{t('monthly.livingDifference')}</p>}
+  </section>
+  const table = <div className="table-box b-trend-table"><table><thead><tr><th>{t('common.month')}</th><th>{t('monthly.trendAsset')}</th><th>{t('monthly.trendLiability')}</th><th>{t('monthly.trendNet')}</th>{!phone && <><th>{t('monthly.trendEarmark')}</th><th>{t('monthly.trendResult')}</th></>}</tr></thead><tbody>{trendRows.map((r) => <tr key={r.month}><td>{r.month}</td><td className={cls(r.assetTotal)}>{money(r.assetTotal)}</td><td className={cls(r.liabilityTotal)}>{money(r.liabilityTotal)}</td><td className={cls(r.netTotal)}>{money(r.netTotal)}</td>{!phone && <><td className={cls(r.earmarkTotal)}>{money(r.earmarkTotal)}</td><td className={cls(r.result)}>{money(r.result)}</td></>}</tr>)}</tbody></table></div>
+  const trend = <section className="b-month-card b-month-trend">{!phone && <div className="b-month-heading"><h3>{t('monthly.trend')}</h3><span className="note">{t('monthly.trendNote')}</span></div>}
+    {current ? <>{phone ? <p className="b-trend-net"><span>{t('monthly.trendNetMonth', { month: Number(month.slice(5)) })}</span><strong className={`b-result ${cls(current.netTotal)}`}>{money(current.netTotal)}</strong></p> : <><p>{t('monthly.trendNetMonth', { month: Number(month.slice(5)) })}</p><strong className={`b-result ${cls(current.netTotal)}`}>{money(current.netTotal)}</strong></>}<p className={`b-trend-change ${previous ? cls(current.netTotal - previous.netTotal) : 'note'}`}>{previous ? t('monthly.trendChange', { amount: money(current.netTotal - previous.netTotal) }) : t('monthly.trendNoPrevious')}</p>
+      <div className="b-trend-switch">{metrics.map((m) => <button type="button" key={m.id} aria-pressed={metric === m.id} onClick={() => setMetric(m.id)}>{m.label}</button>)}</div>
+      <TrendLine rows={[...trendRows].reverse()} metric={metric} label={metrics.find((m) => m.id === metric).label} currency={currency} phone={phone} />
+      {!phone && <details><summary>{t('monthly.trendTable')}</summary>{table}</details>}
+    </> : <p className="note">{t('monthly.trendEmpty')}</p>}
+  </section>
+  return <div className={phone ? 'report b-phone-p5 b-phone-monthly b-month-redesign' : 'report b-page b-monthly b-month-redesign'}>
+    <div className="b-month-header"><h2>{t('monthly.title')}</h2><div className="b-month-picker">
+      <button type="button" aria-label={t('entries.monthPrev')} disabled={!month} onClick={() => setMonth(previousMonth(month))}>‹</button>
+      <input type="month" aria-label={t('common.month')} value={month} onChange={(e) => setMonth(e.target.value)} />
+      <button type="button" aria-label={t('entries.monthNext')} disabled={!month} onClick={() => setMonth(nextMonth(month))}>›</button>
+      {!phone && <button type="button" onClick={() => setMonth(today().slice(0, 7))}>{t('common.thisMonth')}</button>}
+    </div></div>
+    {!month ? <p className="note">{t('common.chooseMonth')}</p> : <>
+      {phone ? <><div className="b-month-combined">{summary}{spending}</div><Tabs prefix="monthly-basic" label={t('monthly.trend')} tabs={[{ id: 'trend', title: t('monthly.trend') }, { id: 'living', title: t('monthly.livingTitle') }]} current={tab} onChange={setTab} /><div role="tabpanel" id={panelDomId('monthly-basic', tab)} aria-labelledby={tabDomId('monthly-basic', tab)}>{tab === 'trend' ? trend : livingPart}</div></> : <div className="b-month-columns"><div>{summary}{livingPart}{spending}</div><div>{trend}</div></div>}
+      <details className="b-month-books"><summary><span className="chev">›</span><span><b>{t('monthly.books')}</b><small>{t('monthly.booksDescription')}</small></span></summary>
+        {phone && <details><summary>{t('monthly.trendTable')}</summary>{table}</details>}
+        <Section title={t('monthly.plTitle', { month })}><p className="note">{t('monthly.unit', { unit: currencyUnit(currency) })}</p><ProfitLossTable report={report} /></Section>
+        <Section title={t('monthly.bsTitle', { month })} extra={!sheet.balanced && <span className="value error">{t('monthly.bsUnbalancedBadge')}</span>}><p className="note">{t('monthly.unit', { unit: currencyUnit(currency) })}</p>{phone ? <BalanceSheetStack sheet={sheet} /> : <BalanceSheetTable sheet={sheet} />}{sheet.balanced ? <p className="note">{t('monthly.bsBalanced')}</p> : <p className="error">{t('monthly.bsUnbalanced')}</p>}<p className="note">{t('monthly.bsNote')}</p></Section>
+        <div className="b-books-actions"><button type="button" onClick={() => setMonth(previousMonth(today()))}>{t('common.lastMonth')}</button><button type="button" onClick={onPrint}>{t('monthly.printView')}</button></div>
+      </details>
+    </>}
+  </div>
+}
+
 export default function Monthly({ data }) {
   const { accounts, entries } = data
   const currency = data.settings.currency
@@ -262,98 +324,8 @@ export default function Monthly({ data }) {
     )
   }
 
-  if (basicPc && !printView) {
-    return (
-      <div className="report b-page b-monthly">
-        <div className="b-page-head">
-          <h2>{t('monthly.title')}</h2>
-          <p>{t('basicPc.monthlyLead')}</p>
-        </div>
-        <div className="month-bar no-print">
-          <input type="month" aria-label={t('common.month')} value={month} onChange={(e) => setMonth(e.target.value)} />
-          <button type="button" onClick={() => setMonth(today().slice(0, 7))}>{t('common.thisMonth')}</button>
-          <button type="button" onClick={() => setMonth(previousMonth(today()))}>{t('common.lastMonth')}</button>
-          <button type="button" onClick={() => setPrintView(true)}>{t('monthly.printView')}</button>
-        </div>
-        {!month ? <p className="note">{t('common.chooseMonth')}</p> : (
-          <>
-            <div className="b-report-grid">
-              <div className="b-report-main">
-                <section>
-                  <div className="b-section-head">
-                    <h3>{t('basicPc.expensePart')}</h3>
-                    <span className="note">{t('monthly.unit', { unit: currencyUnit(currency) })}</span>
-                  </div>
-                  <div className="table-box"><table>
-                    <thead><tr><th>{t('common.account')}</th><th>{t('basicPc.amountUnit', { unit: currencyUnit(currency) })}</th></tr></thead>
-                    <tbody>
-                      {report.expense.map((r) => (
-                        <tr key={r.account.id}>
-                          <td className="user-text">{r.account.name}</td>
-                          <td className={cls(r.amount)}>{formatYen(r.amount)}</td>
-                        </tr>
-                      ))}
-                      <tr className="total"><td>{t('monthly.expenseTotal')}</td><td className={cls(report.expenseTotal)}>{formatYen(report.expenseTotal)}</td></tr>
-                    </tbody>
-                  </table></div>
-                </section>
-                <section>
-                  <div className="b-section-head">
-                    <h3>{t('basicPc.revenuePart')}</h3>
-                    <span className="note">{t('monthly.unit', { unit: currencyUnit(currency) })}</span>
-                  </div>
-                  <div className="table-box"><table>
-                    <thead><tr><th>{t('common.account')}</th><th>{t('basicPc.amountUnit', { unit: currencyUnit(currency) })}</th></tr></thead>
-                    <tbody>
-                      {report.revenue.map((r) => (
-                        <tr key={r.account.id}>
-                          <td className="user-text">{r.account.name}</td>
-                          <td className={cls(r.amount)}>{formatYen(r.amount)}</td>
-                        </tr>
-                      ))}
-                      <tr className="total"><td>{t('monthly.revenueTotal')}</td><td className={cls(report.revenueTotal)}>{formatYen(report.revenueTotal)}</td></tr>
-                    </tbody>
-                  </table></div>
-                </section>
-              </div>
-              <div className="b-report-side">
-                <section>
-                  <div className="b-section-head"><h3>{t('monthly.summaryTitle', { month })}</h3></div>
-                  <div className="table-box"><table><tbody>
-                    <Line name={t('monthly.revenueTotal')} amount={report.revenueTotal} currency={currency} />
-                    <Line name={t('monthly.expenseTotal')} amount={report.expenseTotal} currency={currency} />
-                    {(adj.gain !== 0 || adj.loss !== 0) && <Line name={t('monthly.adjustmentLine')} amount={adj.net} currency={currency} />}
-                    <tr className="total"><td>{t('monthly.result')}</td><td className={cls(report.result)}>{formatMoney(report.result, currency)}</td></tr>
-                  </tbody></table></div>
-                  <p className="note">{t('monthly.noteSummary')}</p>
-                </section>
-                <section>
-                  <div className="b-section-head"><h3>{t('monthly.livingTitle')}</h3></div>
-                  {living.items.length === 0 && <p className="note">{t('monthly.livingNone')}</p>}
-                  <LivingTable living={living} currency={currency} showDifference />
-                  <p className="note">{t('monthly.livingNote')}</p>
-                </section>
-              </div>
-            </div>
-            <div className="b-report-more">
-              <Section title={t('monthly.plTitle', { month })}>
-                <p className="note">{t('monthly.unit', { unit: currencyUnit(currency) })}</p>
-                <ProfitLossTable report={report} />
-              </Section>
-              <Section
-                title={t('monthly.bsTitle', { month })}
-                extra={!sheet.balanced && <span className="value error">{t('monthly.bsUnbalancedBadge')}</span>}
-              >
-                <p className="note">{t('monthly.unit', { unit: currencyUnit(currency) })}</p>
-                <BalanceSheetTable sheet={sheet} />
-                {sheet.balanced ? <p className="note">{t('monthly.bsBalanced')}</p> : <p className="error">{t('monthly.bsUnbalanced')}</p>}
-                <p className="note">{t('monthly.bsNote')}</p>
-              </Section>
-            </div>
-          </>
-        )}
-      </div>
-    )
+  if ((basicPc || basicPhone) && !printView) {
+    return <BasicMonthly accounts={accounts} entries={entries} currency={currency} month={month} setMonth={setMonth} report={report} living={living} sheet={sheet} phone={basicPhone} onPrint={() => setPrintView(true)} />
   }
 
   return (
