@@ -1049,7 +1049,7 @@ export function accountTrend(accounts, entries, accountId, endMonth, count = 12)
       if ((row.debit !== null) === debitIncreases) increase += row.entry.amount
       else decrease += row.entry.amount
     }
-    result.push({ month, balance: book.balance, increase, decrease })
+    result.push({ month, balance: book.balance, increase, decrease, amount: increase - decrease }) // amount：その月の金額（費用・収益の科目で見せる）
   }
   return result
 }

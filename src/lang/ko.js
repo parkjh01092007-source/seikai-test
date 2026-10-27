@@ -456,6 +456,9 @@ export default {
   'book.trendBalance': '월말 잔액',
   'book.trendIncrease': '당월 늘어난 금액',
   'book.trendDecrease': '당월 줄어든 금액',
+  'book.trendNow': '이번 달 금액',
+  'book.trendMonthly': '해당 월 금액',
+  'book.trendAmountAria': '{label}의 월별 금액. {month}월은 {amount}',
   'book.note': '보기만 하는 화면입니다. 편집・삭제는 \'분개\' 화면에서 합니다.',
   'book.empty': '분개가 없습니다',
   'book.jumpConfirm': '이 분개를 수정하기 위해 분개 화면으로 이동할까요?', // 仮訳（未監修）

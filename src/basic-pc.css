@@ -333,6 +333,8 @@
   :root[data-theme='basic'] .b-book .b-trend-zero { stroke: var(--b-muted); stroke-dasharray: 3 4; }
   :root[data-theme='basic'] .b-book .b-trend-line { fill: none; stroke: var(--b-active-bar); stroke-width: 2; }
   :root[data-theme='basic'] .b-book .b-trend-dot { fill: var(--b-active-bar); }
+  :root[data-theme='basic'] .b-book .b-trend-grid { stroke: var(--b-side-line); }
+  :root[data-theme='basic'] .b-book .b-trend-chart .b-trend-point { fill: var(--b-text); }
   :root[data-theme='basic'] .b-book .b-book-trend th:not(:first-child), :root[data-theme='basic'] .b-book .b-book-trend td:not(:first-child) { text-align: right; white-space: nowrap; }
 
   /* 科目管理：常時編集の行を維持。メモや変更不可の理由は一行下へ。 */
