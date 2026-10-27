@@ -8,6 +8,7 @@ import './skills.css'
 import { Icon, IconButton } from './Icon.jsx'
 import { useGunjoPc } from '../gunjoPc.js'
 import { useBasicPc } from '../basicPc.js'
+import { useBasicPhone } from '../basicPhone.js'
 import { useBandHost } from './bandHost.js'
 import { BandStat } from './PageBand.jsx'
 
@@ -62,6 +63,7 @@ export default function Skills({ data, update }) {
   const setSkills = (skills) => update({ ...data, skills })
   const gunjoPc = useGunjoPc()
   const basicPc = useBasicPc()
+  const basicPhone = useBasicPhone()
   const bandHost = useBandHost()
 
   const add = (e) => {
@@ -114,5 +116,5 @@ export default function Skills({ data, update }) {
       <div className="b-page-head"><h2>{t('nav.tab.skills')}</h2><p>{t('basicPc.homeDesc.skills')}</p></div>
       {body}
     </div>
-  ) : body
+  ) : basicPhone ? <div className="b-phone-skills">{body}</div> : body
 }

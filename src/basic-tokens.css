@@ -1,0 +1,45 @@
+/* 基本テーマの色・文字・余白の変数（PC とスマホで共通。条件なし）。
+   値は画像案 Documentsseikai-basic-pc-principles-20261027 の色。文字の組は 4.5:1 以上（basicPc.check.js が確かめる）。
+   基本 PC の規則（basic-pc.css）と、基本スマホの規則（basic-phone.css）が、この変数を使う。この中に規則は置かない（変数だけ）。 */
+:root[data-theme='basic'] {
+  --b-bg: #f6f6f3; /* * */
+  --b-surface: #ffffff; /* * */
+  --b-text: #1c211f;
+  --b-muted: #46534b;
+  --b-header-line: #b8bdb9; /* * */
+  --b-side-bg: #ecefeb; /* * */
+  --b-side-line: #c7cec8;
+  --b-active-bg: #e4edf7; /* * */
+  --b-active-bar: #22518a;
+  --b-navy: #203b5c;
+  --b-negative: #b42318;
+  --b-positive: #28604d;
+  --b-line: #a3afa6;
+  --b-table-head: #ecf0ed;
+  --b-total-bg: #f0f3f0;
+
+  --b-font-ui: 'Yu Gothic UI', 'Meiryo', sans-serif;
+  --b-font-size: 14px;
+  --b-font-small: 12px;
+  --b-font-label: 13px;
+  --b-font-heading: 24px;
+  --b-font-home-entry: 18px;
+  --b-font-large: 24px;
+  --b-weight-normal: 400;
+  --b-weight-bold: 700;
+  --b-line-height: 1.6;
+
+  --b-space-0: 0;
+  --b-space-1: 4px;
+  --b-space-2: 8px;
+  --b-space-3: 10px;
+  --b-space-4: 12px;
+  --b-space-5: 16px;
+  --b-space-6: 20px;
+  --b-space-7: 22px;
+  --b-space-8: 28px;
+  --b-space-9: 30px;
+  --b-space-10: 38px;
+  --b-shadow: none;
+  --b-clear: transparent;
+}

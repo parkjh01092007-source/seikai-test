@@ -7,6 +7,7 @@ import { t } from '../text.js'
 import { usePhone } from '../layout.js'
 import { useGunjoPc } from '../gunjoPc.js'
 import { useBasicPc } from '../basicPc.js'
+import { useBasicPhone } from '../basicPhone.js'
 import { useBandHost } from './bandHost.js'
 import { BandStat, signedYen } from './PageBand.jsx'
 import { HistRow, StateTag } from './FlowParts.jsx'
@@ -23,6 +24,7 @@ export default function Savings({ data }) {
   const phone = usePhone()
   const gunjoPc = useGunjoPc()
   const basicPc = useBasicPc()
+  const basicPhone = useBasicPhone()
   const bandHost = useBandHost()
 
   // 群青の PC（見本 E22-savings-rose）：左の列（.g-sv-col）に「今月の目標の札 → 科目ごとの表 → 注意書き → 鶏頭図の見かた」、右は青い面（SavingsRose。鶏頭図＋単月の棒グラフ）。
@@ -79,7 +81,7 @@ export default function Savings({ data }) {
   }
 
   return (
-    <div className={basicPc ? 'report b-page b-savings' : 'report'}>
+    <div className={basicPc ? 'report b-page b-savings' : basicPhone ? 'report b-phone-p5 b-phone-savings' : 'report'}>
       {basicPc ? <div className="b-page-head"><h2>{t('savings.title')}</h2></div> : <h2>{t('savings.title')}</h2>}
       {histories.length === 0 && <p className="note">{t('savings.noAccounts')}</p>}
       {histories.map((h) => (
@@ -91,7 +93,7 @@ export default function Savings({ data }) {
               {h.rows.map(({ entry, delta, total }) => (
                 <li key={entry.id}>
                   <span className="name">{entry.date} {name(entry.debitId === h.account.id ? entry.creditId : entry.debitId)}</span>
-                  <span className="value">{delta < 0 ? t('savings.out') : t('savings.in')} {formatYen(Math.abs(delta))}{unit}</span>
+                  <span className="value">{basicPhone ? <span className={`b-phone-tag${delta < 0 ? ' out' : ''}`}>{delta < 0 ? t('savings.out') : t('savings.in')}</span> : delta < 0 ? t('savings.out') : t('savings.in')} {formatYen(Math.abs(delta))}{unit}</span>
                   <span className="sub">
                     {entry.memo && <span>{entry.memo}</span>}
                     <span>{t('savings.cumulative')} <Num n={total} />{unit}</span>

@@ -6,6 +6,7 @@ import { t } from '../text.js'
 import { usePhone } from '../layout.js'
 import { useGunjoPc } from '../gunjoPc.js'
 import { useBasicPc } from '../basicPc.js'
+import { useBasicPhone } from '../basicPhone.js'
 import { useBandHost } from './bandHost.js'
 import { BandStat } from './PageBand.jsx'
 import { KIND_LABELS } from './Entries.jsx'
@@ -24,12 +25,13 @@ export default function LedgerBook({ data }) {
   const phone = usePhone()
   const gunjoPc = useGunjoPc()
   const basicPc = useBasicPc()
+  const basicPhone = useBasicPhone()
   const bandHost = useBandHost()
   const dateText = (d) => (gunjoPc ? d.replaceAll('-', '/') : d) // 群青の PC は、見本どおり 2026/10/02
   const heroValue = book ? `${book.balance < 0 ? '−' : ''}${formatYen(Math.abs(book.balance))}` : ''
 
   return (
-    <div className={`report${gunjoPc ? ` g-book${book ? '' : ' g-book-empty'}` : basicPc ? ' b-page b-book' : ''}`}>
+    <div className={`report${gunjoPc ? ` g-book${book ? '' : ' g-book-empty'}` : basicPc ? ' b-page b-book' : basicPhone ? ' b-phone-book' : ''}`}>
       {/* 群青の PC：画面の名前は帯のマス。帯に、選んだ科目の残高（マイナスは白地の上で読めるよう、赤にせず「−」を付ける） */}
       {bandHost && book && createPortal(<BandStat label={t('book.heroLabel', { name: book.account.name })} value={heroValue} unit={currencyUnit(data.settings.currency)} />, bandHost)}
       {basicPc ? <div className="b-page-head"><h2>{t('book.title')}</h2></div> : !gunjoPc && <h2>{t('book.title')}</h2>}

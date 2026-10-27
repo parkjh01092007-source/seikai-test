@@ -18,6 +18,7 @@ import { presetIconId, PRESET_ICON_PICKER } from '../icons.js'
 import IconPicker from './PresetIconPicker.jsx'
 import { useGunjoPc, useFixedEntries } from '../gunjoPc.js'
 import { useBasicPc } from '../basicPc.js'
+import { useBasicPhone } from '../basicPhone.js'
 import { createPortal } from 'react-dom'
 import { useBandHost, useBandTop, useBandRoad } from './bandHost.js'
 import { BandStat, signedYen } from './PageBand.jsx'
@@ -55,7 +56,8 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
   const options = entryAccountOptions(accounts, currentIds)
   const gunjoPc = useGunjoPc()
   const basicPc = useBasicPc()
-  const swapOn = gunjoPc || basicPc // 交換の処理は共用し、基本 PC と群青 PC だけに出す
+  const basicPhone = useBasicPhone()
+  const swapOn = gunjoPc || basicPc || basicPhone // 交換の処理は共用。基本スマホにも絵のボタンを出す
   const [swapNote, setSwapNote] = useState('') // 入れ替えたあとの読み上げ（見えない行）
   const [f, setF] = useState(initial)
   const [error, setError] = useState('')
@@ -88,7 +90,7 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
   const copyValues = lastEntry ? copyInputFromEntry(lastEntry, accounts) : null
   const copyPressed = copyValues !== null && applied === 'copy' && sameValues(copyValues)
   const copyTitle = lastEntry ? t('entries.copyLastTitle', { date: lastEntry.date, debit: accounts.find((a) => a.id === lastEntry.debitId)?.name ?? '', credit: accounts.find((a) => a.id === lastEntry.creditId)?.name ?? '', amount: formatMoney(lastEntry.amount, currency) }) : ''
-  const copyButton = lastEntry ? (
+  const copyButton = !basicPhone && lastEntry ? (
     <button type="button" className={basicPc ? `copy-last${copyPressed ? ' on' : ''}` : copyPressed ? 'copy-last icon-only on' : 'copy-last icon-only'} aria-pressed={copyPressed} aria-label={t('entries.copyLast')} title={copyPressed ? t('entries.undoTitle', { text: copyTitle }) : copyTitle} onClick={() => press('copy', copyValues)}>{basicPc ? t('entries.copyLast') : <Icon name="copy" />}</button>
   ) : null
   const [adding, setAdding] = useState(startAdding) // プリセットの追加の状態（日付の欄は隠れる）。startAdding：スマホの最初の選ぶ画面の「追加」から開いたとき、初めから追加の状態
@@ -226,7 +228,7 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
         {placeQuick}
         {fields.date}
         {fields.amount}
-        <div className="sheet-pair">{fields.debit}{fields.credit}</div>
+        <div className="sheet-pair">{fields.debit}{fields.swap}{fields.credit}</div>
         {fields.living}
         <Field label={t('common.memo')}><textarea className="memo-input" rows={3} aria-label={t('common.memo')} value={f.memo} onChange={(e) => set('memo')(e.target.value)} /></Field>
         {error && <span className="error">{error}</span>}
@@ -411,6 +413,7 @@ export default function Entries({ data, update }) {
   const phone = usePhone()
   const gunjoPc = useGunjoPc() // 群青の PC：月の欄と並べ替えのボタンの間の空白を描かない（間は 12px の余白だけ）
   const basicPc = useBasicPc()
+  const basicPhone = useBasicPhone()
   const fixedList = useFixedEntries() // 一覧の領域だけが中でスクロールする高さ
   const listRef = useRef(null)
   const bandHost = useBandHost()
@@ -444,7 +447,7 @@ export default function Entries({ data, update }) {
   const presetFull = canAddEntryPreset(presets)
   const plusItems = [
     { key: 'entry', icon: 'edit', label: t('plusMenu.entry'), onSelect: () => openSheet() },
-    { key: 'copy', icon: 'copy', label: t('plusMenu.copy'), disabledReason: lastEntry ? '' : t('plusMenu.copyNone'), onSelect: () => openSheet({ fill: copyInputFromEntry(lastEntry, accounts) }) },
+    ...(!basicPhone ? [{ key: 'copy', icon: 'copy', label: t('plusMenu.copy'), disabledReason: lastEntry ? '' : t('plusMenu.copyNone'), onSelect: () => openSheet({ fill: copyInputFromEntry(lastEntry, accounts) }) }] : []),
     { key: 'preset', icon: 'starPlus', label: t('plusMenu.preset'), disabledReason: presetFull.ok ? '' : presetFull.error, onSelect: () => openSheet({ startAdd: true }) },
     { key: 'nospend', icon: 'circle', label: t('plusMenu.noSpend'), onSelect: () => { setMenuOpen(false); setPicking(true) } },
   ]
@@ -641,7 +644,7 @@ export default function Entries({ data, update }) {
   const list = !month ? <p className="note">{t('common.chooseMonth')}</p> : groups.length === 0 ? <p className="note">{t('common.noEntriesInMonth')}</p> : withTens ? tens.map(renderTens) : groups.map(renderDay)
 
   return (
-    <div className={basicPc ? 'entries b-page b-entries' : 'entries'}>
+    <div className={basicPc ? 'entries b-page b-entries' : basicPhone ? 'entries b-phone-entries' : 'entries'}>
       {basicPc && <div className="b-page-head"><h2>{t('nav.tab.entries')}</h2><p>{t('basicPc.entriesLead')}</p></div>}
       {/* 群青の PC（見本 E-entries）：帯 L に、月の選び（前の月・今の月・次の月）、10月の費用と今月の仕訳の件数、月の道 */}
       {bandTop && createPortal(
@@ -711,7 +714,11 @@ export default function Entries({ data, update }) {
       {basicPc ? <div className="b-section-head b-entry-list-head"><h3>{t('entries.listTitle')}</h3></div> : <h2>{t('entries.listTitle')}</h2>}
       {!gunjoPc && <input type="month" aria-label={t('common.month')} value={month} onChange={(e) => changeMonth(e.target.value)} />}{gunjoPc ? null : ' '}
       {/* 押すたびに切り替える。表示は、押したら切り替わる先 */}
-      <IconButton icon="sort" label={t('entries.sortLabel', { now: t(ORDER_LABELS[order]), next: t(ORDER_LABELS[order === 'asc' ? 'desc' : 'asc']) })} onClick={() => setOrder(order === 'asc' ? 'desc' : 'asc')} />
+      {basicPhone ? (
+        <button type="button" className="b-phone-order" aria-label={t('entries.sortLabel', { now: t(ORDER_LABELS[order]), next: t(ORDER_LABELS[order === 'asc' ? 'desc' : 'asc']) })} onClick={() => setOrder(order === 'asc' ? 'desc' : 'asc')}>{order === 'asc' ? t('entries.orderOld') : t('entries.orderNew')}</button>
+      ) : (
+        <IconButton icon="sort" label={t('entries.sortLabel', { now: t(ORDER_LABELS[order]), next: t(ORDER_LABELS[order === 'asc' ? 'desc' : 'asc']) })} onClick={() => setOrder(order === 'asc' ? 'desc' : 'asc')} />
+      )}
       {basicPc && <p className="note b-entry-unit">{t('monthly.unit', { unit: currencyUnit(settings.currency) })}</p>}
       {list}
         </>

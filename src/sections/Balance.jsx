@@ -9,6 +9,7 @@ import { t } from '../text.js'
 import { usePhone } from '../layout.js'
 import { useGunjoPc } from '../gunjoPc.js'
 import { useBasicPc } from '../basicPc.js'
+import { useBasicPhone } from '../basicPhone.js'
 import { useBandHost, useBandRoad } from './bandHost.js'
 import { signedYen } from './PageBand.jsx'
 import MonthRoad from './MonthRoad.jsx'
@@ -29,6 +30,7 @@ export default function Balance({ data }) {
   const phone = usePhone()
   const gunjoPc = useGunjoPc()
   const basicPc = useBasicPc()
+  const basicPhone = useBasicPhone()
   const bandHost = useBandHost()
   const bandRoad = useBandRoad()
   const viewButtons = BALANCE_VIEWS.map((v) => (
@@ -205,7 +207,7 @@ export default function Balance({ data }) {
   if (phone) {
     const join = (items, render) => items.map((item, i) => <span key={item.id}>{i > 0 && t('common.separator')}{render(item)}</span>)
     return (
-      <div className="report">
+      <div className={basicPhone ? 'report b-phone-p5 b-phone-balance' : 'report'}>
         <div className="free-head">
           <h2 className="free-label">{t('balance.freeTitle')}</h2>
           <div className="view-toggle segmented" role="group" aria-label={t('balance.viewLabel')}>{viewButtons}</div>

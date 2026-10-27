@@ -1,0 +1,616 @@
+/* 基本のスマホの形（docs/plan-basic-pc-impl.md 18・20 章。P0〜P6：土台・仕訳・クレカと予算・メニューと元帳と設定・科目管理と開始残高と残高調整とスキル・ホームと残高と月次と貯蓄と定期支払い・補助画面）。
+   当てるのは、基本 かつ スマホの形のときだけ。ほかのプリセット・基本の PC・群青は、この中の規則にかからない（全規則が :root[data-theme='basic'] で始まる）。
+   スマホの条件は、layout.js の PHONE_QUERY と同じ（basicPhone.check.js が確かめる）。色・文字・余白は basic-tokens.css の変数（色を直接書かない）。
+   決まり（spec-mobile.md）：入力欄の文字は 16px 以上・押せる場所は 44px 以上・横にスクロールしない。DOM の分岐は useBasicPhone() だけ。 */
+@media screen and (max-width: 959.98px), screen and (pointer: coarse) and (hover: none) {
+  :root[data-theme='basic'] { --b-phone-content-w: 720px; /* 本文の最大幅（タッチ 1280 など広いスマホの形を中央寄せ） */ background: var(--b-bg); }
+  :root[data-theme='basic'] body { background: var(--b-bg); color: var(--b-text); font-family: var(--b-font-ui); }
+
+  /* ---- 上の帯：☰ と画面の名前。白い面・下に罫線（基本 PC のヘッダーと同じ色・線） ---- */
+  :root[data-theme='basic'] .sidetabs { background: var(--b-surface); border-bottom: 1px solid var(--b-header-line); color: var(--b-text); }
+  :root[data-theme='basic'] .sidetabs .toggle { color: var(--b-text); }
+  :root[data-theme='basic'] .sidetabs .bar-title { color: var(--b-text); font-weight: var(--b-weight-bold); }
+
+  /* ---- メニュー（☰ で開く）：縦タブの地・線・今いる入口の青い線（基本 PC の縦タブと同じ色）。開き方・形は今のまま ---- */
+  :root[data-theme='basic'] .sidetabs .panel { background: var(--b-side-bg); border-right: 1px solid var(--b-side-line); color: var(--b-text); }
+  :root[data-theme='basic'] .sidetabs h3 { color: var(--b-muted); }
+  :root[data-theme='basic'] .sidetabs a { color: var(--b-text); }
+  :root[data-theme='basic'] .sidetabs a[aria-current='page'] { background: var(--b-active-bg); box-shadow: inset 3px 0 0 var(--b-active-bar); }
+  :root[data-theme='basic'] .sidetabs .menu-last { color: var(--b-muted); }
+  :root[data-theme='basic'] .sidetabs .bottom { border-top: 1px solid var(--b-side-line); }
+
+  /* ---- 本文：左右の余白 16px。タッチ 1280 のような広いスマホの形は、最大幅を決めて中央寄せ ---- */
+  :root[data-theme='basic'] .content { box-sizing: border-box; max-width: var(--b-phone-content-w); margin: 0 auto; padding-left: var(--b-space-5); padding-right: var(--b-space-5); }
+  :root[data-theme='basic'] .main-col { background: var(--b-bg); }
+
+  /* ---- 右下の「＋」：形はそのまま、色だけ基本 PC の追加ボタンの紺 ---- */
+  :root[data-theme='basic'] .entry-fab { background: var(--b-navy); color: var(--b-surface); border-color: var(--b-navy); }
+
+  /* ---- P1：仕訳の一覧と、その中の入力・編集シートだけ。色は共通の変数、スマホの寸法はここで持つ ---- */
+  :root[data-theme='basic'] .b-phone-entries {
+    --b-phone-font: 16px;
+    --b-phone-control: 44px;
+    --b-phone-action: 48px;
+    --b-phone-order-w: 64px;
+    --b-phone-radius: 3px;
+    --space: var(--b-space-2);
+    font-size: var(--b-phone-font);
+    color: var(--b-text);
+    font-family: var(--b-font-ui);
+    min-width: 0;
+  }
+  :root[data-theme='basic'] .b-phone-entries > h2 { margin: var(--b-space-6) var(--b-space-0) var(--b-space-4); padding-bottom: var(--b-space-2); border-bottom: 1px solid var(--b-line); font-size: var(--b-font-home-entry); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-phone-entries > input[type='month'],
+  :root[data-theme='basic'] .b-phone-entries .sheet input,
+  :root[data-theme='basic'] .b-phone-entries .sheet select,
+  :root[data-theme='basic'] .b-phone-entries .sheet textarea { box-sizing: border-box; min-width: 0; max-width: 100%; min-height: var(--b-phone-control); padding: var(--b-space-2); border: 1px solid var(--b-line); border-radius: var(--b-phone-radius); background: var(--b-surface); color: var(--b-text); font-family: var(--b-font-ui); font-size: var(--b-phone-font); line-height: var(--b-line-height); box-shadow: var(--b-shadow); }
+  /* 月入力は entries 直下のまま。編集後に月入力へ戻す既存のフォーカス指定を保つ。 */
+  :root[data-theme='basic'] .b-phone-entries > input[type='month'] { width: calc(100% - var(--b-phone-order-w) - var(--b-space-5)); margin-right: var(--b-space-1); vertical-align: middle; }
+  :root[data-theme='basic'] .b-phone-entries > .b-phone-order,
+  :root[data-theme='basic'] .b-phone-entries .sheet button,
+  :root[data-theme='basic'] .b-phone-entries .card-actions button,
+  :root[data-theme='basic'] .b-phone-entries .plus-item { box-sizing: border-box; min-width: var(--b-phone-control); min-height: var(--b-phone-control); padding: var(--b-space-2); border: 1px solid var(--b-line); border-radius: var(--b-phone-radius); background: var(--b-surface); color: var(--b-text); font-family: var(--b-font-ui); font-size: var(--b-phone-font); line-height: var(--b-line-height); box-shadow: var(--b-shadow); }
+  :root[data-theme='basic'] .b-phone-entries > .b-phone-order { width: var(--b-phone-order-w); vertical-align: middle; font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-phone-entries button:focus-visible,
+  :root[data-theme='basic'] .b-phone-entries input:focus-visible,
+  :root[data-theme='basic'] .b-phone-entries select:focus-visible,
+  :root[data-theme='basic'] .b-phone-entries textarea:focus-visible { outline: 2px solid var(--b-active-bar); outline-offset: 2px; }
+  :root[data-theme='basic'] .b-phone-entries .note,
+  :root[data-theme='basic'] .b-phone-entries .preset-label,
+  :root[data-theme='basic'] .b-phone-entries .sheet-nth { color: var(--b-muted); font-size: var(--b-font-size); }
+  :root[data-theme='basic'] .b-phone-entries .error { color: var(--b-negative); font-size: var(--b-phone-font); }
+
+  /* 下から出る形・フォーカス・キーボード対応は既存のまま。日付、金額、科目の下に交換と円。 */
+  :root[data-theme='basic'] .b-phone-entries .sheet { width: 100%; max-width: var(--b-phone-content-w); margin-inline: auto; gap: var(--b-space-3); padding: var(--b-space-3) var(--b-space-5) calc(var(--b-space-8) + env(safe-area-inset-bottom)); background: var(--b-surface); border-color: var(--b-line); color: var(--b-text); font-family: var(--b-font-ui); font-size: var(--b-phone-font); box-shadow: var(--b-shadow); }
+  :root[data-theme='basic'] .b-phone-entries .sheet-grip { background: var(--b-line); }
+  :root[data-theme='basic'] .b-phone-entries .sheet-title { font-size: var(--b-font-heading); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-phone-entries .sheet-form,
+  :root[data-theme='basic'] .b-phone-entries .sheet .preset-add-form { gap: var(--b-space-3); margin: var(--b-space-0); }
+  :root[data-theme='basic'] .b-phone-entries .sheet .field { gap: var(--b-space-1); min-width: 0; }
+  :root[data-theme='basic'] .b-phone-entries .sheet .field-label { color: var(--b-muted); font-size: var(--b-font-size); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-phone-entries .sheet .sheet-pair,
+  :root[data-theme='basic'] .b-phone-entries .sheet .preset-row,
+  :root[data-theme='basic'] .b-phone-entries .sheet .sheet-actions { gap: var(--b-space-2); }
+  /* 借方と貸方の真ん中に交換ボタン（選択欄の高さにそろえる）。 */
+  :root[data-theme='basic'] .b-phone-entries .sheet .sheet-pair { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: end; }
+  :root[data-theme='basic'] .b-phone-entries .sheet .sheet-pair .icon-only { width: var(--b-phone-control); height: var(--b-phone-control); }
+  :root[data-theme='basic'] .b-phone-entries .sheet .amount-wrap input { width: 100%; }
+  :root[data-theme='basic'] .b-phone-entries .sheet .memo-input { width: 100%; min-width: 0; }
+  :root[data-theme='basic'] .b-phone-entries .sheet .icon-only { display: inline-flex; align-items: center; justify-content: center; width: var(--b-phone-action); height: var(--b-phone-action); padding: var(--b-space-2); }
+  :root[data-theme='basic'] .b-phone-entries .sheet .icon-only .icon { width: var(--b-font-large); height: var(--b-font-large); }
+  :root[data-theme='basic'] .b-phone-entries .sheet .sheet-actions { margin-top: var(--b-space-1); }
+  :root[data-theme='basic'] .b-phone-entries .sheet .sheet-actions button { min-height: var(--b-phone-action); }
+  /* entries.css の個別規則を残す：主ボタン、選択中の反転、追加の点線、押せない状態。 */
+  :root[data-theme='basic'] .b-phone-entries .sheet .sheet-actions .primary,
+  :root[data-theme='basic'] .b-phone-entries .sheet .preset-chip.on { background: var(--b-navy); border-color: var(--b-navy); color: var(--b-surface); }
+  :root[data-theme='basic'] .b-phone-entries .sheet .preset-row .preset-add { border-style: dashed; background: var(--b-clear); }
+  :root[data-theme='basic'] .b-phone-entries .sheet button:disabled { opacity: 0.5; cursor: default; }
+
+  /* 日付帯と 2 行の明細。開閉・省略・編集不可の判定は既存のまま。 */
+  :root[data-theme='basic'] .b-phone-entries .day { margin-top: var(--b-space-4); padding: var(--b-space-0); border: 1px solid var(--b-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-phone-entries .day h3 { margin: var(--b-space-0); }
+  :root[data-theme='basic'] .b-phone-entries .day-toggle { box-sizing: border-box; min-width: var(--b-phone-control); min-height: var(--b-phone-control); height: auto; padding: var(--b-space-2) var(--b-space-4); border-bottom: 1px solid var(--b-line); background: var(--b-table-head); color: var(--b-text); font-size: var(--b-phone-font); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-phone-entries .tens .day .day-toggle { height: auto; min-height: var(--b-phone-control); font-size: var(--b-phone-font); }
+  :root[data-theme='basic'] .b-phone-entries .day-toggle > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-phone-entries .day ol { margin: var(--b-space-0); }
+  :root[data-theme='basic'] .b-phone-entries .day li.card { padding: var(--b-space-0); border: 0; border-bottom: 1px solid var(--b-side-line); }
+  :root[data-theme='basic'] .b-phone-entries .day li.card:last-child { border-bottom: 0; }
+  :root[data-theme='basic'] .b-phone-entries .card-toggle { min-width: var(--b-phone-control); min-height: var(--b-phone-control); padding: var(--b-space-4); column-gap: var(--b-space-1); row-gap: var(--b-space-1); background: var(--b-surface); color: var(--b-text); font-size: var(--b-phone-font); }
+  :root[data-theme='basic'] .b-phone-entries .card-toggle .names { font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-phone-entries .card-toggle .no { color: var(--b-muted); }
+  :root[data-theme='basic'] .b-phone-entries .card-toggle .amount { color: var(--b-navy); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-phone-entries .card-toggle .memo { color: var(--b-muted); font-size: var(--b-font-size); }
+  :root[data-theme='basic'] .b-phone-entries .card-actions { flex-wrap: wrap; gap: var(--b-space-2); padding: var(--b-space-0) var(--b-space-4) var(--b-space-4); }
+  :root[data-theme='basic'] .b-phone-entries .card-actions .danger { border-color: var(--b-negative); background: var(--b-clear); color: var(--b-negative); }
+  :root[data-theme='basic'] .b-phone-entries .tens-toggle { min-height: var(--b-phone-control); padding: var(--b-space-2) var(--b-space-4); border-color: var(--b-line); background: var(--b-total-bg); color: var(--b-text); font-size: var(--b-phone-font); }
+  :root[data-theme='basic'] .b-phone-entries .tens-toggle[aria-expanded='true'] { min-height: var(--b-phone-control); padding: var(--b-space-2) var(--b-space-4); background: var(--b-total-bg); border-color: var(--b-line); font-size: var(--b-phone-font); }
+  :root[data-theme='basic'] .b-phone-entries .tens:has(> h3 > .tens-toggle[aria-expanded='true']) { border-left-color: var(--b-active-bar); }
+
+  /* ---- P2：クレカ（一覧・個別）と予算だけ。既存の並び・入力・履歴は維持する。 ---- */
+  :root[data-theme='basic'] .b-phone-p2 {
+    --b-phone-font: 16px;
+    --b-phone-control: 44px;
+    --b-phone-radius: 3px;
+    --b-phone-bar-h: 6px;
+    --b-phone-day-w: 3em;
+    --space: var(--b-space-2);
+    min-width: 0;
+    font-family: var(--b-font-ui);
+    font-size: var(--b-phone-font);
+    line-height: var(--b-line-height);
+    color: var(--b-text);
+  }
+  :root[data-theme='basic'] .b-phone-p2 > h2 { margin: var(--b-space-6) var(--b-space-0) var(--b-space-4); padding-bottom: var(--b-space-2); border-bottom: 1px solid var(--b-line); font-size: var(--b-font-home-entry); font-weight: var(--b-weight-bold); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-phone-p2 h3 { margin: var(--b-space-8) var(--b-space-0) var(--b-space-3); font-size: var(--b-font-home-entry); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-phone-p2 .note,
+  :root[data-theme='basic'] .b-phone-p2 .rows2 .sub { font-size: var(--b-font-size); color: var(--b-muted); }
+  :root[data-theme='basic'] .b-phone-p2 .error,
+  :root[data-theme='basic'] .b-phone-p2 .neg { color: var(--b-negative); }
+  :root[data-theme='basic'] .b-phone-p2 input,
+  :root[data-theme='basic'] .b-phone-p2 select,
+  :root[data-theme='basic'] .b-phone-p2 button,
+  :root[data-theme='basic'] .b-phone-p2 .back a { box-sizing: border-box; min-width: var(--b-phone-control); min-height: var(--b-phone-control); max-width: 100%; padding: var(--b-space-2); border: 1px solid var(--b-line); border-radius: var(--b-phone-radius); background: var(--b-surface); color: var(--b-text); font-family: var(--b-font-ui); font-size: var(--b-phone-font); line-height: var(--b-line-height); box-shadow: var(--b-shadow); }
+  :root[data-theme='basic'] .b-phone-p2 input,
+  :root[data-theme='basic'] .b-phone-p2 select { min-width: 0; }
+  :root[data-theme='basic'] .b-phone-p2 button:focus-visible,
+  :root[data-theme='basic'] .b-phone-p2 input:focus-visible,
+  :root[data-theme='basic'] .b-phone-p2 select:focus-visible,
+  :root[data-theme='basic'] .b-phone-p2 a:focus-visible,
+  :root[data-theme='basic'] .b-phone-p2 summary:focus-visible { outline: 2px solid var(--b-active-bar); outline-offset: var(--b-space-1); }
+  :root[data-theme='basic'] .b-phone-p2 .table-box { max-width: 100%; background: var(--b-surface); }
+  :root[data-theme='basic'] .b-phone-p2 td { padding: var(--b-space-3) var(--b-space-4); border-bottom: 1px solid var(--b-side-line); white-space: normal; overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-phone-p2 .rows2 { margin: var(--b-space-0); border-top: 1px solid var(--b-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-phone-p2 .rows2 > li { padding: var(--b-space-4); column-gap: var(--b-space-2); row-gap: var(--b-space-1); border-bottom: 1px solid var(--b-side-line); }
+  :root[data-theme='basic'] .b-phone-p2 .rows2 .name { font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-phone-p2 .rows2 .sub { white-space: normal; overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-phone-p2 .rows2 > li.total { border-top: 2px solid var(--b-line); border-bottom: 2px solid var(--b-line); background: var(--b-total-bg); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-phone-p2 .rows2 > li.total .sub { color: var(--b-text); font-weight: var(--b-weight-bold); }
+
+  /* 一覧のカードは今のリンクの並び。使わない設定・負数・追加のエラーを保つ。 */
+  :root[data-theme='basic'] .b-phone-cards .cards { gap: var(--b-space-0); margin: var(--b-space-0); border-top: 1px solid var(--b-line); }
+  :root[data-theme='basic'] .b-phone-cards .card-button { min-width: var(--b-phone-control); min-height: var(--b-phone-control); padding: var(--b-space-4); gap: var(--b-space-2); border: 0; border-bottom: 1px solid var(--b-side-line); background: var(--b-surface); color: var(--b-text); font-family: var(--b-font-ui); font-size: var(--b-phone-font); }
+  :root[data-theme='basic'] .b-phone-cards .card-button > span:first-child { font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-phone-cards .card-button .amount { max-width: 65%; white-space: normal; overflow-wrap: anywhere; text-align: right; }
+  :root[data-theme='basic'] .b-phone-cards .card-button.inactive { color: var(--b-muted); }
+  :root[data-theme='basic'] .b-phone-cards .card-form { gap: var(--b-space-2); }
+  :root[data-theme='basic'] .b-phone-cards .card-form input.day { width: var(--b-phone-day-w); min-width: var(--b-phone-control); }
+  :root[data-theme='basic'] .b-phone-cards .card-form > button,
+  :root[data-theme='basic'] .b-phone-budgets .panel-manage > form > button { background: var(--b-navy); border-color: var(--b-navy); color: var(--b-surface); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-phone-p2 .b-phone-state { display: inline-block; margin-inline-start: var(--b-space-2); padding: var(--b-space-0) var(--b-space-2); border: 1px solid var(--b-line); background: var(--b-table-head); color: var(--b-text); font-size: var(--b-font-size); font-weight: var(--b-weight-bold); white-space: normal; }
+  :root[data-theme='basic'] .b-phone-p2 .b-phone-state.paid { background: var(--b-total-bg); color: var(--b-muted); font-weight: var(--b-weight-normal); }
+
+  /* 次の引き落とし分が主役。項目の表は未請求と残高だけ。説明は閉じておく。 */
+  :root[data-theme='basic'] .b-phone-card-detail .back { margin-bottom: var(--b-space-4); }
+  :root[data-theme='basic'] .b-phone-card-detail .back a { display: inline-flex; align-items: center; padding-inline: var(--b-space-4); text-decoration: none; }
+  :root[data-theme='basic'] .b-phone-card-detail .b-phone-next { display: flex; flex-direction: column; gap: var(--b-space-1); margin-bottom: var(--b-space-3); padding: var(--b-space-5); border: 1px solid var(--b-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-phone-card-detail .b-phone-next > span { color: var(--b-muted); font-size: var(--b-font-size); }
+  :root[data-theme='basic'] .b-phone-card-detail .b-phone-next > b { color: var(--b-navy); font-size: var(--b-font-large); font-weight: var(--b-weight-bold); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-phone-card-detail .b-phone-calcfold { margin-top: var(--b-space-4); border: 1px solid var(--b-side-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-phone-card-detail .b-phone-calcfold > summary { display: flex; align-items: center; justify-content: space-between; gap: var(--b-space-2); box-sizing: border-box; min-width: var(--b-phone-control); min-height: var(--b-phone-control); padding: var(--b-space-2) var(--b-space-4); font-size: var(--b-phone-font); list-style: none; }
+  :root[data-theme='basic'] .b-phone-card-detail .b-phone-calcfold > summary::-webkit-details-marker { display: none; }
+  :root[data-theme='basic'] .b-phone-card-detail .b-phone-calcfold > summary::after { content: ''; flex: none; width: var(--b-space-2); height: var(--b-space-2); border: solid var(--b-muted); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  :root[data-theme='basic'] .b-phone-card-detail .b-phone-calcfold[open] > summary::after { transform: rotate(-135deg); }
+  :root[data-theme='basic'] .b-phone-card-detail .b-phone-calcfold > p { margin: var(--b-space-0); padding: var(--b-space-2) var(--b-space-4) var(--b-space-4); border-top: 1px solid var(--b-side-line); }
+  :root[data-theme='basic'] .b-phone-card-detail .rows2 .open-period { color: var(--b-muted); }
+  :root[data-theme='basic'] .b-phone-card-detail .rows2 .sub { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--b-space-1); }
+  :root[data-theme='basic'] .b-phone-card-detail .rows2 .sub > .b-phone-state { margin-left: var(--b-space-0); }
+
+  /* 予算：2行の明細の文字を残して棒だけ足す。目標・合計には超過判定を足さない。 */
+  :root[data-theme='basic'] .b-phone-budgets .tabs { border-bottom-color: var(--b-line); }
+  :root[data-theme='basic'] .b-phone-budgets .tabs .tab { min-width: var(--b-phone-control); border: 0; border-bottom: 3px solid var(--b-clear); border-radius: 0; background: var(--b-clear); color: var(--b-muted); }
+  :root[data-theme='basic'] .b-phone-budgets .tabs .tab[aria-selected='true'] { border-bottom-color: var(--b-active-bar); color: var(--b-active-bar); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-phone-budgets .month-bar { flex-wrap: wrap; gap: var(--b-space-2); }
+  :root[data-theme='basic'] .b-phone-budgets .month-bar input { max-width: 100%; }
+  :root[data-theme='basic'] .b-phone-budgets .rows2 { margin-bottom: var(--b-space-5); }
+  :root[data-theme='basic'] .b-phone-budgets .rows2 .value:not(:empty) { padding: var(--b-space-0) var(--b-space-2); border: 1px solid var(--b-line); background: var(--b-table-head); color: var(--b-text); font-size: var(--b-font-size); }
+  :root[data-theme='basic'] .b-phone-budgets .rows2 > li.over,
+  :root[data-theme='basic'] .b-phone-budgets .rows2 > li.over .sub,
+  :root[data-theme='basic'] .b-phone-budgets .rows2 > li.over .value { color: var(--b-negative); }
+  :root[data-theme='basic'] .b-phone-budgets .rows2 > li.over .value { border-color: var(--b-negative); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-phone-budgets .rows2 .sub > .b-phone-rate { display: block; margin: var(--b-space-2) var(--b-space-0) var(--b-space-0); }
+  :root[data-theme='basic'] .b-phone-budgets .b-phone-bar { display: block; width: 100%; height: var(--b-phone-bar-h); background: var(--b-table-head); }
+  :root[data-theme='basic'] .b-phone-budgets .b-phone-bar > i { display: block; height: 100%; background: var(--b-active-bar); }
+  :root[data-theme='basic'] .b-phone-budgets .b-phone-bar.over > i { background: var(--b-negative); }
+  :root[data-theme='basic'] .b-phone-budgets .panel-manage > details { border: 1px solid var(--b-side-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-phone-budgets .panel-manage > details > summary { box-sizing: border-box; min-width: var(--b-phone-control); min-height: var(--b-phone-control); font-size: var(--b-phone-font); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-phone-budgets details.inactive summary { color: var(--b-muted); }
+  :root[data-theme='basic'] .b-phone-budgets .panel-manage li { border-bottom-color: var(--b-side-line); }
+  :root[data-theme='basic'] .b-phone-budgets .panel-manage li > .icon-only { border-color: var(--b-negative); background: var(--b-clear); color: var(--b-negative); }
+
+  /* ---- P3：今の形・部品は残す。メニューの位置・元帳の2行・設定の共用部品は作り替えない。 ---- */
+  :root[data-theme='basic'] .sidetabs,
+  :root[data-theme='basic'] .b-phone-book,
+  :root[data-theme='basic'] .settings {
+    --b-phone-font: 16px;
+    --b-phone-control: 44px;
+    --b-phone-radius: 3px;
+    --space: var(--b-space-2);
+    font-family: var(--b-font-ui);
+    font-size: var(--b-phone-font);
+    line-height: var(--b-line-height);
+    color: var(--b-text);
+  }
+
+  /* メニュー：上のホームリンクと最後のセーブ、下の横並び＋折り返しはそのまま。 */
+  :root[data-theme='basic'] .sidetabs .menu-head { gap: var(--b-space-1); padding: var(--b-space-4) var(--b-space-2); border-bottom-color: var(--b-side-line); }
+  :root[data-theme='basic'] .sidetabs .menu-title { font-size: var(--b-font-home-entry); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .sidetabs .menu-last { font-size: var(--b-font-size); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .sidetabs h3 { margin: var(--b-space-5) var(--b-space-0) var(--b-space-1); padding-inline: var(--b-space-2); font-size: var(--b-font-size); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .sidetabs nav a { min-width: var(--b-phone-control); min-height: var(--b-phone-control); padding-inline: var(--b-space-4); font-size: var(--b-phone-font); }
+  :root[data-theme='basic'] .sidetabs a[aria-current='page'] { border-left: 0; font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .sidetabs .bottom { gap: var(--b-space-2); margin-top: var(--b-space-5); padding-top: var(--b-space-4); }
+  :root[data-theme='basic'] .sidetabs .bottom > * { min-width: var(--b-phone-control); min-height: var(--b-phone-control); padding-inline: var(--b-space-2); background: var(--b-clear); color: var(--b-text); font-size: var(--b-phone-font); }
+  :root[data-theme='basic'] .sidetabs a:focus-visible,
+  :root[data-theme='basic'] .sidetabs button:focus-visible { outline: 2px solid var(--b-active-bar); outline-offset: var(--b-space-1); }
+
+  /* 元帳だけのclass。report共通や他の照会画面には当てない。 */
+  :root[data-theme='basic'] .b-phone-book,
+  :root[data-theme='basic'] .settings { min-width: 0; }
+  :root[data-theme='basic'] .b-phone-book > h2,
+  :root[data-theme='basic'] .settings > h2 { margin: var(--b-space-6) var(--b-space-0) var(--b-space-4); padding-bottom: var(--b-space-2); border-bottom: 1px solid var(--b-line); font-size: var(--b-font-home-entry); font-weight: var(--b-weight-bold); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-phone-book .note,
+  :root[data-theme='basic'] .settings .note { color: var(--b-muted); font-size: var(--b-font-size); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-phone-book .neg,
+  :root[data-theme='basic'] .settings .error,
+  :root[data-theme='basic'] .settings .pset-full,
+  :root[data-theme='basic'] .settings .icon-trash { color: var(--b-negative); }
+  :root[data-theme='basic'] .b-phone-book .month-bar { gap: var(--b-space-2); margin-bottom: var(--b-space-4); padding: var(--b-space-4); border: 1px solid var(--b-side-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-phone-book input,
+  :root[data-theme='basic'] .b-phone-book select,
+  :root[data-theme='basic'] .b-phone-book button,
+  :root[data-theme='basic'] .settings input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']),
+  :root[data-theme='basic'] .settings select,
+  :root[data-theme='basic'] .settings button { box-sizing: border-box; min-width: var(--b-phone-control); min-height: var(--b-phone-control); max-width: 100%; padding: var(--b-space-2); border: 1px solid var(--b-line); border-radius: var(--b-phone-radius); background: var(--b-surface); color: var(--b-text); font-family: var(--b-font-ui); font-size: var(--b-phone-font); line-height: var(--b-line-height); box-shadow: var(--b-shadow); }
+  :root[data-theme='basic'] .b-phone-book input,
+  :root[data-theme='basic'] .b-phone-book select,
+  :root[data-theme='basic'] .settings input:not([type='checkbox']):not([type='radio']),
+  :root[data-theme='basic'] .settings select { min-width: 0; }
+  :root[data-theme='basic'] .b-phone-book button:focus-visible,
+  :root[data-theme='basic'] .b-phone-book input:focus-visible,
+  :root[data-theme='basic'] .b-phone-book select:focus-visible,
+  :root[data-theme='basic'] .settings button:focus-visible,
+  :root[data-theme='basic'] .settings input:focus-visible,
+  :root[data-theme='basic'] .settings select:focus-visible { outline: 2px solid var(--b-active-bar); outline-offset: var(--b-space-1); }
+  :root[data-theme='basic'] .b-phone-book .rows2 { margin: var(--b-space-0); border-top: 1px solid var(--b-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-phone-book .rows2 > li { padding: var(--b-space-4); column-gap: var(--b-space-2); row-gap: var(--b-space-1); border-bottom: 1px solid var(--b-side-line); }
+  :root[data-theme='basic'] .b-phone-book .rows2 .name,
+  :root[data-theme='basic'] .b-phone-book .rows2 .value { font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-phone-book .rows2 .value { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-phone-book .rows2 .sub { color: var(--b-muted); font-size: var(--b-font-size); }
+  :root[data-theme='basic'] .b-phone-book .rows2 > li.total { background: var(--b-total-bg); border-bottom-color: var(--b-line); }
+
+  /* 設定：タブの順・番号・フォームの折り返しを維持。PCの2列の作りは持ち込まない。 */
+  :root[data-theme='basic'] .settings .tabs { flex-wrap: wrap; margin: var(--b-space-0) var(--b-space-0) var(--b-space-5); border-bottom-color: var(--b-line); }
+  :root[data-theme='basic'] .settings .tabs .tab { flex: 1 1 auto; min-width: var(--b-phone-control); padding: var(--b-space-2); border: 0; border-bottom: 3px solid var(--b-clear); border-radius: 0; background: var(--b-clear); color: var(--b-muted); }
+  :root[data-theme='basic'] .settings .tabs .tab[aria-selected='true'] { border-bottom-color: var(--b-active-bar); color: var(--b-active-bar); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .settings .set-title { margin: var(--b-space-8) var(--b-space-0) var(--b-space-4); padding-bottom: var(--b-space-2); border-bottom: 1px solid var(--b-line); font-size: var(--b-font-home-entry); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .settings .set-panel > .set-title:first-child { margin-top: var(--b-space-0); }
+  :root[data-theme='basic'] .settings .sub-title { margin: var(--b-space-6) var(--b-space-0) var(--b-space-3); font-size: var(--b-phone-font); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .settings .sub-sub { margin: var(--b-space-4) var(--b-space-0) var(--b-space-2); font-size: var(--b-font-size); font-weight: var(--b-weight-bold); }
+  /* settings.cssの縦並びを残し、ラベルと欄の間・項目同士の間を別々に決める。 */
+  :root[data-theme='basic'] .settings .open-mode { gap: var(--b-space-1); margin: var(--b-space-0) var(--b-space-0) var(--b-space-4); }
+  :root[data-theme='basic'] .settings .bullet-set { gap: var(--b-space-4); }
+  :root[data-theme='basic'] .settings .bullet-ex-cap { color: var(--b-muted); font-size: var(--b-font-size); }
+  :root[data-theme='basic'] .settings .bullet-ex .day { border-color: var(--b-side-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .settings .bullet-ex .day-toggle { color: var(--b-text); }
+  :root[data-theme='basic'] .settings .bullet-ex .day-toggle > span:first-child::before { color: var(--b-active-bar); }
+  :root[data-theme='basic'] .settings form,
+  :root[data-theme='basic'] .settings .pset,
+  :root[data-theme='basic'] .settings .display-row,
+  :root[data-theme='basic'] .settings .save-settings .row,
+  :root[data-theme='basic'] .settings .backup-row { gap: var(--b-space-2); }
+  :root[data-theme='basic'] .settings li.fav-item,
+  :root[data-theme='basic'] .settings .card-row,
+  :root[data-theme='basic'] .settings .backup-list li { padding: var(--b-space-2); border-bottom: 1px solid var(--b-side-line); background: var(--b-surface); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .settings li.inactive .name { color: var(--b-muted); }
+  :root[data-theme='basic'] .settings .pset-line { margin-top: var(--b-space-1); }
+  :root[data-theme='basic'] .settings .pset-icons { gap: var(--b-space-2); }
+  :root[data-theme='basic'] .settings button.icon-only { width: var(--b-phone-control); height: var(--b-phone-control); padding: var(--b-space-0); }
+  /* 汎用buttonの白い面を上書き：記号の選択中の反転と使用済みの点を残す。 */
+  :root[data-theme='basic'] .settings .pset-icon-opt.on { border-color: var(--b-navy); background: var(--b-navy); color: var(--b-surface); }
+  :root[data-theme='basic'] .settings .pset-dot { background: currentColor; }
+  :root[data-theme='basic'] .settings .pset-submit { border-color: var(--b-navy); background: var(--b-navy); color: var(--b-surface); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .settings .save-settings .row { padding-block: var(--b-space-2); border-bottom: 1px solid var(--b-side-line); }
+  :root[data-theme='basic'] .settings .backup-list li { border-top-color: var(--b-side-line); }
+  :root[data-theme='basic'] .settings .set-danger { margin: var(--b-space-8) var(--b-space-0); padding: var(--b-space-0) var(--b-space-4) var(--b-space-4); border-color: var(--b-negative); background: var(--b-surface); }
+  :root[data-theme='basic'] .settings .set-danger .set-title { margin-top: var(--b-space-4); }
+  :root[data-theme='basic'] .settings .set-danger button { border-color: var(--b-negative); color: var(--b-negative); }
+  :root[data-theme='basic'] .settings button:disabled { opacity: 0.5; cursor: default; }
+  :root[data-theme='basic'] .settings .app-version { margin-top: var(--b-space-6); }
+
+  /* ---- P4：今の形と操作を保ち、面・罫線・文字・余白だけ基本PCにそろえる。 ---- */
+  :root[data-theme='basic'] .ledger,
+  :root[data-theme='basic'] .opening,
+  :root[data-theme='basic'] .adjustment,
+  :root[data-theme='basic'] .b-phone-skills {
+    --b-phone-font: 16px;
+    --b-phone-control: 44px;
+    --b-phone-radius: 3px;
+    --space: var(--b-space-2);
+    min-width: 0;
+    color: var(--b-text);
+    font-family: var(--b-font-ui);
+    font-size: var(--b-phone-font);
+    line-height: var(--b-line-height);
+  }
+  :root[data-theme='basic'] .ledger > h2,
+  :root[data-theme='basic'] .opening > h2,
+  :root[data-theme='basic'] .adjustment > h2 { margin: var(--b-space-6) var(--b-space-0) var(--b-space-4); padding-bottom: var(--b-space-2); border-bottom: 1px solid var(--b-line); font-size: var(--b-font-home-entry); font-weight: var(--b-weight-bold); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .ledger h3,
+  :root[data-theme='basic'] .opening h3 { margin: var(--b-space-8) var(--b-space-0) var(--b-space-3); padding-bottom: var(--b-space-2); border-bottom: 1px solid var(--b-line); color: var(--b-text); font-size: var(--b-font-home-entry); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .ledger .note,
+  :root[data-theme='basic'] .opening .note,
+  :root[data-theme='basic'] .adjustment .note { color: var(--b-muted); font-size: var(--b-font-size); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .ledger .error,
+  :root[data-theme='basic'] .opening .error,
+  :root[data-theme='basic'] .adjustment .error,
+  :root[data-theme='basic'] .ledger .icon-trash,
+  :root[data-theme='basic'] .b-phone-skills .icon-trash { color: var(--b-negative); }
+  :root[data-theme='basic'] .ledger input:not([type='checkbox']),
+  :root[data-theme='basic'] .ledger select,
+  :root[data-theme='basic'] .ledger button,
+  :root[data-theme='basic'] .opening input,
+  :root[data-theme='basic'] .opening button,
+  :root[data-theme='basic'] .adjustment input,
+  :root[data-theme='basic'] .adjustment select,
+  :root[data-theme='basic'] .adjustment button,
+  :root[data-theme='basic'] .b-phone-skills input,
+  :root[data-theme='basic'] .b-phone-skills textarea,
+  :root[data-theme='basic'] .b-phone-skills button { box-sizing: border-box; min-width: var(--b-phone-control); min-height: var(--b-phone-control); max-width: 100%; padding: var(--b-space-2); border: 1px solid var(--b-line); border-radius: var(--b-phone-radius); background: var(--b-surface); color: var(--b-text); font-family: var(--b-font-ui); font-size: var(--b-phone-font); line-height: var(--b-line-height); box-shadow: var(--b-shadow); }
+  :root[data-theme='basic'] .ledger input:not([type='checkbox']),
+  :root[data-theme='basic'] .ledger select,
+  :root[data-theme='basic'] .opening input,
+  :root[data-theme='basic'] .adjustment input,
+  :root[data-theme='basic'] .adjustment select,
+  :root[data-theme='basic'] .b-phone-skills input,
+  :root[data-theme='basic'] .b-phone-skills textarea { min-width: 0; }
+  :root[data-theme='basic'] .ledger :focus-visible,
+  :root[data-theme='basic'] .opening :focus-visible,
+  :root[data-theme='basic'] .adjustment :focus-visible,
+  :root[data-theme='basic'] .b-phone-skills :focus-visible { outline: 2px solid var(--b-active-bar); outline-offset: var(--b-space-1); }
+  :root[data-theme='basic'] .ledger button:disabled,
+  :root[data-theme='basic'] .ledger select:disabled,
+  :root[data-theme='basic'] .opening button:disabled,
+  :root[data-theme='basic'] .adjustment button:disabled,
+  :root[data-theme='basic'] .b-phone-skills button:disabled { opacity: 0.5; cursor: default; }
+
+  /* 科目：追加欄の折り返し・一行だけ開く編集欄・省略・変更不可の説明を維持。 */
+  :root[data-theme='basic'] .ledger > form { gap: var(--b-space-2); margin-bottom: var(--b-space-8); padding: var(--b-space-4); border: 1px solid var(--b-side-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .ledger > form > button,
+  :root[data-theme='basic'] .opening .date-row > button,
+  :root[data-theme='basic'] .opening .save-bar > button,
+  :root[data-theme='basic'] .adjustment form > button,
+  :root[data-theme='basic'] .b-phone-skills > form > button { border-color: var(--b-navy); background: var(--b-navy); color: var(--b-surface); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .ledger ul.accts { border-top: 1px solid var(--b-line); }
+  :root[data-theme='basic'] .ledger ul.accts li.acct { margin: var(--b-space-0); padding: var(--b-space-0); border: 0; border-bottom: 1px solid var(--b-side-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .ledger .acct-toggle { gap: var(--b-space-2); padding: var(--b-space-3) var(--b-space-4); border: 0; border-radius: 0; background: var(--b-surface); color: var(--b-text); text-align: left; }
+  :root[data-theme='basic'] .ledger .acct-toggle .nm { font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .ledger .acct-toggle .role,
+  :root[data-theme='basic'] .ledger .acct-toggle .mark { color: var(--b-muted); font-size: var(--b-font-size); }
+  :root[data-theme='basic'] .ledger li.inactive,
+  :root[data-theme='basic'] .ledger li.inactive .acct-toggle .nm { color: var(--b-muted); }
+  :root[data-theme='basic'] .ledger .acct.open > .acct-toggle { background: var(--b-table-head); }
+  :root[data-theme='basic'] .ledger .acct-detail { gap: var(--b-space-2); padding: var(--b-space-4); border-top: 1px solid var(--b-side-line); }
+  :root[data-theme='basic'] .ledger .acct-detail > .living-month,
+  :root[data-theme='basic'] .ledger .acct-detail > .fixed-flag { gap: var(--b-space-2); color: var(--b-muted); font-size: var(--b-font-size); min-height: var(--b-phone-control); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .ledger .acct-detail > .fixed-flag { min-width: var(--b-phone-control); }
+  :root[data-theme='basic'] .ledger .acct-detail > .living-month select { font-size: var(--b-phone-font); }
+  :root[data-theme='basic'] .ledger .acct-detail > .icon-only,
+  :root[data-theme='basic'] .b-phone-skills .skill-row > .icon-only { border-color: var(--b-negative); color: var(--b-negative); background: var(--b-clear); }
+
+  /* 開始残高：科目名は上、金額と単位は下。保存結果の空の読み上げ場所を保つ。 */
+  :root[data-theme='basic'] .opening > .note { margin: var(--b-space-1) var(--b-space-0); }
+  :root[data-theme='basic'] .opening > form { gap: var(--b-space-4); margin-top: var(--b-space-6); }
+  :root[data-theme='basic'] .opening .date-row,
+  :root[data-theme='basic'] .opening .save-bar { gap: var(--b-space-2); }
+  :root[data-theme='basic'] .opening .date { max-width: 100%; color: var(--b-muted); font-size: var(--b-font-size); }
+  :root[data-theme='basic'] .opening .row { padding: var(--b-space-3) var(--b-space-4); column-gap: var(--b-space-3); row-gap: var(--b-space-1); border-bottom: 1px solid var(--b-side-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .opening .row > span:first-child { font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .opening .row > span:last-child { color: var(--b-muted); font-size: var(--b-font-size); }
+  :root[data-theme='basic'] .opening .date-row > .error,
+  :root[data-theme='basic'] .opening .save-bar > .error { font-size: var(--b-font-size); }
+
+  /* 残高調整：一科目の入力だけ。履歴・札やPC画像の差額表は追加しない。 */
+  :root[data-theme='basic'] .adjustment > form { gap: var(--b-space-2); margin: var(--b-space-6) var(--b-space-0); padding: var(--b-space-4); border: 1px solid var(--b-side-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .adjustment form > label { gap: var(--b-space-2); color: var(--b-muted); font-size: var(--b-font-size); }
+  :root[data-theme='basic'] .adjustment .current { color: var(--b-text); font-weight: var(--b-weight-bold); }
+
+  /* スキル：基本スマホだけの外箱。黒丸・その場の編集・説明の51段階は作り替えない。 */
+  :root[data-theme='basic'] .b-phone-skills > form { margin: var(--b-space-6) var(--b-space-0); padding: var(--b-space-4); border: 1px solid var(--b-side-line); background: var(--b-surface); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-phone-skills > ul { margin: var(--b-space-0); padding-left: var(--b-space-6); }
+  :root[data-theme='basic'] .b-phone-skills .skill-row { margin-bottom: var(--b-space-4); padding: var(--b-space-4); border-bottom: 1px solid var(--b-side-line); background: var(--b-surface); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-phone-skills button { margin-block: var(--b-space-1); }
+  :root[data-theme='basic'] .b-phone-skills input + button,
+  :root[data-theme='basic'] .b-phone-skills textarea + button,
+  :root[data-theme='basic'] .b-phone-skills button + button { margin-inline-start: var(--b-space-2); }
+  :root[data-theme='basic'] .b-phone-skills .skill-row > div { margin-block: var(--b-space-1); }
+  :root[data-theme='basic'] .b-phone-skills .skill-row > ol > li { margin-top: var(--b-space-4); padding: var(--b-space-4); border: 1px solid var(--b-side-line); }
+  :root[data-theme='basic'] .b-phone-skills textarea { width: 100%; vertical-align: middle; }
+  /* 共用部品のinline指定だけを置き換える。適用中の強調・エラーの意味は残す。 */
+  :root[data-theme='basic'] .b-phone-skills .skill-row > ol > li[style] { background: var(--b-total-bg) !important; }
+  :root[data-theme='basic'] .b-phone-skills .skill-row > div[style],
+  :root[data-theme='basic'] .b-phone-skills > form > span[style] { color: var(--b-negative) !important; }
+
+  /* ---- P5：図・配置・表示対象・金額表記は足し引きしない。基本PCの面・線・文字だけ。 ---- */
+  :root[data-theme='basic'] .home,
+  :root[data-theme='basic'] .b-phone-p5,
+  :root[data-theme='basic'] .subscriptions {
+    --b-phone-font: 16px;
+    --b-phone-control: 44px;
+    --b-phone-action: 48px;
+    --b-phone-radius: 3px;
+    --b-tag-w: 68px;
+    --space: var(--b-space-2);
+    min-width: 0;
+    color: var(--b-text);
+    font-family: var(--b-font-ui);
+    font-size: var(--b-phone-font);
+    line-height: var(--b-line-height);
+  }
+  /* ホーム：入口の順序・並び・中央寄せはnav.cssのまま。説明や矢印は足さない。 */
+  :root[data-theme='basic'] .home h1 { margin: var(--b-space-8) var(--b-space-0); font-size: var(--b-font-heading); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .home .entries { gap: var(--b-space-5); margin: var(--b-space-8) var(--b-space-0); }
+  :root[data-theme='basic'] .home .entry-button { --b-phone-entry-min-w: 8em; box-sizing: border-box; min-width: calc(var(--b-phone-entry-min-w) + var(--b-space-8) * 2); min-height: var(--b-phone-control); padding: var(--b-space-6) var(--b-space-8); border: 1px solid var(--b-side-line); background: var(--b-surface); color: var(--b-text); font-size: var(--b-font-home-entry); font-weight: var(--b-weight-bold); box-shadow: var(--b-shadow); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .home a:focus-visible,
+  :root[data-theme='basic'] .b-phone-p5 :focus-visible,
+  :root[data-theme='basic'] .subscriptions :focus-visible { outline: 2px solid var(--b-active-bar); outline-offset: var(--b-space-1); }
+  :root[data-theme='basic'] .b-phone-p5 > h2,
+  :root[data-theme='basic'] .subscriptions > h2 { margin: var(--b-space-6) var(--b-space-0) var(--b-space-4); padding-bottom: var(--b-space-2); border-bottom: 1px solid var(--b-line); font-size: var(--b-font-home-entry); font-weight: var(--b-weight-bold); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-phone-p5 h3 { margin: var(--b-space-8) var(--b-space-0) var(--b-space-3); padding-bottom: var(--b-space-2); border-bottom: 1px solid var(--b-line); font-size: var(--b-font-home-entry); font-weight: var(--b-weight-bold); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-phone-p5 .note,
+  :root[data-theme='basic'] .b-phone-p5 .rows2 .sub,
+  :root[data-theme='basic'] .subscriptions .note { color: var(--b-muted); font-size: var(--b-font-size); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-phone-p5 .error,
+  :root[data-theme='basic'] .b-phone-p5 .neg,
+  :root[data-theme='basic'] .subscriptions .error { color: var(--b-negative); }
+  :root[data-theme='basic'] .b-phone-p5 input,
+  :root[data-theme='basic'] .b-phone-p5 button,
+  :root[data-theme='basic'] .subscriptions input,
+  :root[data-theme='basic'] .subscriptions select,
+  :root[data-theme='basic'] .subscriptions button { box-sizing: border-box; min-width: var(--b-phone-control); min-height: var(--b-phone-control); max-width: 100%; padding: var(--b-space-2); border: 1px solid var(--b-line); border-radius: var(--b-phone-radius); background: var(--b-surface); color: var(--b-text); font-family: var(--b-font-ui); font-size: var(--b-phone-font); line-height: var(--b-line-height); box-shadow: var(--b-shadow); }
+  :root[data-theme='basic'] .b-phone-p5 input,
+  :root[data-theme='basic'] .subscriptions input:not(.day),
+  :root[data-theme='basic'] .subscriptions select { min-width: 0; }
+  :root[data-theme='basic'] .b-phone-p5 button:disabled,
+  :root[data-theme='basic'] .subscriptions button:disabled { opacity: 0.5; cursor: default; }
+  :root[data-theme='basic'] .b-phone-p5 .rows2 { margin: var(--b-space-0); border-top: 1px solid var(--b-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-phone-p5 .rows2 > li { padding: var(--b-space-3) var(--b-space-4); column-gap: var(--b-space-2); row-gap: var(--b-space-1); border-bottom: 1px solid var(--b-side-line); }
+  :root[data-theme='basic'] .b-phone-p5 .rows2 .name { font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-phone-p5 .rows2 .value { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-phone-p5 .rows2 > li.inactive .name { color: var(--b-muted); }
+  :root[data-theme='basic'] .b-phone-p5 .rows2 > li.total { border-top: 2px solid var(--b-line); border-bottom: 2px solid var(--b-line); background: var(--b-total-bg); font-weight: var(--b-weight-bold); }
+
+  /* 残高：大きな数字・折り返す内訳・2行の明細。切替の選択状態を白い面で消さない。 */
+  :root[data-theme='basic'] .b-phone-balance .free-head { flex-wrap: wrap; gap: var(--b-space-2); }
+  :root[data-theme='basic'] .b-phone-balance .free-label { color: var(--b-muted); font-size: var(--b-font-size); }
+  :root[data-theme='basic'] .b-phone-balance .segmented { border-color: var(--b-line); border-radius: var(--b-phone-radius); }
+  :root[data-theme='basic'] .b-phone-balance .segmented button { border: 0; border-radius: 0; padding-inline: var(--b-space-4); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-phone-balance .segmented button[aria-pressed='true'] { background: var(--b-navy); color: var(--b-surface); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-phone-balance .free { margin: var(--b-space-2) var(--b-space-0) var(--b-space-0); color: var(--b-navy); }
+  :root[data-theme='basic'] .b-phone-balance .free-amount { --b-phone-free-size: 36px; font-size: var(--b-phone-free-size); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-phone-balance .free-unit { margin-left: var(--b-space-1); font-size: var(--b-font-home-entry); }
+  :root[data-theme='basic'] .b-phone-balance .free-items { margin: var(--b-space-1) var(--b-space-0) var(--b-space-4); color: var(--b-muted); font-size: var(--b-font-size); }
+
+  /* 月次：開閉・印刷用表示・B/Sの縦並びはそのまま。表の段と不一致の印を残す。 */
+  :root[data-theme='basic'] .b-phone-monthly .month-bar { flex-wrap: wrap; gap: var(--b-space-2); margin-bottom: var(--b-space-4); }
+  :root[data-theme='basic'] .b-phone-monthly > details { margin-top: var(--b-space-4); border: 1px solid var(--b-side-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-phone-monthly summary { box-sizing: border-box; min-width: var(--b-phone-control); min-height: var(--b-phone-control); padding: var(--b-space-3) var(--b-space-4); font-size: var(--b-phone-font); list-style: none; overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-phone-monthly summary::-webkit-details-marker { display: none; }
+  :root[data-theme='basic'] .b-phone-monthly summary h2 { margin: var(--b-space-0); font-size: var(--b-font-home-entry); }
+  :root[data-theme='basic'] .b-phone-monthly summary .chev { display: inline-flex; margin-right: var(--b-space-2); color: var(--b-muted); }
+  :root[data-theme='basic'] .b-phone-monthly details[open] > summary .chev { transform: rotate(90deg); }
+  :root[data-theme='basic'] .b-phone-monthly details[open] > summary { border-bottom: 1px solid var(--b-side-line); background: var(--b-table-head); }
+  :root[data-theme='basic'] .b-phone-monthly details > .note,
+  :root[data-theme='basic'] .b-phone-monthly details > .error { margin: var(--b-space-3) var(--b-space-4); }
+  :root[data-theme='basic'] .b-phone-monthly .table-box { max-width: 100%; background: var(--b-surface); }
+  :root[data-theme='basic'] .b-phone-monthly td { padding: var(--b-space-3) var(--b-space-4); border-bottom: 1px solid var(--b-side-line); white-space: normal; overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-phone-monthly .statement .head { background: var(--b-table-head); }
+  :root[data-theme='basic'] .b-phone-monthly .statement .none { color: var(--b-muted); }
+  :root[data-theme='basic'] .b-phone-monthly tr.total > td,
+  :root[data-theme='basic'] .b-phone-monthly .statement td.total { border-top: 2px solid var(--b-line); border-bottom: 2px solid var(--b-line); background: var(--b-total-bg); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-phone-monthly .statement.bs td.right { border-left-color: var(--b-line); }
+  /* B/S は 4 列で狭い：数字は途中で折らない（印刷用表示で「120,00／0」と割れた）。余白を詰め、科目名のほうを折り返す */
+  :root[data-theme='basic'] .b-phone-monthly .statement.bs td { padding-left: var(--b-space-2); padding-right: var(--b-space-2); }
+  :root[data-theme='basic'] .b-phone-monthly .statement.bs td:nth-child(2),
+  :root[data-theme='basic'] .b-phone-monthly .statement.bs td:nth-child(4) { white-space: nowrap; overflow-wrap: normal; }
+  :root[data-theme='basic'] .b-phone-monthly .print-section { margin-top: var(--b-space-6); }
+
+  /* 貯蓄：PCと同じ固定幅・中央寄せ・currentColorの枠。表示対象と金額はスマホのまま。 */
+  :root[data-theme='basic'] .b-phone-savings .b-phone-tag { float: left; display: block; box-sizing: border-box; width: var(--b-tag-w); margin-right: var(--b-space-3); padding: var(--b-space-0); text-align: center; white-space: nowrap; border: 1px solid currentColor; font-size: var(--b-font-size); line-height: var(--b-line-height); color: var(--b-positive); }
+  :root[data-theme='basic'] .b-phone-savings .b-phone-tag.out { color: var(--b-negative); }
+  :root[data-theme='basic'] .b-phone-savings > .note { margin-top: var(--b-space-6); }
+
+  /* 定期支払い：スマホの折り返し・全幅の登録・半幅ずつの保存とやめるを保つ。 */
+  :root[data-theme='basic'] .subscriptions form { --b-phone-sub-day-w: 128px; --b-phone-sub-amount-min-w: 8em; gap: var(--b-space-2); margin: var(--b-space-4) var(--b-space-0); padding: var(--b-space-4); border: 1px solid var(--b-side-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .subscriptions li form { margin: var(--b-space-0); }
+  /* 金額と毎月の日で1行を使い、借方・貸方は次の1行へ。登録と編集で同じ幅の決まりにする。 */
+  :root[data-theme='basic'] .subscriptions form > input[inputmode] { flex-basis: calc(100% - var(--b-phone-sub-day-w) - var(--b-space-2)); min-width: max(var(--b-phone-control), var(--b-phone-sub-amount-min-w)); }
+  :root[data-theme='basic'] .subscriptions form > label { flex-basis: var(--b-phone-sub-day-w); gap: var(--b-space-2); color: var(--b-muted); font-size: var(--b-font-size); }
+  :root[data-theme='basic'] .subscriptions form > select { flex: 1 1 calc(50% - var(--b-space-2) / 2); min-width: 0; }
+  :root[data-theme='basic'] .subscriptions input.day { min-width: var(--b-phone-control); }
+  :root[data-theme='basic'] .subscriptions .sub-submit { min-height: var(--b-phone-action); border-color: var(--b-navy); background: var(--b-navy); color: var(--b-surface); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .subscriptions .sub-cancel { min-height: var(--b-phone-action); }
+  :root[data-theme='basic'] .subscriptions > ul { margin: var(--b-space-4) var(--b-space-0); }
+  :root[data-theme='basic'] .subscriptions > ul > li { margin-bottom: var(--b-space-4); padding: var(--b-space-4); border: 1px solid var(--b-side-line); background: var(--b-surface); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .subscriptions li.inactive { color: var(--b-muted); }
+  :root[data-theme='basic'] .subscriptions .sub-actions { gap: var(--b-space-2); margin-top: var(--b-space-3); }
+  :root[data-theme='basic'] .subscriptions .sub-actions .danger { border-color: var(--b-negative); background: var(--b-clear); color: var(--b-negative); }
+
+  /* ---- P6：補助画面。幅・開き方・並び・角の形は共用CSSのまま。履歴や画像だけの部品は足さない。 ---- */
+  :root[data-theme='basic'] dialog.confirm,
+  :root[data-theme='basic'] dialog.saveload,
+  :root[data-theme='basic'] dialog.keypad,
+  :root[data-theme='basic'] .migration {
+    --b-phone-font: 16px;
+    --b-phone-control: 44px;
+    --b-phone-action: 48px;
+    color: var(--b-text);
+    background: var(--b-surface);
+    border-color: var(--b-line);
+    font-family: var(--b-font-ui);
+    font-size: var(--b-phone-font);
+    line-height: var(--b-line-height);
+    box-shadow: var(--b-shadow);
+  }
+  /* --spaceは変えない：dialogの幅の式・既存の折り返しに使われている。 */
+  :root[data-theme='basic'] dialog.confirm,
+  :root[data-theme='basic'] dialog.saveload { padding: var(--b-space-5); }
+  :root[data-theme='basic'] dialog.confirm .message { margin-bottom: var(--b-space-5); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] dialog.confirm .extra { margin-bottom: var(--b-space-2); }
+  :root[data-theme='basic'] dialog.confirm .typed { margin-bottom: var(--b-space-2); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] dialog.confirm .typed input { margin-top: var(--b-space-1); }
+  :root[data-theme='basic'] dialog.confirm .actions { gap: var(--b-space-5); }
+  :root[data-theme='basic'] dialog.confirm .rename-list .note,
+  :root[data-theme='basic'] dialog.saveload .note,
+  :root[data-theme='basic'] dialog.saveload .slot dt,
+  :root[data-theme='basic'] dialog.saveload .nodata,
+  :root[data-theme='basic'] dialog.confirm.conflict .note-line { color: var(--b-muted); font-size: var(--b-font-size); }
+  :root[data-theme='basic'] dialog.confirm .rename-list label { min-width: var(--b-phone-control); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] dialog.confirm button,
+  :root[data-theme='basic'] dialog.saveload button,
+  :root[data-theme='basic'] .migration button { box-sizing: border-box; min-width: var(--b-phone-control); min-height: var(--b-phone-control); max-width: 100%; padding: var(--b-space-2); border: 1px solid var(--b-line); background: var(--b-surface); color: var(--b-text); font-family: var(--b-font-ui); font-size: var(--b-phone-font); line-height: var(--b-line-height); box-shadow: var(--b-shadow); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] dialog.confirm .actions button { min-height: var(--b-phone-action); }
+  :root[data-theme='basic'] dialog.confirm input:not([type='checkbox']):not([type='radio']),
+  :root[data-theme='basic'] dialog.saveload input { box-sizing: border-box; min-width: 0; min-height: var(--b-phone-control); max-width: 100%; padding: var(--b-space-2); border: 1px solid var(--b-line); background: var(--b-surface); color: var(--b-text); font-family: var(--b-font-ui); font-size: var(--b-phone-font); line-height: var(--b-line-height); box-shadow: var(--b-shadow); }
+  :root[data-theme='basic'] dialog.confirm :focus-visible,
+  :root[data-theme='basic'] dialog.saveload :focus-visible,
+  :root[data-theme='basic'] dialog.keypad :focus-visible,
+  :root[data-theme='basic'] .migration button:focus-visible,
+  :root[data-theme='basic'] .amount-wrap.phone > .calc-btn:focus-visible,
+  :root[data-theme='basic'] .autosave-problem:focus-visible { outline: 2px solid var(--b-active-bar); outline-offset: var(--b-space-1); }
+  :root[data-theme='basic'] dialog.confirm button:disabled,
+  :root[data-theme='basic'] dialog.saveload button:disabled { opacity: 0.5; cursor: default; }
+  :root[data-theme='basic'] dialog.confirm .error,
+  :root[data-theme='basic'] dialog.saveload .error { color: var(--b-negative); font-size: var(--b-font-size); overflow-wrap: anywhere; }
+
+  /* 食い違い：スマホの1列・各枠・説明の場所を残す。 */
+  :root[data-theme='basic'] dialog.confirm.conflict .sides { gap: var(--b-space-2); margin-bottom: var(--b-space-5); }
+  :root[data-theme='basic'] dialog.confirm.conflict .side { padding: var(--b-space-2); border-color: var(--b-line); background: var(--b-surface); }
+  :root[data-theme='basic'] dialog.confirm.conflict .side h3 { margin-bottom: var(--b-space-2); padding-bottom: var(--b-space-2); border-bottom: 1px solid var(--b-line); font-size: var(--b-phone-font); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] dialog.confirm.conflict .side p { padding-block: var(--b-space-1); border-bottom: 1px solid var(--b-side-line); }
+  :root[data-theme='basic'] dialog.confirm.conflict .note-line { margin-bottom: var(--b-space-5); overflow-wrap: anywhere; }
+
+  /* セーブ・ロード：スロットごとの表示と空の1行、上と下の閉じるを保つ。 */
+  :root[data-theme='basic'] dialog.saveload .head { gap: var(--b-space-2); padding-bottom: var(--b-space-3); margin-bottom: var(--b-space-4); border-bottom: 1px solid var(--b-line); }
+  :root[data-theme='basic'] dialog.saveload h2 { font-size: var(--b-font-heading); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] dialog.saveload h3 { font-size: var(--b-phone-font); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] dialog.saveload .slots { margin-top: var(--b-space-2); }
+  :root[data-theme='basic'] dialog.saveload .slot { padding: var(--b-space-2); margin-bottom: var(--b-space-2); border-color: var(--b-side-line); background: var(--b-surface); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] dialog.saveload .slot dl { gap: var(--b-space-2) var(--b-space-6); }
+  :root[data-theme='basic'] dialog.saveload .slot dl > div { min-width: 0; max-width: 100%; }
+  :root[data-theme='basic'] dialog.saveload .slot .actions,
+  :root[data-theme='basic'] dialog.saveload .slot form { flex-wrap: wrap; gap: var(--b-space-2); }
+  :root[data-theme='basic'] dialog.saveload .slot form label { min-width: 0; max-width: 100%; }
+  :root[data-theme='basic'] dialog.saveload .slot.empty { gap: var(--b-space-1) var(--b-space-2); }
+  :root[data-theme='basic'] dialog.saveload .foot { margin-top: var(--b-space-2); }
+  :root[data-theme='basic'] dialog.saveload a { min-width: var(--b-phone-control); min-height: var(--b-phone-control); color: var(--b-active-bar); font-size: var(--b-phone-font); }
+
+  /* 電卓はbodyへのportal。入力シートの外でも当てる。キーの寸法・低い画面の縮小はcalc.cssのまま。 */
+  :root[data-theme='basic'] .amount-wrap.phone > .calc-btn { --b-phone-font: 16px; --b-phone-control: 44px; box-sizing: border-box; min-width: var(--b-phone-control); min-height: var(--b-phone-control); padding: var(--b-space-0); border: 1px solid var(--b-line); background: var(--b-surface); color: var(--b-text); font-family: var(--b-font-ui); font-size: var(--b-phone-font); box-shadow: var(--b-shadow); }
+  :root[data-theme='basic'] dialog.keypad .key { border: 1px solid var(--b-line); background: var(--b-surface); color: var(--b-text); font-family: var(--b-font-ui); box-shadow: var(--b-shadow); }
+  :root[data-theme='basic'] dialog.keypad .key.fn { color: var(--b-text); }
+  :root[data-theme='basic'] dialog.keypad .key.insert { border-color: var(--b-navy); background: var(--b-navy); color: var(--b-surface); }
+  :root[data-theme='basic'] dialog.keypad .keypad-expr { color: var(--b-text); }
+  :root[data-theme='basic'] dialog.keypad .keypad-answer { color: var(--b-navy); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] dialog.keypad .keypad-reason { color: var(--b-negative); font-weight: var(--b-weight-normal); }
+
+  /* 待ち表示：四角・幕・操作をふさぐ作り・動きを止める設定は維持。 */
+  :root[data-theme='basic'] .drive-busy.curtain { background: color-mix(in srgb, var(--b-surface) 70%, var(--b-clear)); color: var(--b-text); font-family: var(--b-font-ui); font-size: var(--b-font-size); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .drive-busy.curtain .db-hop i { background: var(--b-navy); }
+
+  /* 知らせ：黄色は足さず白＋既存の赤。件数→一覧と、ホーム等の1件1行を残す。 */
+  :root[data-theme='basic'] .autosave-problem,
+  :root[data-theme='basic'] .sidetabs .notices-toggle,
+  :root[data-theme='basic'] .sidetabs .notices-list .notice-row { --b-phone-font: 16px; --b-phone-control: 44px; min-width: var(--b-phone-control); min-height: var(--b-phone-control); color: var(--b-negative); font-family: var(--b-font-ui); font-size: var(--b-phone-font); line-height: var(--b-line-height); box-shadow: var(--b-shadow); }
+  :root[data-theme='basic'] .notice-rows { gap: var(--b-space-2); margin-bottom: var(--b-space-5); }
+  :root[data-theme='basic'] .notice-rows .autosave-problem.notice-row { padding: var(--b-space-2); border-color: var(--b-negative); background: var(--b-surface); }
+  :root[data-theme='basic'] .sidetabs .notices-toggle { padding-inline: var(--b-space-2); background: var(--b-clear); }
+  :root[data-theme='basic'] .sidetabs .notices-list { background: var(--b-surface); border-bottom-color: var(--b-negative); }
+  :root[data-theme='basic'] .sidetabs .notices-list li + li { border-top-color: var(--b-side-line); }
+  :root[data-theme='basic'] .sidetabs .notices-list .notice-row { padding: var(--b-space-2); background: var(--b-surface); }
+
+  /* 移行：黄色い囲みの形と説明1段落・2ボタンの順序を残し、面は白に。 */
+  :root[data-theme='basic'] .migration { padding: var(--b-space-2); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .migration > p { font-size: var(--b-phone-font); }
+  :root[data-theme='basic'] .migration > button:last-child { border-color: var(--b-navy); background: var(--b-navy); color: var(--b-surface); font-weight: var(--b-weight-bold); }
+}

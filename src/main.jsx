@@ -2,10 +2,12 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import './themes.css'
+import './basic-tokens.css' // 基本の色・文字・余白の変数（PC とスマホで共通）。basic-pc.css・basic-phone.css より前
 import './fonts.css'
 import App from './App.jsx'
 import './gunjo-pc.css' // 群青の PC の規則は、画面ごとの CSS（App が読む）より後に置く。同じ強さのとき、後ろが勝つ
 import './basic-pc.css' // 基本の PC の規則も、同じ理由で App より後（basicPc.check.js が確かめる）
+import './basic-phone.css' // 基本のスマホの規則も、同じ理由で App より後（basicPhone.check.js が確かめる）
 import { applyDocumentLanguage } from './text.js'
 import { applyTheme, loadTheme } from './themes.js'
 import { registerServiceWorker } from './pwa.js'

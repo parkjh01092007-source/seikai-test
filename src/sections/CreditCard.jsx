@@ -10,6 +10,7 @@ import { today } from '../today.js'
 import { t } from '../text.js'
 import { useGunjoPc } from '../gunjoPc.js'
 import { useBasicPc } from '../basicPc.js'
+import { useBasicPhone } from '../basicPhone.js'
 import { useBandHost } from './bandHost.js'
 import { BandStat, signedYen } from './PageBand.jsx'
 import { Icon } from './Icon.jsx'
@@ -124,6 +125,7 @@ function CardTile({ report: r, now, unit }) {
 export default function CreditCard({ data, update, detailId = null }) {
   const gunjoPc = useGunjoPc()
   const basicPc = useBasicPc()
+  const basicPhone = useBasicPhone()
   const bandHost = useBandHost()
   const [formOpen, setFormOpen] = useState(false) // 群青の PC：「カードを追加」の札を開いているか（カードが 0 枚のときは、いつも開く）
   if ((gunjoPc || basicPc) && detailId === 'adjust') return <CardAdjust data={data} update={update} /> // 既存の URL と処理を使い、基本 PC にも表示する。スマホ・ほかのテーマは従来どおり
@@ -135,7 +137,7 @@ export default function CreditCard({ data, update, detailId = null }) {
   // カードが消えたら（削除など）selected が見つからないので、一覧に戻る（# の書き換えは App がする）
   if (selected) {
     return (
-      <div className={gunjoPc ? 'report g-rep' : basicPc ? 'report b-page b-card-detail' : 'report'}>
+      <div className={gunjoPc ? 'report g-rep' : basicPc ? 'report b-page b-card-detail' : basicPhone ? 'report b-phone-p2 b-phone-card-detail' : 'report'}>
         <CreditCardDetail card={selected} backHref={cardHash(null)} unit={unit} />
       </div>
     )
@@ -188,7 +190,7 @@ export default function CreditCard({ data, update, detailId = null }) {
   }
 
   return (
-    <div className={basicPc ? 'report b-page b-cards' : 'report'}>
+    <div className={basicPc ? 'report b-page b-cards' : basicPhone ? 'report b-phone-p2 b-phone-cards' : 'report'}>
       {basicPc ? <div className="b-page-head"><h2>{t('card.title')}</h2><p>{t('basicPc.cardsLead')}</p><a className="b-card-adjust-link" href={cardHash('adjust')}>{t('cardAdjust.linkLabel')}</a></div> : <h2>{t('card.title')}</h2>}
       {basicPc ? <div className="b-section-head"><h3>{t('card.totalTitle')}</h3></div> : <h3>{t('card.totalTitle')}</h3>}
       <div className="table-box"><table>
@@ -201,14 +203,17 @@ export default function CreditCard({ data, update, detailId = null }) {
       {basicPc ? <div className="b-section-head"><h3>{t('card.listTitle')}</h3></div> : <h3>{t('card.listTitle')}</h3>}
       {reports.length === 0 ? <p className="note">{t('card.empty')}</p> : (
         <ul className="cards">
-          {reports.map((r) => (
-            <li key={r.account.id}>
-              <a className={`card-button${r.account.active ? '' : ' inactive'}`} href={cardHash(r.account.id)}>
-                <span>{r.account.name}{!r.account.active && t('common.inactive')}</span>
-                <span className="amount">{t('card.next')}{' '}<Num n={r.next} />{unit}</span>
-              </a>
-            </li>
-          ))}
+          {reports.map((r) => {
+            const status = basicPhone ? periodStatus({ paid: r.payDate <= now }) : null
+            return (
+              <li key={r.account.id}>
+                <a className={`card-button${r.account.active ? '' : ' inactive'}`} href={cardHash(r.account.id)}>
+                  <span>{r.account.name}{!r.account.active && t('common.inactive')}</span>
+                  <span className="amount">{t('card.next')}{' '}<Num n={r.next} />{unit}{basicPhone && <span className={`b-phone-state${status === 'paid' ? ' paid' : ''}`} title={status === 'paid' ? t('card.statusPaidHint') : undefined}>{status === 'paid' ? t('card.statusPaid') : t('card.statusClosed')}</span>}</span>
+                </a>
+              </li>
+            )
+          })}
         </ul>
       )}
       {basicPc ? <div className="b-section-head"><h3>{t('card.add')}</h3></div> : <h3>{t('card.add')}</h3>}

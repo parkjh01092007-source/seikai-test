@@ -12,6 +12,7 @@ import { useConfirm } from './ConfirmDialog.jsx'
 import { usePhone } from '../layout.js'
 import { useGunjoPc } from '../gunjoPc.js'
 import { useBasicPc } from '../basicPc.js'
+import { useBasicPhone } from '../basicPhone.js'
 import { useBandHost } from './bandHost.js'
 import { AmountInput } from './Calculator.jsx'
 import { BandStat, signedYen } from './PageBand.jsx'
@@ -21,17 +22,18 @@ import { Icon, IconButton } from './Icon.jsx'
 
 const Yen = ({ n, currency }) => <>{formatMoney(n, currency)}</>
 const Rate = ({ n }) => <>{n}%</>
-// 群青の PC：達成率は、棒（70px。100% で頭打ち。地の行は青、青い合計の行は白、上限の超過は赤）と数字。棒は飾り（意味は数字と判定の文字で伝わる）
-const RateBar = ({ n, over }) => (
-  <span className="g-rate">
-    <span className={`g-bar${over ? ' over' : ''}`} aria-hidden="true"><i style={{ width: `${Math.min(Math.max(n, 0), 100)}%` }} /></span>
-    <Rate n={n} />
+// 群青の PC は棒と数字。基本スマホは明細に数字があるので棒だけ。幅は既存の0〜100%の処理を共用し、棒は飾り（意味は数字と判定の文字で伝わる）。
+const RateBar = ({ n, over, basicPhone = false }) => (
+  <span className={basicPhone ? 'b-phone-rate' : 'g-rate'}>
+    <span className={`${basicPhone ? 'b-phone-bar' : 'g-bar'}${over ? ' over' : ''}`} aria-hidden="true"><i style={{ width: `${Math.min(Math.max(n, 0), 100)}%` }} /></span>
+    {!basicPhone && <Rate n={n} />}
   </span>
 )
 
 // スマホの幅（spec-mobile.md 第6章）：1科目を2行。1行目に科目と判定（文字。超過の行はエラーの色。未達・達成は赤くしない）、
 // 2行目に「実績／予算」と残り（目標は不足）と達成率。合計の行も同じ形（判定なし）。PC は下の表のまま
 function BudgetRows({ rows, total, currency, kind }) {
+  const basicPhone = useBasicPhone()
   const y = (n) => formatMoney(n, currency)
   const sub = (r) => (kind === 'limit'
     ? t('budgets.rowSubLimit', { actual: y(r.actual), budget: y(r.budget), remaining: y(r.remaining), rate: r.rate })
@@ -43,13 +45,13 @@ function BudgetRows({ rows, total, currency, kind }) {
         <li key={r.account.id} className={r.over ? 'over' : ''}>
           {r.account.active ? <span className="name">{r.account.name}</span> : <span className="name with-note"><span className="nm">{r.account.name}</span><span className="note"> {t('common.inactive')}</span></span>}
           <span className="value">{judge(r)}</span>
-          <span className="sub">{sub(r)}</span>
+          <span className="sub">{sub(r)}{basicPhone && <RateBar n={r.rate} over={r.over} basicPhone />}</span>
         </li>
       ))}
       <li className="total">
         <span className="name">{t('common.total')}</span>
         <span className="value" />
-        <span className="sub">{sub(total)}</span>
+        <span className="sub">{sub(total)}{basicPhone && <RateBar n={total.rate} basicPhone />}</span>
       </li>
     </ul>
   )
@@ -164,6 +166,7 @@ export default function Budgets({ data, update }) {
   const phone = usePhone()
   const gunjoPc = useGunjoPc()
   const basicPc = useBasicPc()
+  const basicPhone = useBasicPhone()
   const bandHost = useBandHost()
   const [tab, setTab] = useState('month') // 開いているタブ（月の予算・登録・履歴）。初めは月の予算。覚えない（画面を移ると戻る）。追加・変更・削除のあとも変えない
 
@@ -212,7 +215,7 @@ export default function Budgets({ data, update }) {
   const heading = (title, en) => (gunjoPc ? <h2 className="g-h">{title}<small lang="en">{en}</small></h2> : basicPc ? <div className="b-section-head"><h3>{title}</h3></div> : <h3>{title}</h3>)
 
   return (
-    <div className={`report budgets${gunjoPc ? ' g-rep' : basicPc ? ' b-page b-budgets' : ''}`}>
+    <div className={`report budgets${gunjoPc ? ' g-rep' : basicPc ? ' b-page b-budgets' : basicPhone ? ' b-phone-p2 b-phone-budgets' : ''}`}>
       {hero}
       {basicPc ? <div className="b-page-head"><h2>{t('budgets.title')}</h2><p>{t('basicPc.budgetsLead')}</p></div> : !gunjoPc && <h2>{t('budgets.title')}</h2>}
       <Tabs label={t('budgets.title')} tabs={[{ id: 'month', title: t('budgets.tabMonth') }, { id: 'manage', title: t('budgets.tabManage') }]} current={tab} onChange={setTab} prefix="budgets" />

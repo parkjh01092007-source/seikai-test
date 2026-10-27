@@ -8,6 +8,7 @@ import { t } from '../text.js'
 import { usePhone } from '../layout.js'
 import { useGunjoPc } from '../gunjoPc.js'
 import { useBasicPc } from '../basicPc.js'
+import { useBasicPhone } from '../basicPhone.js'
 import { useBandHost, useBandTop, useBandRoad } from './bandHost.js'
 import { signedYen } from './PageBand.jsx'
 import { loadNoSpendShape } from '../entryView.js'
@@ -221,6 +222,7 @@ export default function Monthly({ data }) {
   const living = month ? livingBalance(entries, accounts, month) : null
   const gunjoPc = useGunjoPc()
   const basicPc = useBasicPc()
+  const basicPhone = useBasicPhone()
   const bandHost = useBandHost()
   const bandTop = useBandTop()
   const bandRoad = useBandRoad()
@@ -355,7 +357,7 @@ export default function Monthly({ data }) {
   }
 
   return (
-    <div className={`report${printView ? ' print-view' : ''}`}>
+    <div className={`report${basicPhone ? ' b-phone-p5 b-phone-monthly' : ''}${printView ? ' print-view' : ''}`}>
       {printView ? <h2 className="print-title">{t('monthly.printTitle')}{month && t('monthly.inMonth', { month })}</h2> : <h2>{t('monthly.title')}</h2>}
       {printView && <p className="issued">{issuedLabel(today())}</p>}
       <div className="month-bar no-print">

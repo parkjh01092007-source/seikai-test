@@ -292,6 +292,8 @@ export default {
   'entries.listTitle': '분개 목록',
   'entries.orderAsc': '오래된 순',
   'entries.orderDesc': '최신 순',
+  'entries.orderOld': 'OLD', // 仮訳：基本スマホの並び順（現在は古い順）
+  'entries.orderNew': 'NEW', // 仮訳：基本スマホの並び順（現在は新しい順）
   'entries.sortLabel': '현재 {now}. 누르면 {next}(으)로 바뀝니다',
   'entries.kind.opening': '시작 잔액',
   'entries.kind.adjustment': '잔액 조정',

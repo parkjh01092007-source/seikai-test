@@ -259,6 +259,8 @@ export default {
   'entries.listTitle': '仕訳の一覧',
   'entries.orderAsc': '古い順',
   'entries.orderDesc': '新しい順',
+  'entries.orderOld': 'OLD',
+  'entries.orderNew': 'NEW',
   'entries.sortLabel': '今は{now}。押すと{next}にします',
   'entries.kind.opening': '開始残高',
   'entries.kind.adjustment': '残高調整',

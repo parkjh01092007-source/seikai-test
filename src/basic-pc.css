@@ -2,17 +2,8 @@
    当てるのは、基本 かつ PC の形のときだけ。ほかのプリセット・基本のスマホの形・群青は、この中の規則も変数も届かない（変えない）。
    PC の条件は、layout.js の PHONE_QUERY の反対側（gunjo-pc.css と同じ。basicPc.check.js が確かめる）。画面だけ（@media screen）。印刷にはかからない。 */
 @media screen and (not (max-width: 959.98px)) and (not ((pointer: coarse) and (hover: none))) {
-  /* ---- 変数（画像案 Documents\seikai-basic-pc-principles-20261027 の色。文字の組は 4.5:1 以上。basicPc.check.js が確かめる） ---- */
+  /* ---- 変数：色・文字・余白は basic-tokens.css（PC とスマホで共通）。ここには PC の配置の変数だけ置く ---- */
   :root[data-theme='basic'] {
-    --b-bg: #f6f6f3; /* ページの地 */
-    --b-surface: #ffffff; /* ヘッダー・表の面 */
-    --b-text: #1c211f;
-    --b-muted: #46534b;
-    --b-header-line: #b8bdb9; /* ヘッダーの下の線 */
-    --b-side-bg: #ecefeb; /* 縦タブの地 */
-    --b-side-line: #c7cec8;
-    --b-active-bg: #e4edf7; /* 今いる画面 */
-    --b-active-bar: #22518a;
     --b-header-h: 52px;
     --b-side-w: 190px;
     --b-content-w: 1282px; /* 本文の幅 1244px＋左右の余白 38px。左寄せ（右に余白が残る。案 1A） */
@@ -48,35 +39,6 @@
 
   /* ---- 段 1：この変数を使う規則は、5 画面の b-* の枝だけ ---- */
   :root[data-theme='basic'] {
-    --b-font-ui: 'Yu Gothic UI', 'Meiryo', sans-serif;
-    --b-font-size: 14px;
-    --b-font-small: 12px;
-    --b-font-label: 13px;
-    --b-font-heading: 24px;
-    --b-font-home-entry: 18px;
-    --b-font-large: 24px;
-    --b-weight-normal: 400;
-    --b-weight-bold: 700;
-    --b-line-height: 1.6;
-    --b-space-0: 0;
-    --b-space-1: 4px;
-    --b-space-2: 8px;
-    --b-space-3: 10px;
-    --b-space-4: 12px;
-    --b-space-5: 16px;
-    --b-space-6: 20px;
-    --b-space-7: 22px;
-    --b-space-8: 28px;
-    --b-space-9: 30px;
-    --b-space-10: 38px;
-    --b-navy: #203b5c;
-    --b-negative: #b42318;
-    --b-positive: #28604d;
-    --b-line: #a3afa6;
-    --b-table-head: #ecf0ed;
-    --b-total-bg: #f0f3f0;
-    --b-shadow: none;
-    --b-clear: transparent;
     --b-page-w: 1244px;
     --b-home-w: 880px;
     --b-home-label-w: 190px;
