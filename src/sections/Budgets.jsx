@@ -209,7 +209,7 @@ export default function Budgets({ data, update }) {
   const heroUnit = currencyUnit(currency)
   const hero = gunjoPc && bandHost && createPortal(
     tab === 'month'
-      ? (month && <BandStat label={t('budgets.heroFree')} value={signedYen(budgetFreeAmount(accounts, entries, budgets, month).total, formatYen)} unit={heroUnit} />)
+      ? (month && <BandStat label={t('budgets.heroFree')} value={signedYen(budgetFreeAmount(accounts, entries, budgets, month, data.loans).total, formatYen)} unit={heroUnit} />)
       : <BandStat label={t('budgets.heroCount')} value={budgeted.length} unit={t('settings.countUnit')} />,
     bandHost)
   const heading = (title, en) => (gunjoPc ? <h2 className="g-h">{title}<small lang="en">{en}</small></h2> : basicPc ? <div className="b-section-head"><h3>{title}</h3></div> : <h3>{title}</h3>)

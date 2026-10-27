@@ -141,7 +141,7 @@ export function checkAfterUpload(revisions, mine, expectedPrev) {
   return { ok: false, reason: 'slipped', theirs: prev }
 }
 
-// 手元が初めの状態か（4.6）：仕訳・定期支払い・予算・スキル・お気に入り・仕訳プリセット・「使っていない日」がなく、科目が初期科目（preset か key を持つもの）だけ
+// 手元が初めの状態か（4.6）：仕訳・定期支払い・予算・スキル・お気に入り・仕訳プリセット・「使っていない日」・借りているお金がなく、科目が初期科目（preset か key を持つもの）だけ
 export function isInitialData(data) {
   const fav = data?.settings?.favorites
   return Array.isArray(data?.entries) && data.entries.length === 0 &&
@@ -150,6 +150,7 @@ export function isInitialData(data) {
     Array.isArray(data.skills) && data.skills.length === 0 &&
     (data.entryPresets === undefined || (Array.isArray(data.entryPresets) && data.entryPresets.length === 0)) &&
     (data.noSpendDays === undefined || (Array.isArray(data.noSpendDays) && data.noSpendDays.length === 0)) &&
+    (data.loans === undefined || (Array.isArray(data.loans) && data.loans.length === 0)) &&
     Array.isArray(data.accounts) && data.accounts.every((a) => a.preset !== undefined || a.key !== undefined) &&
     (fav?.debit?.length ?? 0) === 0 && (fav?.credit?.length ?? 0) === 0
 }

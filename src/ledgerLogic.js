@@ -519,17 +519,65 @@ export function expenseBreakdown(expense, top = 5) {
 // 資産 − 負債（残高の画面の札。typeTotals の資産の残高合計 − 負債の残高合計。貸借対照表の純資産ではない）
 export const assetLiabilityGap = (rows) => typeTotals(rows, 'asset').balance - typeTotals(rows, 'liability').balance
 
+// ---- 借りているお金（loans。v12）の計算 ----
+
+// その月の利率と返済額。rateHistory のうち from が月以前で一番新しい行。なければ loan 自身の rate・payment（はじめの値）
+export function loanTermAt(loan, month) {
+  const hit = loan.rateHistory.filter((x) => x.from <= month).sort((a, b) => (a.from < b.from ? 1 : -1))[0]
+  return hit ?? loan
+}
+
+const LOAN_MONTH_LIMIT = 600 // 50 年。これを超えても終わらないものは「終わりの月なし」
+
+// 返す予定（今の利率での見込み。銀行の計算規則は真似しない）。balance は今の残り、fromMonth は最初に返す月（'YYYY-MM'）。
+// 毎月：利息 ＝ 残り × 年利 ÷ 12（円未満は切り捨て。rate は 1/100 %）、元金 ＝ 返済額 − 利息。最後の月は、残り＋利息だけ返す。
+// 返す形：{ rows: [{ month, payment, interest, principal, balance（返したあとの残り） }], endMonth（最後に返す月）, endless }
+// 終わらない（endless: true・endMonth は null）：返済額が利息以下（0 を含む）で残りが減らない月が来たとき、または 600 か月を超えたとき。rows はそこまで。
+// 残りがすでに 0 以下：rows は空、endMonth は null、endless は false
+export function loanSchedule(loan, balance, fromMonth) {
+  const rows = []
+  let left = balance
+  let month = fromMonth
+  if (!(left > 0)) return { rows, endMonth: null, endless: false }
+  while (rows.length < LOAN_MONTH_LIMIT) {
+    const term = loanTermAt(loan, month)
+    const interest = Math.floor((left * term.rate) / 120000)
+    if (term.payment <= interest) return { rows, endMonth: null, endless: true }
+    const payment = Math.min(term.payment, left + interest)
+    left -= payment - interest
+    rows.push({ month, payment, interest, principal: payment - interest, balance: left })
+    if (left <= 0) return { rows, endMonth: month, endless: false }
+    month = nextMonth(month)
+  }
+  return { rows, endMonth: null, endless: true }
+}
+
+// その月に返す額（自由に使える額から引く額）。月初から引く。引かない（0）のは次のとき：残りが 0 以下、奨学金で返し始める月より前、その月にこの借入の科目への返済の仕訳（借方）がすでにある（返した分は残高と現金に出ているので、二重に引かない）
+// 残りが少ないときは、残り＋その月の利息まで。entries は全仕訳、balance はこの借入の科目の今の残り
+export function loanDue(loan, balance, entries, month) {
+  if (!(balance > 0)) return 0
+  if (loan.repayFrom !== undefined && month < loan.repayFrom) return 0
+  if (entries.some((e) => e.debitId === loan.accountId && e.date.slice(0, 7) === month)) return 0
+  const term = loanTermAt(loan, month)
+  return Math.min(term.payment, balance + Math.floor((balance * term.rate) / 120000))
+}
+
 // 自由に使える額 ＝ role が cash の資産の残高合計 − 負債の残高合計（取り分け・その他の資産は含めない。使わない科目も含める）
-// items：画面に並べる内訳（現金類のうち残高が0でないもの。負債があるときは、最後に「負債」を負の値で足す）
-export function freeAmount(accounts, entries) {
+// loans（省略可）があるときは、借入の科目の残高全体は負債の合計から外し、代わりに month の返済額（loanDue）だけを引く。loans が空（省略）なら、今までと同じ値
+// items：画面に並べる内訳（現金類のうち残高が0でないもの。負債があるときは「負債」を負の値で、借入の返済があるときは最後に「借入の返済」を負の値で足す）
+export function freeAmount(accounts, entries, loans = [], month = '') {
   const { rows } = accountBalances(accounts, entries)
   const cash = rows.filter((r) => r.account.type === 'asset' && r.account.role === 'cash')
   const cashTotal = sum(cash, (r) => r.balance)
-  const liabilityTotal = sum(rows.filter((r) => r.account.type === 'liability'), (r) => r.balance)
+  const loanIds = new Set(loans.map((l) => l.accountId))
+  const liabilityTotal = sum(rows.filter((r) => r.account.type === 'liability' && !loanIds.has(r.account.id)), (r) => r.balance)
+  const due = sum(loans, (l) => loanDue(l, rows.find((r) => r.account.id === l.accountId)?.balance ?? 0, entries, month))
   const items = cash.filter((r) => r.balance !== 0).map((r) => ({ id: r.account.id, name: r.account.name, balance: r.balance }))
   if (liabilityTotal !== 0) items.push({ id: 'liability', name: TYPE_LABELS.liability, balance: -liabilityTotal })
-  return { total: cashTotal - liabilityTotal, cashTotal, liabilityTotal, items }
+  if (due !== 0) items.push({ id: 'loans', name: t('loans.dueItem'), balance: -due })
+  return { total: cashTotal - liabilityTotal - due, cashTotal, liabilityTotal, loanDue: due, items }
 }
+
 
 // ---- クレカ（role が card の負債。カードごとに締め日・引き落とし日を持つ）----
 // today・month は呼ぶ側から渡す。日付は subscriptionDate で作る（その月にない日は月末日）。使わない設定のカードも含める
@@ -1305,6 +1353,10 @@ export const budgetAccountOptions = (accounts, kind) => accounts.filter((a) => a
 
 export const isBudgetMonth = (v) => typeof v === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(v)
 
+// 借りているお金（loans。v12）の種類と名前の文字数の上限。rate は年利の 1/100 %（1.25% は 125）
+export const LOAN_KINDS = ['scholarship', 'loan', 'other']
+export const LOAN_NAME_MAX = 30
+
 // その月の予算：その科目の予算のうち、適用開始月がその月以前で一番新しいもの（レコード）。なければ null
 export function effectiveBudget(budgets, accountId, month) {
   let best = null
@@ -1380,8 +1432,8 @@ export function budgetStatus(budgets, accounts, report, goalActuals, month) {
 // 残り・不足は budgetStatus（予算の表と同じ計算）。マイナス（超過）は0として扱う（実績が予算を超えた科目は、実績がもう自由に使える額から引かれているので、それ以上は引かない）。
 // 予算のない科目は見ない。使わない設定の科目も、その月の予算があれば対象。月初に大きく減るのは、意図した動き
 // 返す形：{ total（予算反映）, free（実際の額）, reserved（引いた額の合計）, items: [{ id, name, amount }]（上限の科目 → 目標の科目の順。引く額が0の科目は出さない） }
-export function budgetFreeAmount(accounts, entries, budgets, month) {
-  const free = freeAmount(accounts, entries).total
+export function budgetFreeAmount(accounts, entries, budgets, month, loans = []) {
+  const free = freeAmount(accounts, entries, loans, month).total
   const status = budgetStatus(budgets, accounts, monthReport(accounts, entries, month), goalActualMap(entries, accounts, budgets, month), month)
   const items = [
     ...status.limits.rows.map((r) => ({ id: r.account.id, name: r.account.name, amount: Math.max(0, r.remaining) })),

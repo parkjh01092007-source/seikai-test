@@ -710,4 +710,42 @@
   /* 元帳の日付（押すと仕訳の画面のその仕訳へ移る。押せる場所は 44px 以上）と、移った先の目印 */
   :root[data-theme='basic'] .b-phone-book .b-date-jump { min-width: var(--b-phone-control); min-height: var(--b-phone-control); padding: var(--b-space-0); border: 0; background: none; box-shadow: none; color: var(--b-navy); font: inherit; text-decoration: underline; }
   :root[data-theme='basic'] .entries .card.jump-mark { background: var(--b-table-head); outline: 2px solid var(--b-navy); outline-offset: -2px; }
+
+  /* 借入（段 4）：PC を簡単にした形。上に札 2 つ、下に借入 3 件と合計。選ぶと中身（数値の札 3 つ・グラフ）。変数は .b-phone-p5 のもの（押せる場所 44px 以上） */
+  :root[data-theme='basic'] .b-phone-loans { display: flex; flex-direction: column; gap: var(--b-space-4); padding-top: var(--b-space-3); }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--b-space-3); }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-tile { display: flex; flex-direction: column; gap: var(--b-space-1); min-width: 0; padding: var(--b-space-3) var(--b-space-4); border: 1px solid var(--b-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-tile .lbl { color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-tile strong { font-size: var(--b-font-large); font-weight: var(--b-weight-bold); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-list { display: flex; flex-direction: column; gap: var(--b-space-3); }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: 'ic name rem' 'ic track track'; gap: var(--b-space-1) var(--b-space-3); align-items: center; box-sizing: border-box; width: 100%; min-height: var(--b-phone-control); padding: var(--b-space-3) var(--b-space-4); border: 1px solid var(--b-line); border-radius: 0; background: var(--b-surface); color: var(--b-text); font: inherit; text-align: left; }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-ic { grid-area: ic; display: inline-flex; align-items: center; justify-content: center; width: var(--b-phone-control); height: var(--b-phone-control); border-radius: 50%; background: var(--b-active-bg); color: var(--b-navy); }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-name { grid-area: name; font-weight: var(--b-weight-bold); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-rem { grid-area: rem; font-weight: var(--b-weight-bold); font-variant-numeric: tabular-nums; text-align: right; }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-track { grid-area: track; display: block; height: var(--b-space-2); background: var(--b-table-head); }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-track > span { display: block; height: 100%; background: var(--b-navy); }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-more { box-sizing: border-box; min-height: var(--b-phone-control); padding: var(--b-space-2) var(--b-space-4); border: 1px dashed var(--b-line); border-radius: 0; background: transparent; color: var(--b-navy); font: inherit; }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-total { display: flex; align-items: baseline; gap: var(--b-space-3); margin: var(--b-space-0); padding: var(--b-space-3) var(--b-space-4); background: var(--b-total-bg); color: var(--b-muted); }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-total strong { margin-left: auto; color: var(--b-text); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-back { display: inline-flex; align-items: center; align-self: flex-start; gap: var(--b-space-2); min-height: var(--b-phone-control); padding: var(--b-space-0) var(--b-space-3) var(--b-space-0) var(--b-space-0); border: 0; background: none; color: var(--b-navy); font: inherit; font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--b-space-1) var(--b-space-3); align-items: center; }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-head .b-pl-ic { grid-area: auto; }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-head h3 { margin: var(--b-space-0); padding: var(--b-space-0); border: 0; font-size: var(--b-font-home-entry); }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-head h3 small { margin-left: var(--b-space-2); color: var(--b-muted); font-size: var(--b-font-small); font-weight: var(--b-weight-normal); }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-head p { grid-column: 1 / -1; display: flex; align-items: baseline; gap: var(--b-space-3); margin: var(--b-space-0); }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-head p small { color: var(--b-muted); }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-head p strong { font-size: var(--b-font-large); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--b-space-2); }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-fact { display: flex; flex-direction: column; gap: var(--b-space-1); min-width: 0; padding: var(--b-space-2) var(--b-space-3); border: 1px solid var(--b-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-fact .k { color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-fact .v { font-weight: var(--b-weight-bold); font-size: var(--b-font-label); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-fact .v small { display: block; color: var(--b-muted); font-size: var(--b-font-small); font-weight: var(--b-weight-normal); }
+  :root[data-theme='basic'] .b-phone-loans .b-loan-chart { width: 100%; }
+  :root[data-theme='basic'] .b-phone-loans .b-loan-chart svg { display: block; }
+  :root[data-theme='basic'] .b-phone-loans .b-loan-chart text { fill: var(--b-muted); font-size: var(--b-font-small); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-phone-loans .b-loan-chart .b-loan-now { fill: var(--b-navy); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-phone-loans .b-loan-grid { stroke: var(--b-side-line); }
+  :root[data-theme='basic'] .b-phone-loans .b-loan-zero { stroke: var(--b-muted); stroke-dasharray: 4 4; }
+  :root[data-theme='basic'] .b-phone-loans .b-loan-line { fill: none; stroke: var(--b-navy); stroke-width: 2.5; }
+  :root[data-theme='basic'] .b-phone-loans .b-loan-dot { fill: var(--b-navy); }
 }

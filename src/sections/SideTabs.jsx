@@ -5,6 +5,7 @@ import { HOME, toHash } from '../route.js'
 import { usePhone } from '../layout.js'
 import { useGunjoPc, useCanPin } from '../gunjoPc.js'
 import { useBasicPc } from '../basicPc.js'
+import { useBasicPhone } from '../basicPhone.js'
 import { useModalLayer } from '../modalLayer.js'
 import { lastSaveLine } from './lastSave.js'
 import { Icon } from './Icon.jsx'
@@ -27,6 +28,7 @@ function Mark({ text }) {
 export default function SideTabs({ entry, currentTab, onOpenPanel, notices = [] }) {
   const phone = usePhone()
   const gunjoPc = useGunjoPc() // 群青の PC のときだけ描く部品（閉じた形の「正解」の円、見出しの英字）
+  const basicPhone = useBasicPhone()
   const basicPc = useBasicPc() // 基本の PC は、縦タブをいつも開いておく（basic-pc.css）
   const canPin = useCanPin() // 群青の PC は、幅 1100px 未満では固定しない（☰ は乗せる・Tab で開くだけ）
   const [pinned, setPinned] = useState(false)
@@ -143,7 +145,7 @@ export default function SideTabs({ entry, currentTab, onOpenPanel, notices = [] 
               <section key={g.label}>
                 <h3>{t(g.label)}{gunjoPc && <span className="en" lang="en">{t(g.en)}</span>}</h3>
                 <ul>
-                  {g.tabs.map((tb) => (
+                  {g.tabs.filter((tb) => !tb.basicOnly || basicPc || basicPhone).map((tb) => (
                     <li key={tb.id}>
                       <a href={toHash({ entry: entry.id, tab: tb.id, detailId: null })} aria-current={tb.id === currentTab ? 'page' : undefined} onClick={closePhone}>{t(tb.label)}{basicPc && tb.id === currentTab && <small className="b-current">{t('nav.current')}</small>}</a>
                     </li>

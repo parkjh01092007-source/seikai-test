@@ -66,7 +66,7 @@ export function recordDays(entries, savedDate) {
 
 // データから求める項目。お金は既存の純関数を使う。savedAt・memo・kind はファイルの一番上にあるので、ここには入れない
 const SUMMARY_CALCS = {
-  free: (data) => freeAmount(data.accounts, data.entries).total,
+  free: (data, savedAt) => freeAmount(data.accounts, data.entries, data.loans, savedAt.slice(0, 7)).total, // 借りているお金は、セーブした月の返済額だけ引く
   days: (data, savedAt) => recordDays(data.entries, savedAt.slice(0, 10)),
   lastDate: (data) => data.entries.map((e) => e.date).sort().at(-1) ?? null,
   count: (data) => data.entries.length,
