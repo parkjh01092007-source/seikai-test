@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import './balance.css'
-import { groupByType, ledgerBook, accountTrend, formatYen, currencyUnit, canEditEntry } from '../ledgerLogic.js'
+import { groupByType, ledgerBook, accountTrend, formatYen, currencyUnit, canEditEntry, payMarkText } from '../ledgerLogic.js'
 import { today } from '../today.js'
 import { t } from '../text.js'
 import { toHash } from '../route.js'
@@ -104,6 +104,7 @@ export default function LedgerBook({ data }) {
                   <span>{t('common.balance')} <Num n={r.balance} /></span>
                   {KIND_LABELS[r.entry.kind] && <span>{t('entries.kindNote', { kind: KIND_LABELS[r.entry.kind] })}</span>}
                   {r.entry.memo && <span>{r.entry.memo}</span>}
+                  {r.entry.pay && basicPhone && <span className="pay-mark">{payMarkText(r.entry.pay)}</span>}
                 </span>
               </li>
             ))}
@@ -134,7 +135,7 @@ export default function LedgerBook({ data }) {
                   <td>{r.debit !== null && formatYen(r.debit)}</td>
                   <td>{r.credit !== null && formatYen(r.credit)}</td>
                   <td><Num n={r.balance} /></td>
-                  <td className="text wrap">{r.entry.memo}</td>
+                  <td className="text wrap">{r.entry.memo}{r.entry.pay && basicPc && <span className="pay-mark">{payMarkText(r.entry.pay)}</span>}</td>
                   <td className="text">{KIND_LABELS[r.entry.kind]}</td>
                 </tr>
               ))}

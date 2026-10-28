@@ -1,6 +1,6 @@
 // セーブ・ロードの純関数（フォルダの読み書きは saveStore.js）。new Date は使わない。今の時刻・セーブした日時は、呼ぶ側から引数で渡す。
 // 日時（savedAt）は、ローカルの時差つきの ISO 形式（例 2026-10-10T08:30:12.345+09:00）。先頭10文字がローカルの日付になる。
-import { freeAmount, accountBalances, formatMoney, currencyUnit, isCurrency } from './ledgerLogic.js'
+import { freeAmount, cardLaterTotal, accountBalances, formatMoney, currencyUnit, isCurrency } from './ledgerLogic.js'
 import { t } from './text.js'
 import { parseImport, SCHEMA_VERSION } from './storage.js'
 
@@ -66,7 +66,7 @@ export function recordDays(entries, savedDate) {
 
 // データから求める項目。お金は既存の純関数を使う。savedAt・memo・kind はファイルの一番上にあるので、ここには入れない
 const SUMMARY_CALCS = {
-  free: (data, savedAt) => freeAmount(data.accounts, data.entries, data.loans, savedAt.slice(0, 7)).total, // 借りているお金は、セーブした月の返済額だけ引く
+  free: (data, savedAt) => freeAmount(data.accounts, data.entries, data.loans, savedAt.slice(0, 7), cardLaterTotal(data.accounts, data.entries, savedAt.slice(0, 10))).total, // 借りているお金は、セーブした月の返済額だけ引く。クレカの分割・リボの先の分は引かない
   days: (data, savedAt) => recordDays(data.entries, savedAt.slice(0, 10)),
   lastDate: (data) => data.entries.map((e) => e.date).sort().at(-1) ?? null,
   count: (data) => data.entries.length,

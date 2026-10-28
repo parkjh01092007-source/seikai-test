@@ -3,7 +3,7 @@ import { t, getLanguage } from './text.js'
 import { ENTRY_PRESET_NAME_LOAD_MAX, ENTRY_HIDDEN_KEYS, makeInitialAccounts, addKeys, addCardRoles, addPresets, addLiving, addFixed, hasFixed, applySubscriptions, emptySettings, sanitizeSettings, defaultCurrency, isCurrency, budgetKindAllows, isBudgetMonth, LOAN_KINDS, LOAN_NAME_MAX, hasLivingMonth, livingAccount, TYPES, ROLES, LIABILITY_ROLES, PRESETS, KINDS, LIVING, SPECIAL_KEYS, isDate } from './ledgerLogic.js'
 
 const KEY = 'orenoyome'
-export const SCHEMA_VERSION = 12
+export const SCHEMA_VERSION = 13
 
 // 初めての起動と全体の初期化：初期科目はその時点の言語の名前で作り、通貨は言語に合わせる（韓国語ならウォン、それ以外は円）
 export const emptyData = (language = getLanguage()) => ({ schemaVersion: SCHEMA_VERSION, skills: [], accounts: makeInitialAccounts(undefined, language), entries: [], subscriptions: [], settings: { ...emptySettings(), currency: defaultCurrency(language) }, budgets: [], entryPresets: [], noSpendDays: [], loans: [] })
@@ -25,7 +25,7 @@ export const needsMigration = (data) => data.schemaVersion < SCHEMA_VERSION
 // 定期支払いの記入・保存・オートセーブのどれも書かない（古い版の決まりで書き換えて壊さないため。spec-pwa.md 6章）
 export const isNewerData = (data) => Number.isInteger(data?.schemaVersion) && data.schemaVersion > SCHEMA_VERSION
 
-// v1（スキルのみ）・v2〜v11 → v12。スキルはそのまま引き継ぐ。成功: { data, warnings } / 失敗: { error }（渡したデータは変えない）
+// v1（スキルのみ）・v2〜v12 → v13。スキルはそのまま引き継ぐ。成功: { data, warnings } / 失敗: { error }（渡したデータは変えない）
 // v1：初期科目（language の名前）・仕訳なし。v2：key を付ける（欠けたら error）。v3：そのまま。v4：定期支払いもそのまま。v5：設定（お気に入り）もそのまま。v6：予算もそのまま。
 // 負債に role を付ける（v7。key が credit-card → card・締め日31・引き落とし日27、ほか → other）。
 // 科目に preset を付ける（v7 以前だけ。名前と区分が、ja・ko どちらかの初期名と同じ科目。key を持つ科目・同じ preset の2つ目には付けない）。
@@ -33,7 +33,8 @@ export const isNewerData = (data) => Number.isInteger(data?.schemaVersion) && da
 // 生活費の月を付ける（v9。収益の科目（調整益を除く）と、それを使う通常の仕訳に same）。
 // 固定費の印を付ける（v10。費用の科目（調整損を除く）に fixed。preset が通信費なら true、ほかは false）。
 // 仕訳プリセット（entryPresets）と「使っていない日」（noSpendDays）を空で足す（v11。v11 以上のデータは、検証してそのまま引き継ぐ）。
-// 借りているお金（loans）を空で足す（v12。v12 のデータは検証してそのまま引き継ぐ）。
+// 借りているお金（loans）を空で足す（v12。v12 以上のデータは検証してそのまま引き継ぐ）。
+// 分割払い・リボ（v13）：仕訳の pay とクレカの科目の revolving は任意の項目なので、v12 以前からの移行では何も足さない。v12 以前のデータに pay・revolving があれば error（新しい版の項目なので）。
 // subscriptions（v4 より前は空）、settings（v5 より前は空の初期値）、budgets（v6 より前は空）を足す。
 // v7 以前のデータに preset、v8 以前のデータに livingMonth・living、v9 以前のデータに fixed があれば error（新しい版の項目なので）。組み立てた結果は、返す前に v11 の検証にかける。保存は、呼ぶ側が成功のときだけ行う。
 // warnings：v5〜v8 の設定で、その項目だけ無視したときの警告の文（なければ空）
@@ -57,12 +58,12 @@ export function migrate(data, language = getLanguage()) {
   if (Array.isArray(accounts)) accounts = addCardRoles(accounts)
   const budgets = data.schemaVersion >= 6 ? data.budgets : []
   const v = data.schemaVersion
-  const error = checkLedger(accounts, entries, { requireKeys: true, v7: true, v8: v === 1 || v >= 8, v9: v === 1 || v >= 9, v10: v === 1 || v >= 10 }) ?? checkSubscriptions(subscriptions, accounts) ?? checkBudgets(budgets, accounts)
+  const error = checkLedger(accounts, entries, { requireKeys: true, v7: true, v8: v === 1 || v >= 8, v9: v === 1 || v >= 9, v10: v === 1 || v >= 10, v13: v >= 13 }) ?? checkSubscriptions(subscriptions, accounts) ?? checkBudgets(budgets, accounts)
   if (error) return { error }
   if (v < 8) accounts = addPresets(accounts) // v8 の科目には付け足さない
   ;({ accounts, entries } = addLiving(accounts, entries))
   accounts = addFixed(accounts)
-  const addedError = checkLedger(accounts, entries, { requireKeys: true, v7: true, v8: true, v9: true, v10: true }) // 付けた結果の検証
+  const addedError = checkLedger(accounts, entries, { requireKeys: true, v7: true, v8: true, v9: true, v10: true, v13: v >= 13 }) // 付けた結果の検証
   if (addedError) return { error: addedError }
   if (v >= 8 && !isCurrency(data.settings?.currency)) return { error: t('import.currencyInvalid') }
   let settings = emptySettings()
@@ -177,13 +178,19 @@ const validLivingMonth = (a, v9) => (v9 && hasLivingMonth(a) ? LIVING.includes(a
 // fixed：v10 から。費用の科目（調整損を除く）は真偽値を必ず持つ。ほかの科目と v9 以前は持たない
 const validFixed = (a, v10) => (v10 && hasFixed(a) ? typeof a.fixed === 'boolean' : a.fixed === undefined)
 
-function validAccount(a, v7, v8, v9, v10) {
+// revolving：v13 から。クレカ（role が card）の科目だけが持てる任意の項目（リボの毎月の支払い額と年率。rate は 1/100 %）。持たなくてもよい
+const validRevolving = (a, v13) =>
+  a.revolving === undefined ||
+  (v13 && a.type === 'liability' && a.role === 'card' && isObj(a.revolving) && Object.keys(a.revolving).every((k) => k === 'monthly' || k === 'rate') &&
+    isInt(a.revolving.monthly) && a.revolving.monthly >= 1 && isInt(a.revolving.rate) && a.revolving.rate >= 0 && a.revolving.rate <= 10000)
+
+function validAccount(a, v7, v8, v9, v10, v13) {
   return (
     isObj(a) && isStr(a.id) && isStr(a.name) && a.name.trim() !== '' &&
     TYPES.includes(a.type) &&
     (a.key === undefined || SPECIAL_KEYS.includes(a.key)) &&
     validRole(a, v7) && validCardDays(a, v7) &&
-    (!v7 || a.key !== 'credit-card' || a.role === 'card') && validPreset(a, v8) && validLivingMonth(a, v9) && validFixed(a, v10) &&
+    (!v7 || a.key !== 'credit-card' || a.role === 'card') && validPreset(a, v8) && validLivingMonth(a, v9) && validFixed(a, v10) && validRevolving(a, v13) &&
     typeof a.active === 'boolean' && isStr(a.createdAt) && isStr(a.updatedAt)
   )
 }
@@ -192,20 +199,32 @@ const unique = (list) => new Set(list).size === list.length
 
 // living：v9 から。収益の科目（調整益を除く）を使う通常の仕訳は same・next のどちらかを必ず持つ。
 // ほかの仕訳（開始残高・残高調整・収益を使わない仕訳・調整益だけの仕訳）と v8 以前は持たない
-function validEntry(e, accounts, accountIds, v9) {
+// pay：v13 から。通常の仕訳で、貸方がクレカのものだけが持てる任意の項目（なければ一括）。
+// 分割：{ mode: 'installment', count: 2〜60 の整数, rate?: 0〜10000（年率の 1/100 %。見込み用） }、リボ：{ mode: 'revolving' }。
+// クレカにリボの設定（revolving）がなくても、リボの仕訳は読める（計算では一括として扱う）
+const PAY_KEYS = { installment: ['mode', 'count', 'rate'], revolving: ['mode'] }
+const validPay = (e, cardIds, v13) =>
+  e.pay === undefined ||
+  (v13 && e.kind === 'normal' && cardIds.has(e.creditId) && isObj(e.pay) && Object.keys(PAY_KEYS[e.pay.mode] ?? []).length > 0 &&
+    Object.keys(e.pay).every((k) => PAY_KEYS[e.pay.mode].includes(k)) &&
+    (e.pay.mode === 'revolving' ||
+      (isInt(e.pay.count) && e.pay.count >= 2 && e.pay.count <= 60 && (e.pay.rate === undefined || (isInt(e.pay.rate) && e.pay.rate >= 0 && e.pay.rate <= 10000)))))
+
+function validEntry(e, accounts, accountIds, v9, v13, cardIds) {
   return (
     isObj(e) && isStr(e.id) && isDate(e.date) &&
     accountIds.has(e.debitId) && accountIds.has(e.creditId) && e.debitId !== e.creditId &&
     isInt(e.amount) && e.amount >= 1 && isStr(e.memo) && KINDS.includes(e.kind) &&
     (v9 && e.kind === 'normal' && livingAccount(accounts, e.debitId, e.creditId) ? LIVING.includes(e.living) : e.living === undefined) &&
+    validPay(e, cardIds, v13) &&
     isStr(e.createdAt) && isStr(e.updatedAt)
   )
 }
 
 // accounts / entries の検証。エラー文を返す（問題なければ null）。requireKeys: 4つの特別科目の key が揃っていること（v3）。v7: 負債の role・締め日・引き落とし日の検証（v7）。v8: preset の検証（v8。同じ preset の重複もエラー）。
-// v9: 生活費の月（科目の livingMonth・仕訳の living）の検証。v10: 固定費の印（科目の fixed）の検証
-function checkLedger(accounts, entries, { requireKeys = false, v7 = false, v8 = false, v9 = false, v10 = false } = {}) {
-  if (!Array.isArray(accounts) || !accounts.every((a) => validAccount(a, v7, v8, v9, v10))) return t('import.accountsShape')
+// v9: 生活費の月（科目の livingMonth・仕訳の living）の検証。v10: 固定費の印（科目の fixed）の検証。v13: 分割払い・リボ（クレカの revolving・仕訳の pay）の検証
+function checkLedger(accounts, entries, { requireKeys = false, v7 = false, v8 = false, v9 = false, v10 = false, v13 = false } = {}) {
+  if (!Array.isArray(accounts) || !accounts.every((a) => validAccount(a, v7, v8, v9, v10, v13))) return t('import.accountsShape')
   if (!unique(accounts.map((a) => a.id))) return t('import.accountIdDup')
   if (!unique(accounts.map((a) => a.name.trim()))) return t('import.accountNameDup')
   if (!unique(accounts.filter((a) => a.preset !== undefined).map((a) => a.preset))) return t('import.accountPresetDup')
@@ -214,7 +233,8 @@ function checkLedger(accounts, entries, { requireKeys = false, v7 = false, v8 = 
   if (requireKeys && !SPECIAL_KEYS.every((k) => keys.includes(k))) return t('import.specialMissing')
   if (!Array.isArray(entries)) return t('import.entriesShape')
   const ids = new Set(accounts.map((a) => a.id))
-  if (!entries.every((e) => validEntry(e, accounts, ids, v9))) return t('import.entriesInvalid')
+  const cardIds = new Set(accounts.filter((a) => a.type === 'liability' && a.role === 'card').map((a) => a.id))
+  if (!entries.every((e) => validEntry(e, accounts, ids, v9, v13, cardIds))) return t('import.entriesInvalid')
   if (!unique(entries.map((e) => e.id))) return t('import.entryIdDup')
   return null
 }
@@ -324,13 +344,13 @@ export function parseImport(text, language = getLanguage()) {
   if (json.schemaVersion < 1 || !Array.isArray(json.skills) || !json.skills.every(validSkill))
     return { error: t('import.dataShape') }
   if (json.schemaVersion === 1) return migrate(json, language)
-  const error = checkLedger(json.accounts, json.entries, { requireKeys: json.schemaVersion >= 3, v7: json.schemaVersion >= 7, v8: json.schemaVersion >= 8, v9: json.schemaVersion >= 9, v10: json.schemaVersion >= 10 })
+  const error = checkLedger(json.accounts, json.entries, { requireKeys: json.schemaVersion >= 3, v7: json.schemaVersion >= 7, v8: json.schemaVersion >= 8, v9: json.schemaVersion >= 9, v10: json.schemaVersion >= 10, v13: json.schemaVersion >= 13 })
   if (error) return { error }
   if (json.schemaVersion >= 4) {
     const subError = checkSubscriptions(json.subscriptions, json.accounts)
     if (subError) return { error: subError }
   }
-  if (json.schemaVersion < 12) return migrate(json, language) // v2〜v11 → v12（migrate が v12 の検証をする。v5〜v8 の設定の警告も返る）
+  if (json.schemaVersion < 13) return migrate(json, language) // v2〜v12 → v13（migrate が v13 の検証をする。v5〜v8 の設定の警告も返る）
   const r = sanitizeSettings(json.settings, json.accounts)
   if (r.error) return { error: r.error }
   if (!isCurrency(json.settings.currency)) return { error: t('import.currencyInvalid') }

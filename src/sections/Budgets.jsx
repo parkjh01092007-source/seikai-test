@@ -4,7 +4,7 @@ import './balance.css'
 import './budgets.css'
 import {
   BUDGET_RULES, budgetAccountOptions, effectiveBudget, monthReport, goalActualMap, budgetStatus,
-  addBudget, changeBudgetAmount, removeBudget, budgetHistory, hasBudget, isPastBudgetMonth, previousMonth, formatMoney, budgetFreeAmount, currencyUnit, formatYen,
+  addBudget, changeBudgetAmount, removeBudget, budgetHistory, hasBudget, isPastBudgetMonth, previousMonth, formatMoney, budgetFreeAmount, cardLaterTotal, currencyUnit, formatYen,
 } from '../ledgerLogic.js'
 import { today } from '../today.js'
 import { t } from '../text.js'
@@ -209,7 +209,7 @@ export default function Budgets({ data, update }) {
   const heroUnit = currencyUnit(currency)
   const hero = gunjoPc && bandHost && createPortal(
     tab === 'month'
-      ? (month && <BandStat label={t('budgets.heroFree')} value={signedYen(budgetFreeAmount(accounts, entries, budgets, month, data.loans).total, formatYen)} unit={heroUnit} />)
+      ? (month && <BandStat label={t('budgets.heroFree')} value={signedYen(budgetFreeAmount(accounts, entries, budgets, month, data.loans, cardLaterTotal(accounts, entries, today())).total, formatYen)} unit={heroUnit} />)
       : <BandStat label={t('budgets.heroCount')} value={budgeted.length} unit={t('settings.countUnit')} />,
     bandHost)
   const heading = (title, en) => (gunjoPc ? <h2 className="g-h">{title}<small lang="en">{en}</small></h2> : basicPc ? <div className="b-section-head"><h3>{title}</h3></div> : <h3>{title}</h3>)

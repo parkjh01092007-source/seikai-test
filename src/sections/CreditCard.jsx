@@ -141,7 +141,7 @@ export default function CreditCard({ data, update, detailId = null }) {
   if (selected) {
     return (
       <div className={gunjoPc ? 'report g-rep' : basicPc ? 'report b-page b-card-detail' : basicPhone ? 'report b-phone-p2 b-phone-card-detail' : 'report'}>
-        <CreditCardDetail card={selected} backHref={cardHash(null)} unit={unit} />
+        <CreditCardDetail card={selected} backHref={cardHash(null)} unit={unit} entries={data.entries} data={data} update={update} />
       </div>
     )
   }
@@ -212,7 +212,7 @@ export default function CreditCard({ data, update, detailId = null }) {
               <li key={r.account.id}>
                 <a className={`card-button${r.account.active ? '' : ' inactive'}`} href={cardHash(r.account.id)}>
                   <span>{r.account.name}{!r.account.active && t('common.inactive')}</span>
-                  <span className="amount">{t('card.next')}{' '}<Num n={r.next} />{unit}{basicPhone && <span className={`b-phone-state${status === 'paid' ? ' paid' : ''}`} title={status === 'paid' ? t('card.statusPaidHint') : undefined}>{status === 'paid' ? t('card.statusPaid') : t('card.statusClosed')}</span>}</span>
+                  <span className="amount">{t('card.next')}{' '}<Num n={r.next} />{unit}{(basicPc || basicPhone) && r.later > 0 && <span className="b-card-later">{t('card.later')}{' '}<Num n={r.later} />{unit}</span>}{basicPhone && <span className={`b-phone-state${status === 'paid' ? ' paid' : ''}`} title={status === 'paid' ? t('card.statusPaidHint') : undefined}>{status === 'paid' ? t('card.statusPaid') : t('card.statusClosed')}</span>}</span>
                 </a>
               </li>
             )

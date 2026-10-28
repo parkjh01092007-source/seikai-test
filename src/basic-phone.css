@@ -748,4 +748,76 @@
   :root[data-theme='basic'] .b-phone-loans .b-loan-zero { stroke: var(--b-muted); stroke-dasharray: 4 4; }
   :root[data-theme='basic'] .b-phone-loans .b-loan-line { fill: none; stroke: var(--b-navy); stroke-width: 2.5; }
   :root[data-theme='basic'] .b-phone-loans .b-loan-dot { fill: var(--b-navy); }
+
+  /* 仕訳の入力：支払い方法（貸方がクレカのときだけ。押せる場所は 44px 以上）と、一覧の小さい印 */
+  :root[data-theme='basic'] .b-phone-entries .sheet .pay-fields { display: flex; flex-direction: column; gap: var(--b-space-2); }
+  :root[data-theme='basic'] .b-phone-entries .sheet .pay-label { color: var(--b-muted); font-size: var(--b-font-size); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-phone-entries .sheet .pay-modes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--b-space-2); }
+  :root[data-theme='basic'] .b-phone-entries .sheet .pay-counts,
+  :root[data-theme='basic'] .b-phone-entries .sheet .pay-detail { display: flex; flex-wrap: wrap; gap: var(--b-space-2); }
+  :root[data-theme='basic'] .b-phone-entries .sheet .pay-detail { flex-direction: column; }
+  :root[data-theme='basic'] .b-phone-entries .sheet .pay-mode,
+  :root[data-theme='basic'] .b-phone-entries .sheet .pay-count { box-sizing: border-box; min-width: var(--b-phone-control); min-height: var(--b-phone-control); border: 1px solid var(--b-line); border-radius: 0; background: var(--b-surface); color: var(--b-text); font: inherit; }
+  :root[data-theme='basic'] .b-phone-entries .sheet .pay-mode[aria-pressed='true'],
+  :root[data-theme='basic'] .b-phone-entries .sheet .pay-count[aria-pressed='true'] { background: var(--b-navy); border-color: var(--b-navy); color: var(--b-surface); }
+  :root[data-theme='basic'] .b-phone-entries .sheet .pay-mode:disabled { color: var(--b-muted); border-style: dashed; }
+  :root[data-theme='basic'] .b-phone-entries .sheet .pay-count-input { box-sizing: border-box; width: calc(var(--b-phone-control) * 1.4); min-height: var(--b-phone-control); text-align: right; font-size: var(--b-phone-font); }
+  :root[data-theme='basic'] .b-phone-entries .sheet .pay-rate { display: flex; flex-direction: column; gap: var(--b-space-1); color: var(--b-muted); }
+  :root[data-theme='basic'] .b-phone-entries .sheet .pay-rate input { box-sizing: border-box; width: 100%; min-height: var(--b-phone-control); font-size: var(--b-phone-font); }
+  :root[data-theme='basic'] .b-phone-entries .sheet .pay-hint { color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-phone-entries .pay-mark { display: inline-block; margin-left: var(--b-space-2); padding: var(--b-space-0) var(--b-space-2); border: 1px solid var(--b-line); color: var(--b-muted); font-size: var(--b-font-small); white-space: nowrap; }
+  :root[data-theme='basic'] .b-phone-entries .sheet .pay-counts { flex-wrap: nowrap; }
+  :root[data-theme='basic'] .b-phone-entries .sheet .pay-other-input { display: flex; align-items: center; gap: var(--b-space-2); color: var(--b-muted); }
+
+  /* クレカの個別ページ：まだ払っていない分・リボの設定（押せる場所は 44px 以上）。一覧の「先の分」。元帳の印 */
+  :root[data-theme='basic'] .b-phone-card-detail .card-plans,
+  :root[data-theme='basic'] .b-phone-card-detail .card-revolving { margin-bottom: var(--b-space-5); }
+  :root[data-theme='basic'] .b-phone-card-detail .plan-list,
+  :root[data-theme='basic'] .b-phone-card-detail .plan-later { margin: var(--b-space-0); padding: var(--b-space-0); list-style: none; }
+  :root[data-theme='basic'] .b-phone-card-detail .plan-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--b-space-1) var(--b-space-3); align-items: baseline; padding: var(--b-space-3) var(--b-space-0); border-bottom: 1px solid var(--b-line); }
+  :root[data-theme='basic'] .b-phone-card-detail .plan-left { grid-column: 1; color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-phone-card-detail .plan-remain { grid-column: 2; grid-row: 1 / 3; text-align: right; font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-phone-card-detail .plan-fee { grid-column: 1 / -1; color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-phone-card-detail .plan-later-title { display: flex; justify-content: space-between; margin: var(--b-space-3) var(--b-space-0) var(--b-space-1); color: var(--b-muted); }
+  :root[data-theme='basic'] .b-phone-card-detail .plan-later li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--b-space-1) var(--b-space-3); padding: var(--b-space-2) var(--b-space-0); border-bottom: 1px solid var(--b-line); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-phone-card-detail .plan-later li span:nth-child(2) { grid-column: 1; color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-phone-card-detail .plan-later li b { grid-column: 2; grid-row: 1 / 3; text-align: right; }
+  :root[data-theme='basic'] .b-phone-card-detail .plan-later .plan-more { display: block; color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-phone-card-detail .card-revolving form { display: flex; flex-direction: column; gap: var(--b-space-3); }
+  :root[data-theme='basic'] .b-phone-card-detail .card-revolving .field { display: flex; flex-direction: column; gap: var(--b-space-1); color: var(--b-muted); }
+  :root[data-theme='basic'] .b-phone-card-detail .card-revolving input { box-sizing: border-box; width: 100%; min-height: var(--b-phone-control); font-size: var(--b-phone-font); }
+  :root[data-theme='basic'] .b-phone-card-detail .card-revolving button { box-sizing: border-box; min-height: var(--b-phone-action); }
+  :root[data-theme='basic'] .b-phone-cards .b-card-later { display: block; color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-phone-card-detail .pay-mark,
+  :root[data-theme='basic'] .b-phone-book .pay-mark { display: inline-block; margin-left: var(--b-space-2); padding: var(--b-space-0) var(--b-space-2); border: 1px solid var(--b-line); color: var(--b-muted); font-size: var(--b-font-small); white-space: nowrap; }
+
+  /* 借入のページの別枠（スマホ）：まだ払っていない分。初めは畳む。開閉の印は右端の矢印（開くと回る） */
+  :root[data-theme='basic'] .b-phone-loans .b-pl-unpaid { border: 1px solid var(--b-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-unpaid > summary { display: flex; align-items: center; gap: var(--b-space-3); box-sizing: border-box; min-height: var(--b-phone-control); padding: var(--b-space-2) var(--b-space-4); cursor: pointer; list-style: none; }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-unpaid > summary::-webkit-details-marker { display: none; }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-unpaid > summary > span { flex: 1 1 auto; min-width: 0; }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-unpaid > summary > strong { font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-unpaid > summary .icon { width: var(--b-font-large); height: var(--b-font-large); flex: none; color: var(--b-muted); transition: transform 0.15s; }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-unpaid[open] > summary .icon { transform: rotate(180deg); }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-unpaid ul { margin: var(--b-space-0); padding: var(--b-space-0) var(--b-space-4); list-style: none; }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-unpaid li { display: flex; flex-direction: column; gap: var(--b-space-1); padding: var(--b-space-3) var(--b-space-0); border-top: 1px solid var(--b-line); }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-unpaid li > a { display: flex; align-items: center; justify-content: space-between; gap: var(--b-space-3); min-height: var(--b-phone-control); color: var(--b-navy); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-unpaid-sub { color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-phone-loans .b-unpaid-plans { margin: var(--b-space-0); padding: var(--b-space-0); list-style: none; color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-phone-loans .b-unpaid-plans li { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--b-space-1) var(--b-space-2); padding: var(--b-space-1) var(--b-space-0); border-top: 0; }
+  :root[data-theme='basic'] .b-phone-loans .b-unpaid-plans b { margin-left: auto; color: var(--b-text); }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-unpaid .note { margin: var(--b-space-0); padding: var(--b-space-0) var(--b-space-4) var(--b-space-3); }
+  :root[data-theme='basic'] .b-phone-loans .pay-mark { padding: var(--b-space-0) var(--b-space-2); border: 1px solid var(--b-line); white-space: nowrap; }
+  /* クレカの個別ページ（スマホ）：先の請求の予定は、初めは畳む（開閉の印つき） */
+  :root[data-theme='basic'] .b-phone-card-detail .plan-later-fold > summary { display: flex; align-items: center; gap: var(--b-space-3); box-sizing: border-box; min-height: var(--b-phone-control); padding: var(--b-space-2) var(--b-space-0); cursor: pointer; list-style: none; color: var(--b-muted); }
+  :root[data-theme='basic'] .b-phone-card-detail .plan-later-fold > summary::-webkit-details-marker { display: none; }
+  :root[data-theme='basic'] .b-phone-card-detail .plan-later-fold > summary > span { flex: 1 1 auto; }
+  :root[data-theme='basic'] .b-phone-card-detail .plan-later-fold > summary > b { color: var(--b-text); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-phone-card-detail .plan-later-fold > summary .icon { width: var(--b-font-large); height: var(--b-font-large); flex: none; transition: transform 0.15s; }
+  :root[data-theme='basic'] .b-phone-card-detail .plan-later-fold[open] > summary .icon { transform: rotate(180deg); }
+  :root[data-theme='basic'] .b-phone-loans .b-pl-unpaid > summary > strong { white-space: nowrap; }
+  :root[data-theme='basic'] .b-phone-loans .b-unpaid-plans li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--b-space-1) var(--b-space-3); align-items: baseline; }
+  :root[data-theme='basic'] .b-phone-loans .b-up-name { display: flex; align-items: baseline; gap: var(--b-space-2); min-width: 0; }
+  :root[data-theme='basic'] .b-phone-loans .b-up-line { grid-column: 1 / -1; grid-row: 2; }
+  :root[data-theme='basic'] .b-phone-loans .b-unpaid-plans b { grid-column: 2; grid-row: 1; margin-left: 0; text-align: right; }
 }

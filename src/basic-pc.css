@@ -612,4 +612,56 @@
   :root[data-theme='basic'] .b-loan-plan td { padding: var(--b-space-2) var(--b-space-4); border-bottom: 1px solid var(--b-line); text-align: right; white-space: nowrap; }
   :root[data-theme='basic'] .b-loan-plan th:first-child,
   :root[data-theme='basic'] .b-loan-plan td:first-child { text-align: left; }
+
+  /* 仕訳の入力：支払い方法（貸方がクレカのときだけ。一括／分割（回数）／リボ）と、一覧の小さい印。色・文字・余白は変数 */
+  :root[data-theme='basic'] .b-entries .pay-fields { display: flex; flex-basis: 100%; flex-wrap: wrap; align-items: center; gap: var(--b-space-3) var(--b-space-4); }
+  :root[data-theme='basic'] .b-entries .pay-label { color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-entries .pay-modes,
+  :root[data-theme='basic'] .b-entries .pay-counts,
+  :root[data-theme='basic'] .b-entries .pay-detail { display: flex; flex-wrap: wrap; align-items: center; gap: var(--b-space-2); }
+  :root[data-theme='basic'] .b-entries .pay-detail { gap: var(--b-space-2) var(--b-space-5); }
+  :root[data-theme='basic'] .b-entries .pay-mode[aria-pressed='true'],
+  :root[data-theme='basic'] .b-entries .pay-count[aria-pressed='true'] { background: var(--b-navy); border-color: var(--b-navy); color: var(--b-surface); }
+  :root[data-theme='basic'] .b-entries .pay-mode:disabled { color: var(--b-muted); border-style: dashed; }
+  :root[data-theme='basic'] .b-entries .pay-count { min-width: var(--b-control-h); padding-inline: var(--b-space-3); }
+  :root[data-theme='basic'] .b-entries .pay-count-input { width: calc(var(--b-control-h) * 1.6); text-align: right; }
+  :root[data-theme='basic'] .b-entries .pay-rate { display: flex; align-items: center; gap: var(--b-space-2); color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-entries .pay-rate input { width: var(--b-field-w); }
+  :root[data-theme='basic'] .b-entries .pay-hint { color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-entries .pay-mark { margin-left: var(--b-space-3); padding: var(--b-space-0) var(--b-space-2); border: 1px solid var(--b-line); color: var(--b-muted); font-size: var(--b-font-small); white-space: nowrap; }
+  :root[data-theme='basic'] .b-entries .pay-counts { flex-wrap: nowrap; }
+  :root[data-theme='basic'] .b-entries .pay-other-input { display: flex; align-items: center; gap: var(--b-space-2); color: var(--b-muted); }
+
+  /* クレカの個別ページ：まだ払っていない分・リボの設定。一覧の「先の分」。元帳の印。色・文字・余白は変数 */
+  :root[data-theme='basic'] .b-card-detail .card-plans,
+  :root[data-theme='basic'] .b-card-detail .card-revolving { margin-bottom: var(--b-space-6); }
+  :root[data-theme='basic'] .b-card-detail .plan-list,
+  :root[data-theme='basic'] .b-card-detail .plan-later { margin: var(--b-space-0); padding: var(--b-space-0); list-style: none; }
+  :root[data-theme='basic'] .b-card-detail .plan-row { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.6fr) auto; gap: var(--b-space-1) var(--b-space-5); align-items: baseline; padding: var(--b-space-3) var(--b-space-0); border-bottom: 1px solid var(--b-line); }
+  :root[data-theme='basic'] .b-card-detail .plan-remain { text-align: right; font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-card-detail .plan-fee { grid-column: 1 / -1; color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-card-detail .plan-later-title { display: flex; justify-content: space-between; margin: var(--b-space-4) var(--b-space-0) var(--b-space-1); color: var(--b-muted); }
+  :root[data-theme='basic'] .b-card-detail .plan-later li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: var(--b-space-4); padding: var(--b-space-2) var(--b-space-0); border-bottom: 1px solid var(--b-line); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-card-detail .plan-later li b { text-align: right; }
+  :root[data-theme='basic'] .b-card-detail .plan-later .plan-more { display: block; color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-card-detail .card-revolving form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--b-space-4); }
+  :root[data-theme='basic'] .b-card-detail .card-revolving .b-field { flex: 0 1 var(--b-field-w); }
+  :root[data-theme='basic'] .b-cards .b-card-later { display: block; color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-card-detail .pay-mark,
+  :root[data-theme='basic'] .b-book .pay-mark { margin-left: var(--b-space-3); padding: var(--b-space-0) var(--b-space-2); border: 1px solid var(--b-line); color: var(--b-muted); font-size: var(--b-font-small); white-space: nowrap; }
+
+  /* 借入のページの別枠：まだ払っていない分（クレカ・後払い） */
+  :root[data-theme='basic'] .b-loans .b-loan-unpaid { margin-top: var(--b-space-8); }
+  :root[data-theme='basic'] .b-loans .b-loan-unpaid table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-loans .b-loan-unpaid th { padding: var(--b-space-2) var(--b-space-4); background: var(--b-table-head); color: var(--b-muted); font-size: var(--b-font-small); text-align: right; white-space: nowrap; }
+  :root[data-theme='basic'] .b-loans .b-loan-unpaid td { padding: var(--b-space-3) var(--b-space-4); border-bottom: 1px solid var(--b-line); text-align: right; vertical-align: top; white-space: nowrap; }
+  :root[data-theme='basic'] .b-loans .b-loan-unpaid th:first-child,
+  :root[data-theme='basic'] .b-loans .b-loan-unpaid td:first-child { text-align: left; white-space: normal; }
+  :root[data-theme='basic'] .b-loans .b-loan-unpaid td a { color: var(--b-navy); font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-loans .b-loan-unpaid td small { display: block; color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-loans .b-unpaid-plans { margin: var(--b-space-2) var(--b-space-0) var(--b-space-0); padding: var(--b-space-0); list-style: none; color: var(--b-muted); font-size: var(--b-font-small); font-weight: var(--b-weight-normal); }
+  :root[data-theme='basic'] .b-loans .b-unpaid-plans li { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--b-space-1) var(--b-space-3); padding: var(--b-space-1) var(--b-space-0); }
+  :root[data-theme='basic'] .b-loans .b-unpaid-plans b { margin-left: auto; color: var(--b-text); }
+  :root[data-theme='basic'] .b-loans .pay-mark { padding: var(--b-space-0) var(--b-space-2); border: 1px solid var(--b-line); white-space: nowrap; }
+  :root[data-theme='basic'] .b-loans .b-up-name { display: inline-flex; align-items: baseline; gap: var(--b-space-2); }
 }

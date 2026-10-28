@@ -10,6 +10,8 @@ import { BandStat, signedYen } from './PageBand.jsx'
 import { Icon } from './Icon.jsx'
 import { StateTag } from './FlowParts.jsx'
 import CardTimeline from './CardTimeline.jsx'
+import CardPlans from './CardPlans.jsx'
+import CardRevolving from './CardRevolving.jsx'
 import { paidInAdvance, periodStatus } from '../flowArt.js'
 import { today } from '../today.js'
 
@@ -17,7 +19,7 @@ const PERIOD_ROWS = 6 // 請求期間の表に出す行（新しい順）。残�
 const Num = ({ n }) => <span className={n < 0 ? 'neg' : ''}>{formatYen(n)}</span>
 
 // 個別ページ。card は cardReports の1枚分。表示するだけ（計算・並べ替え・判定は ledgerLogic.js）
-export default function CreditCardDetail({ card, backHref, unit }) {
+export default function CreditCardDetail({ card, backHref, unit, entries = [], data, update }) {
   const periods = periodRows(card.periods, card.lastClosing, card.payDay)
   const phone = usePhone()
   const gunjoPc = useGunjoPc()
@@ -109,6 +111,7 @@ export default function CreditCardDetail({ card, backHref, unit }) {
       {basicPhone ? <details className="b-phone-calcfold"><summary>{t('card.calcFold')}</summary><p className="note">{t('card.noteFormula', { date: card.lastClosing })} {t('card.noteRules')}</p></details> : <p className="note">
         {t('card.noteFormula', { date: card.lastClosing })} {t('card.noteRules')}
       </p>}
+      {(basicPc || basicPhone) && <CardPlans card={card} entries={entries} unit={unit} />}
       {basicPc ? <div className="b-section-head"><h3>{t('card.periodsTitle')}</h3></div> : <h3>{t('card.periodsTitle')}</h3>}
       {periods.length === 0 ? <p className="note">{t('card.noUsage')}</p> : phone ? (
         // スマホの幅（spec-mobile.md 第6章）：請求期間ごとに2行。1行目に締め日と利用額、2行目に引き落とし予定日と（未確定）。PC は下の表のまま
@@ -139,6 +142,7 @@ export default function CreditCardDetail({ card, backHref, unit }) {
           </tbody>
         </table></div>
       )}
+      {(basicPc || basicPhone) && data && update && <CardRevolving key={card.account.id} account={card.account} data={data} update={update} />}
     </>
   )
 }

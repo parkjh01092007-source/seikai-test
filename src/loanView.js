@@ -1,19 +1,11 @@
 // 「借りているお金」ページの計算と入力の検証（画面に出す数・入力の判定は、ここに置く。保存の形は storage.js、返す予定と自由に使える額は ledgerLogic.js）。
 // rate は年利の 1/100 %（0.9% は 90）。loan.rate・loan.payment は「はじめの値」で、変更は rateHistory（loanTermAt が月ごとに選ぶ）。
 import { t } from './text.js'
-import { newAccount, validateAccountName, parseOpeningAmount, openingInitial, isBudgetMonth, nextMonth, accountBalances, loanSchedule, loanTermAt, loanDue, LOAN_KINDS, LOAN_NAME_MAX } from './ledgerLogic.js'
+import { parseRate, formatRate, cardReports, cardPayPlans, newAccount, validateAccountName, parseOpeningAmount, openingInitial, isBudgetMonth, nextMonth, accountBalances, loanSchedule, loanTermAt, loanDue, LOAN_KINDS, LOAN_NAME_MAX } from './ledgerLogic.js'
 
 const monthIndex = (m) => Number(m.slice(0, 4)) * 12 + Number(m.slice(5, 7)) - 1
 
-// 利率（%）の入力：半角数字と小数点（小数は 2 桁まで）、0〜100。成功: { rate }（1/100 %）
-export function parseRate(text) {
-  const m = /^(\d{1,3})(?:\.(\d{1,2}))?$/.exec(String(text).trim())
-  if (!m) return { error: t('error.rateInvalid') }
-  const rate = Number(m[1]) * 100 + Number(((m[2] ?? '') + '00').slice(0, 2))
-  return rate > 10000 ? { error: t('error.rateInvalid') } : { rate }
-}
-
-export const formatRate = (rate) => String(rate / 100)
+export { parseRate, formatRate }
 
 // 返す日（1〜31）
 const parseDay = (text) => {
@@ -151,3 +143,14 @@ export function chartPoints(series) {
   return series.filter((p, i) => i === 0 || i === series.length - 1 || p.month.slice(5) === key || slope(series[i - 1], p) !== slope(p, series[i + 1]))
 }
 
+// 借入のページの別枠「まだ払っていない分（クレカ・後払い）」：残高が 0 でないカード（後払いも、カードの科目として入っている）ごとに、
+// { account, report（cardReport：next・unbilled・later・balance・payDate）, plans（cardPayPlans：分割の買い物・リボ） }。totals：{ balance, later }。
+// 一覧は、残高の大きい順。残高が 0 のカードは出さない。today は 'YYYY-MM-DD'
+export function unpaidCards(data, today) {
+  const items = cardReports(data.accounts, data.entries, today)
+    .filter((r) => r.balance !== 0)
+    .map((report) => ({ account: report.account, report, plans: cardPayPlans(report, data.entries) }))
+    .sort((a, b) => b.report.balance - a.report.balance)
+  const sum = (pick) => items.reduce((n, i) => n + pick(i.report), 0)
+  return { items, totals: { balance: sum((r) => r.balance), later: sum((r) => r.later) } }
+}

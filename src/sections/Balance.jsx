@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import './balance.css'
-import { TYPE_LABELS, accountBalances, freeAmount, budgetFreeAmount, typeTotals, assetShares, assetLiabilityGap, perDayAmount, daysLeftInMonth, roadDays, formatYen, currencyUnit } from '../ledgerLogic.js'
+import { TYPE_LABELS, accountBalances, freeAmount, budgetFreeAmount, cardLaterTotal, typeTotals, assetShares, assetLiabilityGap, perDayAmount, daysLeftInMonth, roadDays, formatYen, currencyUnit } from '../ledgerLogic.js'
 import { BALANCE_VIEWS, BALANCE_VIEW_LABELS, loadBalanceView } from '../storage.js'
 import { loadNoSpendShape } from '../entryView.js'
 import { today } from '../today.js'
@@ -22,10 +22,10 @@ const Num = ({ n }) => <span className={n < 0 ? 'neg' : ''}>{formatYen(n)}</span
 export default function Balance({ data }) {
   const { accounts, entries } = data
   const unit = currencyUnit(data.settings.currency)
-  const free = freeAmount(accounts, entries, data.loans, today().slice(0, 7)) // 借りているお金（loans）は、残高全体ではなく今月の返済額だけ引く
+  const free = freeAmount(accounts, entries, data.loans, today().slice(0, 7), cardLaterTotal(accounts, entries, today())) // 借りているお金（loans）は、残高全体ではなく今月の返済額だけ引く。クレカの分割・リボの先の分は引かない
   // 自由に使える額の表示：最初は設定（ブラウザごとに覚えた「自由に使える額の初めの表示」）。ボタンで切り替えた状態は覚えない（画面を移ると、設定の値に戻る）
   const [view, setView] = useState(loadBalanceView)
-  const budgeted = budgetFreeAmount(accounts, entries, data.budgets, today().slice(0, 7), data.loans) // 今月の予算を反映した額（仕様 5.13）
+  const budgeted = budgetFreeAmount(accounts, entries, data.budgets, today().slice(0, 7), data.loans, free.later) // 今月の予算を反映した額（仕様 5.13）
   const { rows, balanced } = accountBalances(accounts, entries)
   const phone = usePhone()
   const gunjoPc = useGunjoPc()
