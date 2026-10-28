@@ -210,7 +210,7 @@ export default function App() {
   // データの移行画面が出ているときは、# に関係なく移行画面を出す（古い形のデータなので、# も読まない）。新しい版のデータのときも同じく、# を読まない
   const migrating = needsMigration(data)
   const newer = isNewerData(data)
-  const route = migrating || newer ? null : parseHash(hash, hash.startsWith('#/ledger/entries/') ? data.entries.map((e) => e.id) : [...cardAccounts(data.accounts).map((a) => a.id), 'adjust']) // 仕訳のタブの id は仕訳。クレカのタブの id はカード
+  const route = migrating || newer ? null : parseHash(hash, hash.startsWith('#/ledger/entries/') ? data.entries.map((e) => e.id) : hash.startsWith('#/ledger/loans/') ? (data.loans ?? []).map((l) => l.id) : [...cardAccounts(data.accounts).map((a) => a.id), 'adjust']) // 仕訳のタブの id は仕訳。クレカのタブの id はカード
   const canonical = route ? toHash(route) : null
   // 設定以外の画面へ移ったら、設定のタブは初めの（記帳）に戻す。ほかの画面から設定へのリンク（セーブ画面の「設定へ」）は、移る前に setSettingsTab で開くタブを決める
   const onSettingsScreen = route?.tab === 'settings'

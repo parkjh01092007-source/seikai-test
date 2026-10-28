@@ -637,6 +637,18 @@
   :root[data-theme='basic'] .b-loan-plan th:first-child,
   :root[data-theme='basic'] .b-loan-plan td:first-child { text-align: left; }
 
+  /* 借入の専用ページ：記録のフォームと、その借入の仕訳の一覧。色・罫線・余白は変数 */
+  :root[data-theme='basic'] .b-loan-records { display: flex; flex-direction: column; gap: var(--b-space-4); }
+  :root[data-theme='basic'] .b-loan-form h4 { margin: var(--b-space-0); font-size: var(--b-font-label); }
+  :root[data-theme='basic'] .b-loan-ledger { display: flex; flex-direction: column; gap: var(--b-space-4); }
+  :root[data-theme='basic'] .b-loan-elist { display: flex; flex-direction: column; margin: var(--b-space-0); padding: var(--b-space-0); list-style: none; }
+  :root[data-theme='basic'] .b-loan-erow { display: grid; grid-template-columns: 7rem 5rem minmax(0, 1fr) auto auto; align-items: center; gap: var(--b-space-4); padding: var(--b-space-2) var(--b-space-4); border-bottom: 1px solid var(--b-line); }
+  :root[data-theme='basic'] .b-loan-erow.editing { display: block; }
+  :root[data-theme='basic'] .b-loan-erow .k { color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-loan-erow .a { font-variant-numeric: tabular-nums; text-align: right; }
+  :root[data-theme='basic'] .b-loan-erow .ops { display: flex; gap: var(--b-space-2); min-width: var(--b-space-6); }
+  :root[data-theme='basic'] .b-loan-link { color: var(--b-navy); font-size: var(--b-font-small); text-decoration: underline; white-space: nowrap; }
+
   /* 仕訳の入力：支払い方法（貸方がクレカのときだけ。一括／分割（回数）／リボ）と、一覧の小さい印。色・文字・余白は変数 */
   :root[data-theme='basic'] .b-entries .pay-fields { display: flex; flex-basis: 100%; flex-wrap: wrap; align-items: center; gap: var(--b-space-3) var(--b-space-4); }
   :root[data-theme='basic'] .b-entries .pay-label { color: var(--b-muted); font-size: var(--b-font-small); }

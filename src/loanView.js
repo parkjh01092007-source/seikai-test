@@ -1,7 +1,7 @@
 // 「借りているお金」ページの計算と入力の検証（画面に出す数・入力の判定は、ここに置く。保存の形は storage.js、返す予定と自由に使える額は ledgerLogic.js）。
 // rate は年利の 1/100 %（0.9% は 90）。loan.rate・loan.payment は「はじめの値」で、変更は rateHistory（loanTermAt が月ごとに選ぶ）。
 import { t } from './text.js'
-import { parseRate, formatRate, cardReports, cardPayPlans, newAccount, validateAccountName, parseOpeningAmount, openingInitial, isBudgetMonth, nextMonth, accountBalances, loanSchedule, loanTermAt, loanDue, LOAN_KINDS, LOAN_NAME_MAX } from './ledgerLogic.js'
+import { parseRate, formatRate, cardReports, cardPayPlans, newAccount, newEntry, formatMoney, validateAccountName, parseOpeningAmount, openingInitial, isBudgetMonth, nextMonth, accountBalances, loanSchedule, loanTermAt, loanDue, LOAN_KINDS, LOAN_NAME_MAX } from './ledgerLogic.js'
 
 const monthIndex = (m) => Number(m.slice(0, 4)) * 12 + Number(m.slice(5, 7)) - 1
 
@@ -153,4 +153,86 @@ export function unpaidCards(data, today) {
     .sort((a, b) => b.report.balance - a.report.balance)
   const sum = (pick) => items.reduce((n, i) => n + pick(i.report), 0)
   return { items, totals: { balance: sum((r) => r.balance), later: sum((r) => r.later) } }
+}
+
+// ---- 借入ごとの専用ページ（返済・受け取りの記録、仕訳の一覧）。自動の仕訳は作らない。保存の形は変えない（仕訳の借方か貸方が借入の科目なら、その借入の仕訳） ----
+const isYmd = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(`${s}T00:00:00Z`)) && new Date(`${s}T00:00:00Z`).toISOString().startsWith(s)
+
+// 仕訳の画面でロックする借入の仕訳か：通常の仕訳で、借方か貸方が借入の科目。該当する借入（なければ undefined）
+export const loanOfEntry = (loans, entry) => (entry.kind === 'normal' ? loans.find((l) => l.accountId === entry.debitId || l.accountId === entry.creditId) : undefined)
+
+export const interestMemo = (loan) => t('loans.memoInterest', { name: loan.name })
+// 利息の科目「支払利息」：同じ名前の科目があればそれ。なければ undefined（記録するときに作る）
+export const interestAccountOf = (accounts) => accounts.find((a) => a.type === 'expense' && a.name.trim() === t('loans.interestName'))
+
+// その借入の仕訳（新しい順）。借方か貸方が借入の科目の仕訳（開始残高・残高調整も。編集できるのは通常の仕訳だけ）＋ 利息の仕訳（借方が支払利息で、メモが利息の決まった文）
+export function loanEntries(data, loan) {
+  const interestId = interestAccountOf(data.accounts)?.id
+  return data.entries
+    .filter((e) => e.debitId === loan.accountId || e.creditId === loan.accountId || (e.kind === 'normal' && interestId !== undefined && e.debitId === interestId && e.memo === interestMemo(loan)))
+    .map((e) => ({ entry: e, type: e.debitId === loan.accountId ? 'repay' : e.creditId === loan.accountId ? 'receive' : 'interest' }))
+    .sort((a, b) => (a.entry.date === b.entry.date ? (a.entry.createdAt < b.entry.createdAt ? 1 : -1) : a.entry.date < b.entry.date ? 1 : -1))
+}
+
+// 今月の返済の予定（元金・利息）。返済の月でない・残りなしは 0
+export function plannedRepayment(loan, balance, month) {
+  const payment = loanDue(loan, balance, [], month)
+  const interest = Math.min(payment, Math.floor((balance * loanTermAt(loan, month).rate) / 120000))
+  return { payment, interest, principal: payment - interest }
+}
+
+// 受け取りの予定（奨学金の受け取り中の月だけ毎月の額。それ以外は 0）
+export const plannedReceipt = (loan, month) => (loan.receiving && month >= loan.receiving.from && month <= loan.receiving.to ? loan.receiving.monthly : 0)
+
+export const repaidThisMonth = (data, loan, month) => data.entries.some((e) => e.kind === 'normal' && e.debitId === loan.accountId && e.date.slice(0, 7) === month)
+export const receivedThisMonth = (data, loan, month) => data.entries.some((e) => e.kind === 'normal' && e.creditId === loan.accountId && e.date.slice(0, 7) === month)
+
+// 払う・受け取る口座の候補（使っている現金類）
+export const cashAccounts = (accounts) => accounts.filter((a) => a.type === 'asset' && a.role === 'cash' && a.active)
+
+// 1 行の確認の文（なければ null）。警告ではなく、「この額でよいか」を聞くだけ。planned は予定の合計、amount は入れた合計、again は今月すでに記録があるか
+export function confirmNote({ planned, amount, again, currency, receipt = false }) {
+  if (again) return t(receipt ? 'loans.noteAgainReceipt' : 'loans.noteAgain')
+  if (planned > 0 && amount !== planned) return t('loans.noteDiff', { planned: formatMoney(planned, currency) })
+  return null
+}
+
+// 返済の記録：元金の仕訳（借方＝借入の科目、貸方＝払う口座）と、利息があれば利息の仕訳（借方＝支払利息、貸方＝払う口座）。
+// 成功: { accounts, entries, added } / 失敗: { error }。渡したデータは変えない
+export function recordRepayment(data, loan, { date, principalText, interestText, fromId }, now = new Date().toISOString()) {
+  if (!isYmd(date)) return { error: t('error.dateInvalid') }
+  const p = parseOpeningAmount(String(principalText).trim())
+  if (p.error) return { error: p.error }
+  const i = parseOpeningAmount(String(interestText).trim())
+  if (i.error) return { error: i.error }
+  if (p.amount + i.amount < 1) return { error: t('loans.errAmount') }
+  if (!cashAccounts(data.accounts).some((a) => a.id === fromId)) return { error: t('loans.errAccount') }
+  let accounts = data.accounts
+  const added = []
+  if (p.amount > 0) added.push(newEntry({ date, debitId: loan.accountId, creditId: fromId, amount: p.amount }, t('loans.memoRepay', { name: loan.name }), now))
+  if (i.amount > 0) {
+    let acc = interestAccountOf(accounts)
+    if (!acc) { acc = newAccount(t('loans.interestName'), 'expense', undefined, now); accounts = [...accounts, acc] }
+    added.push(newEntry({ date, debitId: acc.id, creditId: fromId, amount: i.amount }, interestMemo(loan), now))
+  }
+  return { accounts, entries: [...data.entries, ...added], added }
+}
+
+// 受け取りの記録（借り始め・奨学金の毎月）：借方＝受け取る口座、貸方＝借入の科目。成功: { entries } / 失敗: { error }
+export function recordReceipt(data, loan, { date, amountText, toId }, now = new Date().toISOString()) {
+  if (!isYmd(date)) return { error: t('error.dateInvalid') }
+  const a = parseOpeningAmount(String(amountText).trim())
+  if (a.error) return { error: a.error }
+  if (a.amount < 1) return { error: t('loans.errAmount') }
+  if (!cashAccounts(data.accounts).some((x) => x.id === toId)) return { error: t('loans.errAccount') }
+  return { entries: [...data.entries, newEntry({ date, debitId: toId, creditId: loan.accountId, amount: a.amount }, t('loans.memoReceive', { name: loan.name }), now)] }
+}
+
+// 専用ページでの仕訳の直し（日付・金額・メモ。科目は変えない）。成功: { entries } / 失敗: { error }
+export function editLoanEntry(entries, id, { date, amountText, memo }, now = new Date().toISOString()) {
+  if (!isYmd(date)) return { error: t('error.dateInvalid') }
+  const a = parseOpeningAmount(String(amountText).trim())
+  if (a.error) return { error: a.error }
+  if (a.amount < 1) return { error: t('loans.errAmount') }
+  return { entries: entries.map((e) => (e.id === id ? { ...e, date, amount: a.amount, memo, updatedAt: now } : e)) }
 }

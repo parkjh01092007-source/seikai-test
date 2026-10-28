@@ -5,6 +5,8 @@ import {
   entriesOfMonth, groupEntriesByDate, groupByTens, canEditEntry, formatMoney, formatYen, currencyUnit, roadDays, isCard, PAY_DEFAULT, payInitial, payMarkText,
 } from '../ledgerLogic.js'
 import { today } from '../today.js'
+import { toHash } from '../route.js'
+import { loanOfEntry } from '../loanView.js'
 import { t } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import { usePhone } from '../layout.js'
@@ -320,7 +322,7 @@ export const KIND_LABELS = {
   get adjustment() { return t('entries.kind.adjustment') },
 }
 
-function EntryRow({ entry, number, accounts, favorites, currency, editing, onEdit, onCancel, onSave, onDelete, marked, markRef }) {
+function EntryRow({ entry, number, accounts, formAccounts, loanId, favorites, currency, editing, onEdit, onCancel, onSave, onDelete, marked, markRef }) {
   const gunjoPc = useGunjoPc()
   const basicPc = useBasicPc()
   const name = (id) => accounts.find((a) => a.id === id)?.name ?? ''
@@ -328,7 +330,7 @@ function EntryRow({ entry, number, accounts, favorites, currency, editing, onEdi
     return (
       <li>
         <EntryForm
-          accounts={accounts}
+          accounts={formAccounts ?? accounts}
           initial={{ date: entry.date, amount: String(entry.amount), debitId: entry.debitId, creditId: entry.creditId, memo: entry.memo, living: entry.living ?? null, ...payInitial(entry) }}
           currentIds={[entry.debitId, entry.creditId]}
           favorites={favorites}
@@ -377,7 +379,7 @@ function EntryRow({ entry, number, accounts, favorites, currency, editing, onEdi
         <span className="cell">{name(entry.creditId)}</span>
         <span className="amount">{formatYen(entry.amount)}</span>
         <span className="b-entry-ops">
-          {canEditEntry(entry) && <>
+          {loanId ? <a className="b-loan-link" href={loanHref(loanId)}>{t('entries.loanLink')}</a> : canEditEntry(entry) && <>
             <IconButton icon="edit" label={t('common.edit')} onClick={onEdit} />
             <IconButton icon="trash" className="b-danger" label={t('common.delete')} onClick={onDelete} />
           </>}
@@ -408,7 +410,7 @@ function EntryRow({ entry, number, accounts, favorites, currency, editing, onEdi
 }
 
 // スマホの幅の1件（spec-mobile.md 5.2）：2行のカード。押すと開く（開いている行は1つだけ。Entries が持つ）。開くと、全部の文字と、編集・削除（開始残高・残高調整は種類だけ）が出る
-function EntryCard({ entry, number, accounts, currency, open, onToggle, onEdit, onDelete, marked, markRef }) {
+function EntryCard({ entry, number, accounts, loanId, currency, open, onToggle, onEdit, onDelete, marked, markRef }) {
   const basicPhone = useBasicPhone()
   const name = (id) => accounts.find((a) => a.id === id)?.name ?? ''
   const detailId = `card-${entry.id}`
@@ -422,7 +424,7 @@ function EntryCard({ entry, number, accounts, currency, open, onToggle, onEdit, 
         {entry.pay && basicPhone && <span className="pay-mark">{payMarkText(entry.pay)}</span>}
       </button>
       <div id={detailId} className="card-actions" hidden={!open}>
-        {canEditEntry(entry) ? (
+        {loanId ? <a className="b-loan-link" href={loanHref(loanId)}>{t('entries.loanLink')}</a> : canEditEntry(entry) ? (
           <>
             <IconButton icon="edit" label={t('common.edit')} withText onClick={onEdit} />
             <IconButton icon="trash" label={t('common.delete')} withText className="danger" onClick={onDelete} />
@@ -432,6 +434,8 @@ function EntryCard({ entry, number, accounts, currency, open, onToggle, onEdit, 
     </li>
   )
 }
+
+const loanHref = (loanId) => toHash({ entry: 'ledger', tab: 'loans', detailId: loanId }) // 借入の仕訳は、借入のページで直す
 
 const ORDER_LABELS = { asc: 'entries.orderAsc', desc: 'entries.orderDesc' } // 日付の枠の並びの切り替えボタンの文言（辞書のキー）
 
@@ -474,9 +478,13 @@ export default function Entries({ data, update, detailId = null }) { // detailId
     setMonth(input.date.slice(0, 7)) // 追加した仕訳が見える月に切り替える
     setCreating(false) // スマホの入力画面は、追加できたら閉じる
   }
-  const lastEntry = lastNormalEntry(entries, data.subscriptions) // 「前回と同じ入力」の元（定期支払いの自動記入は除く）
+  // 基本のテーマだけ：借入の仕訳は、借入のページで直す。ここでは直す・消すを出さず、新しい仕訳の科目の選択肢からも借入の科目を外す
+  const lockLoans = basicPc || basicPhone
+  const loans = data.loans ?? []
+  const pickAccounts = lockLoans && loans.length > 0 ? accounts.filter((a) => !loans.some((l) => l.accountId === a.id)) : accounts
+  const lastEntry = lastNormalEntry(lockLoans && loans.length > 0 ? entries.filter((e) => !loanOfEntry(loans, e)) : entries, data.subscriptions) // 「前回と同じ入力」の元（定期支払いの自動記入は除く）
   const last = lastCreditId(entries)
-  const creditId = entryAccountOptions(accounts).some((a) => a.id === last) ? last : '' // 選択肢にあるときだけ使う
+  const creditId = entryAccountOptions(pickAccounts).some((a) => a.id === last) ? last : '' // 選択肢にあるときだけ使う
   const newInitial = { date: today(), amount: '', debitId: '', creditId, memo: '', living: defaultLiving(accounts, '', creditId), ...PAY_DEFAULT }
   const [quickHost, setQuickHost] = useState(null) // 見出しの右端（スマホは入力画面の上端）の、ボタンの置き場所
   const presets = data.entryPresets
@@ -658,6 +666,8 @@ export default function Entries({ data, update, detailId = null }) { // detailId
                       onCancel: () => setEditingId(null),
                       onSave: save(e),
                       onDelete: () => remove(e),
+                      formAccounts: pickAccounts,
+                      loanId: lockLoans ? loanOfEntry(loans, e)?.id : undefined,
                       marked: markId === e.id,
                       markRef,
                     }
@@ -716,7 +726,7 @@ export default function Entries({ data, update, detailId = null }) { // detailId
             <h2 className="g-h">{t('entries.cardTitle')}<small lang="en">{t('entries.cardEn')}</small></h2>
             <EntryForm
               variant="card"
-              accounts={accounts}
+              accounts={pickAccounts}
               favorites={settings.favorites}
               initial={newInitial}
               lastEntry={lastEntry}
@@ -745,7 +755,7 @@ export default function Entries({ data, update, detailId = null }) { // detailId
         <div className="entries-top">
         <EntryForm
           variant={basicPc ? 'basic' : undefined}
-          accounts={accounts}
+          accounts={pickAccounts}
           favorites={settings.favorites}
           initial={newInitial}
           lastEntry={lastEntry}
@@ -784,7 +794,7 @@ export default function Entries({ data, update, detailId = null }) { // detailId
         <EntrySheet title={t('entries.newSheetTitle')} onClose={() => setCreating(false)} onOutside={outsideNew} focus={fill ? 'amount' : undefined}>
           <EntryForm
             variant="sheet"
-            accounts={accounts}
+            accounts={pickAccounts}
             favorites={settings.favorites}
             initial={sheetInitial}
             currency={settings.currency}
@@ -802,7 +812,7 @@ export default function Entries({ data, update, detailId = null }) { // detailId
         <EntrySheet nth={t('entries.sheetNth', { date: formatDayLabel(editing.date), n: editingNth })} onClose={() => setEditingId(null)} onOutside={outside}>
           <EntryForm
             variant="sheet"
-            accounts={accounts}
+            accounts={pickAccounts}
             initial={{ date: editing.date, amount: String(editing.amount), debitId: editing.debitId, creditId: editing.creditId, memo: editing.memo, living: editing.living ?? null, ...payInitial(editing) }}
             currentIds={[editing.debitId, editing.creditId]}
             favorites={settings.favorites}

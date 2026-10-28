@@ -765,6 +765,14 @@
   :root[data-theme='basic'] .b-phone-loans .b-pl-fact { display: flex; flex-direction: column; gap: var(--b-space-1); min-width: 0; padding: var(--b-space-2) var(--b-space-3); border: 1px solid var(--b-line); background: var(--b-surface); }
   :root[data-theme='basic'] .b-phone-loans .b-pl-fact .k { color: var(--b-muted); font-size: var(--b-font-small); }
   :root[data-theme='basic'] .b-phone-loans .b-pl-fact .v { font-weight: var(--b-weight-bold); font-size: var(--b-font-label); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-phone-loans .b-loan-ledger { display: flex; flex-direction: column; gap: var(--b-space-3); }
+  :root[data-theme='basic'] .b-phone-loans .b-loan-elist { display: flex; flex-direction: column; margin: var(--b-space-0); padding: var(--b-space-0); list-style: none; }
+  :root[data-theme='basic'] .b-phone-loans .b-loan-erow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--b-space-1) var(--b-space-3); padding: var(--b-space-2) var(--b-space-3); border-bottom: 1px solid var(--b-line); }
+  :root[data-theme='basic'] .b-phone-loans .b-loan-erow .d { color: var(--b-muted); font-size: var(--b-font-small); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-phone-loans .b-loan-erow .k { font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-phone-loans .b-loan-erow .m { grid-column: 1 / 3; color: var(--b-muted); font-size: var(--b-font-small); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-phone-loans .b-loan-erow .a { grid-row: 1 / 3; grid-column: 3; align-self: center; font-weight: var(--b-weight-bold); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-phone-entries .b-loan-link { color: var(--b-navy); font-size: var(--b-font-small); text-decoration: underline; }
   :root[data-theme='basic'] .b-phone-loans .b-pl-fact .v small { display: block; color: var(--b-muted); font-size: var(--b-font-small); font-weight: var(--b-weight-normal); }
   :root[data-theme='basic'] .b-phone-loans .b-loan-chart { width: 100%; }
   :root[data-theme='basic'] .b-phone-loans .b-loan-chart svg { display: block; }

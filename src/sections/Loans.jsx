@@ -6,6 +6,7 @@ import { today } from '../today.js'
 import { t } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import LoanChart from './LoanChart.jsx'
+import LoanLedger from './LoanLedger.jsx'
 import { Icon } from './Icon.jsx'
 import Tabs from './Tabs.jsx'
 import { panelDomId, tabDomId } from '../tabs.js'
@@ -144,8 +145,8 @@ function UnpaidSection({ unpaid, data, currency }) {
 const PHONE_LIST_MAX = 3 // スマホの一覧に出す件数。それより多いときは「ほか○件」
 
 // 基本のスマホ：PC を簡単にしたもの。上に「残り」「今月の返済」、下に借入 3 件と合計（4 件以上は「ほか○件」で一覧）。選ぶと中身（数値の札 3 つ・グラフ）。入力と返す予定の表は PC だけ
-function LoansPhone({ items, totals, month, currency, unpaid, data }) {
-  const [selectedId, setSelectedId] = useState(null)
+function LoansPhone({ detailId, items, totals, month, currency, unpaid, data }) {
+  const [selectedId, setSelectedId] = useState(detailId)
   const [tab, setTab] = useState('loans') // 借入（ローン・奨学金）／クレカの分割・リボ。初めは借入
   const [all, setAll] = useState(false)
   const selected = items.find((i) => i.loan.id === selectedId)
@@ -162,6 +163,7 @@ function LoansPhone({ items, totals, month, currency, unpaid, data }) {
       </div>
       <div className="b-pl-facts">{(receiving ? loanFacts(selected, month, currency).slice(1) : loanFacts(selected, month, currency).slice(0, 3)).map((f) => <div key={f.label} className="b-pl-fact"><span className="k">{f.label}</span><span className="v">{f.value}{f.small && <small>{f.small}</small>}</span></div>)}</div>
       <LoanChart series={selected.projection.series} name={loan.name} currency={currency} compact />
+      <LoanLedger data={data} loan={loan} balance={balance} currency={currency} readOnly />
     </div>
   }
   const shown = all ? items : items.slice(0, PHONE_LIST_MAX)
@@ -256,6 +258,7 @@ function Detail({ item, data, update, month, currency }) {
         <button type="button" onClick={() => { setChanging(false); setError('') }}>{t('loans.cancel')}</button>
       </div>
     </form>}
+    <LoanLedger data={data} update={update} loan={loan} balance={balance} currency={currency} />
     {loan.rateHistory.length > 0 && <div className="b-loan-history">
       <h4>{t('loans.history')}</h4>
       <ul>{loan.rateHistory.map((x) => <li key={x.from}>{t('loans.historyRow', { month: monthLabel(x.from), rate: yearRate(x.rate), amount: formatMoney(x.payment, currency) })}</li>)}</ul>
@@ -273,18 +276,18 @@ function Detail({ item, data, update, month, currency }) {
   </section>
 }
 
-export default function Loans({ data, update }) {
+export default function Loans({ data, update, detailId = null }) {
   const basicPhone = useBasicPhone()
   const month = today().slice(0, 7)
   const currency = data.settings.currency
   const { items, totals } = loanOverview(data, month)
-  const [selectedId, setSelectedId] = useState(null)
+  const [selectedId, setSelectedId] = useState(detailId) // 仕訳の画面のリンク（#/ledger/loans/<借入の id>）から来たら、その借入
   const [adding, setAdding] = useState(false)
   const [tab, setTab] = useState('loans') // 基本の PC：借入（ローン・奨学金）／クレカの分割・リボ。初めは借入
   const selected = items.find((i) => i.loan.id === selectedId) ?? items[0]
   const paidThisMonth = totals.due < totals.scheduled
   const unpaid = unpaidCards(data, today())
-  if (basicPhone) return <LoansPhone items={items} totals={totals} month={month} currency={currency} unpaid={unpaid} data={data} />
+  if (basicPhone) return <LoansPhone detailId={detailId} items={items} totals={totals} month={month} currency={currency} unpaid={unpaid} data={data} />
   return <div className="report b-page b-loans">
     <div className="b-page-head"><h2>{t('loans.title')}</h2><p>{t('basicPc.loansLead')}</p></div>
     <Tabs prefix="loans-basic" label={t('loans.title')} tabs={[{ id: 'loans', title: t('loans.tabLoans') }, { id: 'plans', title: t('loans.tabPlans') }]} current={tab} onChange={setTab} />
