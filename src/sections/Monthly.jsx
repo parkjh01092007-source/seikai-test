@@ -11,6 +11,7 @@ import { today } from '../today.js'
 import { t } from '../text.js'
 import { usePhone } from '../layout.js'
 import { useGunjoPc } from '../gunjoPc.js'
+import { marketAdjustment } from '../investView.js'
 import { useBasicPc } from '../basicPc.js'
 import { useBasicPhone } from '../basicPhone.js'
 import { useBandHost, useBandTop, useBandRoad } from './bandHost.js'
@@ -229,7 +230,7 @@ function GunjoBody({ month, report, living, sheet, currency }) {
 const NET_BAR_KEYS = { cash: 'monthly.barCash', saving: 'monthly.barSaving', other: 'monthly.barOther', borrow: 'monthly.barBorrow', net: 'monthly.trendNet', shortfall: 'monthly.barShortfall' }
 const REASON_KEYS = { result: 'monthly.reasonResult', receive: 'monthly.reasonReceive', start: 'monthly.reasonStart', other: 'monthly.reasonOther' }
 
-function BasicMonthly({ accounts, entries, loans, currency, month, setMonth, report, living, sheet, phone, onPrint }) {
+function BasicMonthly({ accounts, entries, loans, holdings, currency, month, setMonth, report, living, sheet, phone, onPrint }) {
   const [metric, setMetric] = useState('netTotal')
   const [tab, setTab] = useState('trend')
   const metrics = [
@@ -243,6 +244,7 @@ function BasicMonthly({ accounts, entries, loans, currency, month, setMonth, rep
   const change = previous && netChangeReasons(current, previous)
   const netLabel = current && t(current.scholarshipBefore !== 0 ? 'monthly.trendNetEx' : 'monthly.trendNetMonth', { month: Number(month.slice(5)) })
   const nb = current && netBarParts(current)
+  const market = !phone && month === today().slice(0, 7) ? marketAdjustment({ accounts, entries, holdings }) : null // 今の月の基本 PC だけ。純資産の数字と棒は取得原価のまま
   // 棒（部分ごとの色）と、その真下の名前と金額。名前と金額の列は、部分の幅に合わせる（狭くて入らない部分は、右へずれて並ぶ）
   const netBar = (parts, rest) => <>
     <div className="b-net-bar">{parts.map((p) => <span key={p.id} className={`b-net-${p.id}`} style={{ width: `${p.pct}%` }} />)}</div>
@@ -275,7 +277,7 @@ function BasicMonthly({ accounts, entries, loans, currency, month, setMonth, rep
   </section>
   const table = <div className="table-box b-trend-table"><table><thead><tr><th>{t('common.month')}</th><th>{t('monthly.trendAsset')}</th><th>{t('monthly.trendLiability')}</th><th>{t('monthly.trendNet')}</th>{!phone && <><th>{t('monthly.trendEarmark')}</th><th>{t('monthly.trendResult')}</th></>}{trendRows.some((r) => r.scholarshipBefore !== 0) && <th>{t('monthly.trendScholarship')}</th>}</tr></thead><tbody>{trendRows.map((r) => <tr key={r.month}><td>{r.month}</td><td className={cls(r.assetTotal)}>{money(r.assetTotal)}</td><td className={cls(r.liabilityTotal)}>{money(r.liabilityTotal)}</td><td className={cls(r.netTotal)}>{money(r.netTotal)}</td>{!phone && <><td className={cls(r.earmarkTotal)}>{money(r.earmarkTotal)}</td><td className={cls(r.result)}>{money(r.result)}</td></>}{trendRows.some((r) => r.scholarshipBefore !== 0) && <td>{money(r.scholarshipBefore)}</td>}</tr>)}</tbody></table></div>
   const trend = <section className="b-month-card b-month-trend">{!phone && <div className="b-month-heading"><h3>{t('monthly.trend')}</h3><span className="note">{t('monthly.trendNote')}</span></div>}
-    {current ? <>{phone ? <p className="b-trend-net"><span>{netLabel}</span><strong className={`b-result ${cls(current.netExScholarship)}`}>{money(current.netExScholarship)}</strong></p> : <><p>{netLabel}</p><strong className={`b-result ${cls(current.netExScholarship)}`}>{money(current.netExScholarship)}</strong></>}<p className={`b-trend-change ${previous ? cls(change.change) : 'note'}`}>{!previous ? t('monthly.trendNoPrevious') : change.reasons.length ? t('monthly.trendChangeWhy', { amount: signed(change.change), reasons: change.reasons.map((r) => t(REASON_KEYS[r.id], { amount: signed(r.amount) })).join(t('monthly.reasonJoin')) }) : t('monthly.trendChange', { amount: money(change.change) })}</p>
+    {current ? <>{phone ? <p className="b-trend-net"><span>{netLabel}</span><strong className={`b-result ${cls(current.netExScholarship)}`}>{money(current.netExScholarship)}</strong></p> : <><p>{netLabel}</p><strong className={`b-result ${cls(current.netExScholarship)}`}>{money(current.netExScholarship)}</strong>{market && <p className="b-net-market">{t('monthly.marketNow', { amount: market.diff === 0 ? `±${money(0)}` : signed(market.diff), date: `${Number(market.asOf.slice(5, 7))}/${Number(market.asOf.slice(8))}` })}</p>}</>}<p className={`b-trend-change ${previous ? cls(change.change) : 'note'}`}>{!previous ? t('monthly.trendNoPrevious') : change.reasons.length ? t('monthly.trendChangeWhy', { amount: signed(change.change), reasons: change.reasons.map((r) => t(REASON_KEYS[r.id], { amount: signed(r.amount) })).join(t('monthly.reasonJoin')) }) : t('monthly.trendChange', { amount: money(change.change) })}</p>
       <div className="b-net-bars" role="group" aria-label={t('monthly.barLabel')}>
         {netBar(nb.top, nb.restTop)}
         {netBar(nb.bottom, nb.restBottom)}
@@ -358,7 +360,7 @@ export default function Monthly({ data }) {
   }
 
   if ((basicPc || basicPhone) && !printView) {
-    return <BasicMonthly accounts={accounts} entries={entries} loans={data.loans ?? []} currency={currency} month={month} setMonth={setMonth} report={report} living={living} sheet={sheet} phone={basicPhone} onPrint={() => setPrintView(true)} />
+    return <BasicMonthly accounts={accounts} entries={entries} loans={data.loans ?? []} holdings={data.holdings ?? []} currency={currency} month={month} setMonth={setMonth} report={report} living={living} sheet={sheet} phone={basicPhone} onPrint={() => setPrintView(true)} />
   }
 
   return (

@@ -230,6 +230,7 @@
   :root[data-theme='basic'] .b-month-redesign .b-net-labels li:has(.b-net-net) strong { font-weight: var(--b-weight-bold); }
   :root[data-theme='basic'] .b-month-redesign .b-net-swatch { display: inline-block; width: var(--b-space-2); height: var(--b-space-2); flex: none; }
   :root[data-theme='basic'] .b-month-redesign .b-net-scholarship { margin: var(--b-space-2) var(--b-space-0) var(--b-space-0); font-size: var(--b-font-small); color: var(--b-muted); }
+  :root[data-theme='basic'] .b-month-redesign .b-net-market { margin: var(--b-space-0); font-size: var(--b-font-small); color: var(--b-muted); }
   :root[data-theme='basic'] .b-month-redesign .b-net-with { margin: var(--b-space-0); font-size: var(--b-font-small); color: var(--b-muted); }
   :root[data-theme='basic'] .b-month-redesign .b-trend-table { overflow-x: auto; }
   :root[data-theme='basic'] .b-month-redesign .b-trend-table th:not(:first-child), :root[data-theme='basic'] .b-month-redesign .b-trend-table td:not(:first-child) { text-align: right; white-space: nowrap; }

@@ -68,6 +68,14 @@ export function holdingSummary(data, h) {
   return { holding: h, cost, units, quote, value, gain: value === null ? null : value - cost, afterSale: value === null ? null : { value, fee, tax, net: value - fee - tax } }
 }
 
+// 月次の純資産の下の 1 行用：時価なら取得原価より何円違うか。価格のある銘柄の評価損益の合計（価格のない銘柄は取得原価のまま＝0）。asOf＝使った価格のうち、いちばん新しい日付。
+// 銘柄がない・価格のある銘柄がない（全部売った含む）ときは null（何も出さない）
+export function marketAdjustment(data) {
+  const priced = investOverview(data).items.filter((i) => i.value !== null)
+  if (!priced.length) return null
+  return { diff: priced.reduce((n, i) => n + i.gain, 0), asOf: priced.map((i) => i.quote.date).sort().at(-1) }
+}
+
 // ページ全体：銘柄ごと＋合計。合計の時価・評価損益は、価格のある銘柄だけ（priced）。持っているのに価格がない銘柄の数は missing（全部売った銘柄は数えない）
 export function investOverview(data) {
   const items = (data.holdings ?? []).map((h) => holdingSummary(data, h))

@@ -851,6 +851,7 @@ export default {
   'monthly.scholarshipBefore': '返す前の奨学金 {amount}（返し始め：{from}）',
   'monthly.scholarshipFrom': '{year}年{month}月',
   'monthly.netWithScholarship': '奨学金を含めた純資産 {amount}',
+  'monthly.marketNow': '時価なら {amount}（{date} の価格）',
   'monthly.trendScholarship': 'うち返す前の奨学金',
   'monthly.books': '表で見る（P/L・B/S）',
   'monthly.booksDescription': '月ごとの表・P/L・B/S・印刷用表示',

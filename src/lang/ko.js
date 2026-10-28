@@ -891,6 +891,7 @@ export default {
   'monthly.scholarshipBefore': '상환 전 장학금 {amount}（상환 시작: {from}）',
   'monthly.scholarshipFrom': '{year}년 {month}월',
   'monthly.netWithScholarship': '장학금을 포함한 순자산 {amount}',
+  'monthly.marketNow': '시가라면 {amount}({date} 가격)',
   'monthly.trendScholarship': '상환 전 장학금',
   'monthly.books': '장부로 보기',
   'monthly.booksDescription': '월별 표・P/L・B/S・인쇄용 화면',
