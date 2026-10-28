@@ -739,6 +739,7 @@
   :root[data-theme='basic'] .b-phone-loans .b-pl-tile { display: flex; flex-direction: column; gap: var(--b-space-1); min-width: 0; padding: var(--b-space-3) var(--b-space-4); border: 1px solid var(--b-line); background: var(--b-surface); }
   :root[data-theme='basic'] .b-phone-loans .b-pl-tile .lbl { color: var(--b-muted); font-size: var(--b-font-small); }
   :root[data-theme='basic'] .b-phone-loans .b-pl-tile strong { font-size: var(--b-font-large); font-weight: var(--b-weight-bold); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-phone-loans [role='tabpanel'] { display: flex; flex-direction: column; gap: var(--b-space-4); }
   :root[data-theme='basic'] .b-phone-loans .b-pl-list { display: flex; flex-direction: column; gap: var(--b-space-3); }
   :root[data-theme='basic'] .b-phone-loans .b-pl-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: 'ic name rem' 'ic track track'; gap: var(--b-space-1) var(--b-space-3); align-items: center; box-sizing: border-box; width: 100%; min-height: var(--b-phone-control); padding: var(--b-space-3) var(--b-space-4); border: 1px solid var(--b-line); border-radius: 0; background: var(--b-surface); color: var(--b-text); font: inherit; text-align: left; }
   :root[data-theme='basic'] .b-phone-loans .b-pl-ic { grid-area: ic; display: inline-flex; align-items: center; justify-content: center; width: var(--b-phone-control); height: var(--b-phone-control); border-radius: 50%; background: var(--b-active-bg); color: var(--b-navy); }
@@ -812,6 +813,7 @@
   :root[data-theme='basic'] .b-plan-tile { display: grid; align-content: start; gap: var(--b-space-1); border: 1px solid var(--b-side-line); padding: var(--b-space-4) var(--b-space-5); background: var(--b-surface); }
   :root[data-theme='basic'] .b-plan-tile .lbl { color: var(--b-muted); font-size: var(--b-font-small); }
   :root[data-theme='basic'] .b-plan-nexttile { background: var(--b-active-bg); border-color: var(--b-active-bar); }
+  :root[data-theme='basic'] .b-plan-pending, :root[data-theme='basic'] .b-record-pending { display: block; color: var(--b-muted); font-size: var(--b-font-small); font-weight: var(--b-weight-normal); }
   :root[data-theme='basic'] .b-plan-big { font-size: var(--b-font-heading); font-variant-numeric: tabular-nums; }
   :root[data-theme='basic'] .b-plan-mid { font-size: var(--b-font-large); font-variant-numeric: tabular-nums; }
   :root[data-theme='basic'] .b-plan-band { display: flex; gap: var(--b-space-0); height: var(--b-space-3); margin-top: var(--b-space-1); background: var(--b-table-head); }

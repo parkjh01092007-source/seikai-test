@@ -3,6 +3,7 @@ import { t } from '../text.js'
 import { useBasicPhone } from '../basicPhone.js'
 import PlanOverview from './PlanOverview.jsx'
 import { planOverview } from '../planView.js'
+import { today } from '../today.js'
 
 const PHONE_BAR_MONTHS = 6 // スマホの棒の月数（PC は 12）
 
@@ -13,7 +14,7 @@ export default function CardPlans({ card, entries, accounts, unit }) {
   const { installments, revolving } = cardPayPlans(card, entries)
   if (installments.length === 0 && !revolving && card.later === 0) return null
   const money = (n) => `${formatYen(n)}${unit}`
-  const overview = planOverview([card], accounts, entries, phone ? PHONE_BAR_MONTHS : undefined)
+  const overview = planOverview([card], accounts, entries, phone ? PHONE_BAR_MONTHS : undefined, today())
   return (
     <section className="card-plans">
       {phone ? <h3>{t('card.plansTitle')}</h3> : <div className="b-section-head"><h3>{t('card.plansTitle')}</h3></div>}

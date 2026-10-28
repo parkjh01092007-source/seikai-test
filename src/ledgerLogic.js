@@ -785,6 +785,23 @@ export function cardPayPlans(card, entries) {
   return { installments, revolving }
 }
 
+// 先の分（いまの請求期間の、次の請求期間から先に入る分割・リボ）が最初に引き落とされる日（'YYYY-MM-DD'）。report は cardReport の結果。画面では「12/28 以降に払う分割・リボ」と言う
+export function laterFromDate(report) {
+  const nextClosing = subscriptionDate(nextMonth(report.lastClosing.slice(0, 7)), report.closingDay) // いまの請求期間の締め日
+  return payDateOf(subscriptionDate(nextMonth(nextClosing.slice(0, 7)), report.closingDay), report.payDay)
+}
+
+// 「次の引き落とし」の額と日（札・表。基本のテーマ）。締めた請求が残っているとき（report.next が 0 でない）は、その額と引き落とし日（report.payDate）。
+// 0 のときは、次の引き落とし日（いまの請求期間の分）と未請求の利用額（report.unbilled）。recordPending：残っていて、引き落とし日がもう過ぎている（today を渡したとき）＝「引き落としの記録がまだです」
+export function nextDebit(report, today = '') {
+  if (report.next !== 0) return { amount: report.next, date: report.payDate, recordPending: report.payDate < today }
+  const nextClosing = subscriptionDate(nextMonth(report.lastClosing.slice(0, 7)), report.closingDay) // いまの請求期間の締め日
+  return { amount: report.unbilled, date: payDateOf(nextClosing, report.payDay), recordPending: false }
+}
+
+// 日付 'YYYY-MM-DD' を「12/28」の形に
+export const monthDay = (date) => `${Number(date.slice(5, 7))}/${Number(date.slice(8, 10))}`
+
 // 先の分の請求の予定：締め日ごとの合計 [{ closingDate, amount }]（締め日の古い順）。laterLines は cardReport の結果
 export function laterPeriods(laterLines) {
   const byClosing = new Map()

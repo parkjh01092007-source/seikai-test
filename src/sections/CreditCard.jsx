@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import './balance.css'
 import './creditcard.css'
 import CreditCardDetail from './CreditCardDetail.jsx'
-import { cardReports, cardMonthTotal, addCard, previousMonth, formatYen, currencyUnit } from '../ledgerLogic.js'
+import { cardReports, cardMonthTotal, addCard, previousMonth, formatYen, currencyUnit, laterFromDate, monthDay, nextDebit } from '../ledgerLogic.js'
 import { cardLanes, paidInAdvance, periodStatus, nextPayLane, lanePos, previewLine, shortDate } from '../flowArt.js'
 import { toHash } from '../route.js'
 import { today } from '../today.js'
@@ -212,7 +212,7 @@ export default function CreditCard({ data, update, detailId = null }) {
               <li key={r.account.id}>
                 <a className={`card-button${r.account.active ? '' : ' inactive'}`} href={cardHash(r.account.id)}>
                   <span>{r.account.name}{!r.account.active && t('common.inactive')}</span>
-                  <span className="amount">{t('card.next')}{' '}<Num n={r.next} />{unit}{(basicPc || basicPhone) && r.later > 0 && <span className="b-card-later">{t('card.later')}{' '}<Num n={r.later} />{unit}</span>}{basicPhone && <span className={`b-phone-state${status === 'paid' ? ' paid' : ''}`} title={status === 'paid' ? t('card.statusPaidHint') : undefined}>{status === 'paid' ? t('card.statusPaid') : t('card.statusClosed')}</span>}</span>
+                  <span className="amount">{t('card.next')}{' '}<Num n={basicPc || basicPhone ? nextDebit(r).amount : r.next} />{unit}{(basicPc || basicPhone) && r.later > 0 && <span className="b-card-later">{t('card.laterFrom', { date: monthDay(laterFromDate(r)) })}{' '}<Num n={r.later} />{unit}</span>}{basicPhone && <span className={`b-phone-state${status === 'paid' ? ' paid' : ''}`} title={status === 'paid' ? t('card.statusPaidHint') : undefined}>{status === 'paid' ? t('card.statusPaid') : t('card.statusClosed')}</span>}</span>
                 </a>
               </li>
             )

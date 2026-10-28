@@ -376,6 +376,7 @@
   :root[data-theme='basic'] .b-page .b-field > input,
   :root[data-theme='basic'] .b-page .b-field > select { width: 100%; }
   :root[data-theme='basic'] .b-cards .table-box,
+  :root[data-theme='basic'] .b-card-detail .b-pc-state { display: inline-block; margin-inline-start: var(--b-space-3); padding: var(--b-space-0) var(--b-space-2); border: 1px solid var(--b-line); background: var(--b-total-bg); color: var(--b-muted); font-size: var(--b-font-small); white-space: nowrap; }
   :root[data-theme='basic'] .b-card-detail .table-box,
   :root[data-theme='basic'] .b-budgets .table-box { background: var(--b-surface); }
   :root[data-theme='basic'] .b-cards > .b-section-head,
@@ -669,6 +670,7 @@
   :root[data-theme='basic'] .b-plan-tile { display: grid; align-content: start; gap: var(--b-space-1); border: 1px solid var(--b-side-line); padding: var(--b-space-4) var(--b-space-5); background: var(--b-surface); }
   :root[data-theme='basic'] .b-plan-tile .lbl { color: var(--b-muted); font-size: var(--b-font-small); }
   :root[data-theme='basic'] .b-plan-nexttile { background: var(--b-active-bg); border-color: var(--b-active-bar); }
+  :root[data-theme='basic'] .b-plan-pending, :root[data-theme='basic'] .b-record-pending { display: block; color: var(--b-muted); font-size: var(--b-font-small); font-weight: var(--b-weight-normal); }
   :root[data-theme='basic'] .b-plan-big { font-size: var(--b-font-heading); font-variant-numeric: tabular-nums; }
   :root[data-theme='basic'] .b-plan-mid { font-size: var(--b-font-large); font-variant-numeric: tabular-nums; }
   :root[data-theme='basic'] .b-plan-band { display: flex; gap: var(--b-space-0); height: var(--b-space-3); margin-top: var(--b-space-1); background: var(--b-table-head); }

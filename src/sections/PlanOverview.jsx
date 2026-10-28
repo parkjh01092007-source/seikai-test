@@ -1,4 +1,4 @@
-import { formatYen } from '../ledgerLogic.js'
+import { formatYen, monthDay } from '../ledgerLogic.js'
 import { t } from '../text.js'
 import { useState } from 'react'
 import { Icon } from './Icon.jsx'
@@ -13,7 +13,7 @@ const monthLabel = (closingDate) => t('loans.monthLabel', { year: closingDate.sl
 // phone：スマホ（縦に並べる）。foldItems：スマホで買い物ごとの残りを畳む（借入ページ）。畳まないスマホ（クレカ個別ページ）は、「先の請求の予定｜買い物ごとの残り」のタブで切り替える（初めは先の請求の予定）
 export default function PlanOverview({ overview, money, showCard = false, phone = false, foldItems = false }) {
   const [tab, setTab] = useState('schedule')
-  const { total, split, revo, bars, more, moreAmount, items, next, nextPayDate, endClosing } = overview
+  const { total, split, revo, bars, more, moreAmount, items, next, nextPayDate, recordPending, laterFrom, endClosing } = overview
   const max = Math.max(...bars.map((b) => b.split + b.revo), 1)
   const parts = [['split', 'plan.split', split], ['revo', 'plan.revolving', revo]]
   const legend = (list) => <ul className="b-plan-legend">{list.map(([key, label, amount]) => <li key={key}><span className={`b-plan-swatch b-plan-${key}`} aria-hidden="true" />{t(label)}{amount !== null && <strong>{money(amount)}</strong>}</li>)}</ul>
@@ -73,8 +73,9 @@ export default function PlanOverview({ overview, money, showCard = false, phone 
           {legend(parts)}
         </div>
         <div className="b-plan-tile b-plan-nexttile">
-          <span className="lbl">{phone && <Icon name={PLAN_ICONS.next} />}{t('plan.next', { date: nextPayDate ? `${Number(nextPayDate.slice(5, 7))}/${Number(nextPayDate.slice(8, 10))}` : '' })}</span>
+          <span className="lbl">{phone && <Icon name={PLAN_ICONS.next} />}{t('plan.next', { date: nextPayDate ? monthDay(nextPayDate) : '' })}</span>
           <strong className="b-plan-mid">{money(next)}</strong>
+          {recordPending && <span className="b-plan-pending">{t('card.recordPending')}</span>}
         </div>
         <div className="b-plan-tile">
           <span className="lbl">{phone && <Icon name={PLAN_ICONS.end} />}{t('plan.endLast')}</span>
@@ -93,7 +94,7 @@ export default function PlanOverview({ overview, money, showCard = false, phone 
         <Tabs prefix="plan-phone" label={t('plan.chartTitle')} tabs={[{ id: 'schedule', title: t('plan.tabSchedule') }, { id: 'items', title: t('plan.itemsTitle') }]} current={tab} onChange={setTab} />
         <div role="tabpanel" id={panelDomId('plan-phone', tab)} aria-labelledby={tabDomId('plan-phone', tab)}>{tab === 'schedule' ? chart : list}</div>
       </>}
-      {!showCard && <p className="note">{t('card.laterNote')}</p>}
+      {!showCard && laterFrom && <p className="note">{t('card.laterNote', { date: monthDay(laterFrom) })}</p>}
     </section>
   )
 }

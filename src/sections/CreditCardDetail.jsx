@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom'
-import { periodRows, formatYen } from '../ledgerLogic.js'
+import { periodRows, formatYen, nextDebit } from '../ledgerLogic.js'
 import { t } from '../text.js'
 import { usePhone } from '../layout.js'
 import { useGunjoPc } from '../gunjoPc.js'
@@ -93,16 +93,17 @@ export default function CreditCardDetail({ card, backHref, unit, entries = [], d
       </div>
     )
   }
+  const nd = basicPc || basicPhone ? nextDebit(card, now) : { amount: card.next, date: card.payDate, recordPending: false } // 基本のテーマだけ、締めた請求が残っていなければ次の引き落とし日の分
   return (
     <>
       <div className="back"><a href={backHref}>{t('card.back')}</a></div>
       {basicPc ? <div className="b-page-head"><h2>{card.account.name}{!card.account.active && <span className="note"> {t('common.inactive')}</span>}</h2><p>{t('basicPc.cardDetailLead')}</p></div> : <h2>{card.account.name}{!card.account.active && <span className="note"> {t('common.inactive')}</span>}</h2>}
-      {basicPhone && <section className="b-phone-next"><span>{t('card.next')}</span><b><Num n={card.next} />{unit}</b></section>}
+      {basicPhone && <section className="b-phone-next"><span>{t('card.next')}</span><b><Num n={nd.amount} />{unit}</b>{nd.recordPending && <small className="b-record-pending">{t('card.recordPending')}</small>}</section>}
       <div className="table-box"><table>
         <tbody>
-          {!basicPhone && <tr><td>{t('card.next')}</td><td><Num n={card.next} />{unit}</td></tr>}
+          {!basicPhone && <tr><td>{t('card.next')}</td><td><Num n={nd.amount} />{unit}</td></tr>}
           <tr><td>{t('card.unbilled')}</td><td><Num n={card.unbilled} />{unit}</td></tr>
-          {!basicPhone && <tr><td>{t('card.payDateApprox')}</td><td>{card.payDate}</td></tr>}
+          {!basicPhone && <tr><td>{t('card.payDateApprox')}</td><td>{nd.date}{nd.recordPending && <small className="b-record-pending">{t('card.recordPending')}</small>}</td></tr>}
           <tr><td>{t('card.balanceTotal')}</td><td><Num n={card.balance} />{unit}</td></tr>
           {!basicPhone && <tr><td>{t('card.closingDay')}</td><td>{t('card.everyMonthDay', { day: card.closingDay })}</td></tr>}
           {!basicPhone && <tr><td>{t('card.payDay')}</td><td>{t('card.everyMonthDay', { day: card.payDay })}</td></tr>}
@@ -136,7 +137,7 @@ export default function CreditCardDetail({ card, backHref, unit, entries = [], d
             {periods.map((p) => (
               <tr key={p.closingDate} className={p.open ? 'open-period' : ''}>
                 <td>{p.label}{p.open && t('card.unconfirmed')}</td>
-                <td><Num n={p.amount} />{unit}{t('card.payLabelWrap', { label: p.payLabel })}</td>
+                <td><Num n={p.amount} />{unit}{t('card.payLabelWrap', { label: p.payLabel })}{basicPc && periodStatus({ open: p.open, paid: p.payDate <= now }) === 'paid' && <span className="b-pc-state paid" title={t('card.statusPaidHint')}>{t('card.statusPaid')}</span>}</td>
               </tr>
             ))}
           </tbody>

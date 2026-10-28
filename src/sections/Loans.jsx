@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { formatMoney, nextMonth, payMarkText } from '../ledgerLogic.js'
+import { formatMoney, nextMonth, payMarkText, laterFromDate, monthDay, nextDebit } from '../ledgerLogic.js'
 import { toHash } from '../route.js'
 import { loanOverview, unpaidCards, newLoan, addLoanTerm, removeLoan, receivingProgress, formatRate } from '../loanView.js'
 import { today } from '../today.js'
@@ -113,7 +113,7 @@ const cardHref = (id) => toHash({ entry: 'ledger', tab: 'card', detailId: id })
 function UnpaidSection({ unpaid, data, currency }) {
   const { items, totals } = unpaid
   if (items.length === 0) return null
-  const overview = planOverview(items.map((i) => i.report), data.accounts, data.entries)
+  const overview = planOverview(items.map((i) => i.report), data.accounts, data.entries, undefined, today())
   const money = (n) => formatMoney(n, currency)
   return (
     <section className="b-loan-unpaid">
@@ -122,18 +122,21 @@ function UnpaidSection({ unpaid, data, currency }) {
       <table>
         <thead><tr><th>{t('common.account')}</th><th>{t('card.next')}</th><th>{t('card.unbilled')}</th><th>{t('card.later')}</th><th>{t('card.balanceTotal')}</th></tr></thead>
         <tbody>
-          {items.map(({ account, report }) => (
+          {items.map(({ account, report }) => {
+            const nd = nextDebit(report, today())
+            return (
             <tr key={account.id}>
               <td><a href={cardHref(account.id)}><span className="user-text">{account.name}</span></a></td>
-              <td>{formatMoney(report.next, currency)}<small>{report.payDate.replaceAll('-', '/')}</small></td>
+              <td>{formatMoney(nd.amount, currency)}<small>{nd.date.replaceAll('-', '/')}</small>{nd.recordPending && <small className="b-record-pending">{t('card.recordPending')}</small>}</td>
               <td>{formatMoney(report.unbilled, currency)}</td>
-              <td>{formatMoney(report.later, currency)}</td>
+              <td>{formatMoney(report.later, currency)}{report.later > 0 && <small>{t('card.laterSince', { date: monthDay(laterFromDate(report)) })}</small>}</td>
               <td>{formatMoney(report.balance, currency)}</td>
             </tr>
-          ))}
+            )
+          })}
         </tbody>
       </table>
-      <p className="note">{t('card.laterNote')}</p>
+      {overview.laterFrom && <p className="note">{t('card.laterNote', { date: monthDay(overview.laterFrom) })}</p>}
     </section>
   )
 }
@@ -162,6 +165,7 @@ function LoansPhone({ items, totals, month, currency, unpaid, data }) {
     </div>
   }
   const shown = all ? items : items.slice(0, PHONE_LIST_MAX)
+  const phoneOverview = planOverview(unpaid.items.map((i) => i.report), data.accounts, data.entries, 6, today())
   return <div className="report b-phone-p5 b-phone-loans">
     <Tabs prefix="loans-phone" label={t('loans.title')} tabs={[{ id: 'loans', title: t('loans.tabLoans') }, { id: 'plans', title: t('loans.tabPlans') }]} current={tab} onChange={setTab} />
     <div role="tabpanel" id={panelDomId('loans-phone', tab)} aria-labelledby={tabDomId('loans-phone', tab)}>
@@ -186,16 +190,16 @@ function LoansPhone({ items, totals, month, currency, unpaid, data }) {
         {items.length > 0 && <p className="b-pl-total"><span>{t('loans.total')}</span><span>{t('loans.totalCount', { count: items.length })}</span><strong>{formatMoney(totals.remain, currency)}</strong></p>}
       </> : <>
     {unpaid.items.length === 0 ? <p className="note">{t('loans.plansEmpty')}</p> : <>
-      <PlanOverview phone foldItems overview={planOverview(unpaid.items.map((i) => i.report), data.accounts, data.entries, 6)} money={(n) => formatMoney(n, currency)} showCard />
+      <PlanOverview phone foldItems overview={phoneOverview} money={(n) => formatMoney(n, currency)} showCard />
       <ul className="b-pl-cards">
         {unpaid.items.map(({ account, report }) => (
           <li key={account.id}>
             <a href={cardHref(account.id)}><span className="b-pl-name user-text">{account.name}</span><b>{formatMoney(report.balance, currency)}</b></a>
-            <span className="b-pl-unpaid-sub">{t('card.later')} {formatMoney(report.later, currency)}　{t('card.next')} {formatMoney(report.next, currency)}</span>
+            <span className="b-pl-unpaid-sub">{t('card.laterFrom', { date: monthDay(laterFromDate(report)) })} {formatMoney(report.later, currency)}　{t('card.next')} {formatMoney(nextDebit(report).amount, currency)}</span>
           </li>
         ))}
       </ul>
-      <p className="note">{t('card.laterNote')}</p>
+      {phoneOverview.laterFrom && <p className="note">{t('card.laterNote', { date: monthDay(phoneOverview.laterFrom) })}</p>}
     </>}
       </>}
     </div>
