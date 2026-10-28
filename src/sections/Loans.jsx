@@ -7,6 +7,10 @@ import { t } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import LoanChart from './LoanChart.jsx'
 import { Icon } from './Icon.jsx'
+import Tabs from './Tabs.jsx'
+import { panelDomId, tabDomId } from '../tabs.js'
+import PlanOverview from './PlanOverview.jsx'
+import { planOverview } from '../planView.js'
 import { useBasicPhone } from '../basicPhone.js'
 
 const KIND_LABELS = { scholarship: 'loans.kind.scholarship', loan: 'loans.kind.loan', other: 'loans.kind.other' } // 種類の文言のキー（check が使っているキーを見つけられるよう、1 つずつ書く）
@@ -106,26 +110,21 @@ function loanFacts(item, month, currency) {
 const KIND_ICONS = { scholarship: 'cap', loan: 'home', other: 'wallet' } // 種類の絵（icons.js）
 // 別枠：まだ払っていない分（クレカ・後払い）。カードごとに、引き落とし予定・未請求・先の分・残高と、分割・リボの内訳。カードの画面へのリンクつき
 const cardHref = (id) => toHash({ entry: 'ledger', tab: 'card', detailId: id })
-function UnpaidPlans({ plans, currency }) {
-  return (
-    <ul className="b-unpaid-plans">
-      {plans.installments.map((p) => <li key={p.entry.id}><span className="b-up-name"><span className="user-text">{p.entry.memo}</span><span className="pay-mark">{payMarkText(p.entry.pay)}</span></span><span className="b-up-line">{t('card.planLine', { left: p.left, monthly: formatMoney(p.monthly, currency), month: monthLabel(p.endClosing.slice(0, 7)) })}</span><b>{t('card.planRemain', { amount: formatMoney(p.remaining, currency) })}</b></li>)}
-      {plans.revolving && <li><span className="b-up-name"><span className="pay-mark">{t('entries.payMarkRevolving')}</span></span><span className="b-up-line">{t('card.planLine', { left: plans.revolving.left, monthly: formatMoney(plans.revolving.monthly, currency), month: monthLabel(plans.revolving.endClosing.slice(0, 7)) })}</span><b>{t('card.planRemain', { amount: formatMoney(plans.revolving.remaining, currency) })}</b></li>}
-    </ul>
-  )
-}
-function UnpaidSection({ unpaid, currency }) {
+function UnpaidSection({ unpaid, data, currency }) {
   const { items, totals } = unpaid
   if (items.length === 0) return null
+  const overview = planOverview(items.map((i) => i.report), data.accounts, data.entries)
+  const money = (n) => formatMoney(n, currency)
   return (
     <section className="b-loan-unpaid">
       <div className="b-section-head"><h3>{t('loans.unpaidTitle')}</h3><span className="note">{t('loans.unpaidTotal', { amount: formatMoney(totals.balance, currency) })}</span></div>
+      {(overview.items.length > 0) && <PlanOverview overview={overview} money={money} showCard />}
       <table>
         <thead><tr><th>{t('common.account')}</th><th>{t('card.next')}</th><th>{t('card.unbilled')}</th><th>{t('card.later')}</th><th>{t('card.balanceTotal')}</th></tr></thead>
         <tbody>
-          {items.map(({ account, report, plans }) => (
+          {items.map(({ account, report }) => (
             <tr key={account.id}>
-              <td><a href={cardHref(account.id)}><span className="user-text">{account.name}</span></a>{(plans.installments.length > 0 || plans.revolving) && <UnpaidPlans plans={plans} currency={currency} />}</td>
+              <td><a href={cardHref(account.id)}><span className="user-text">{account.name}</span></a></td>
               <td>{formatMoney(report.next, currency)}<small>{report.payDate.replaceAll('-', '/')}</small></td>
               <td>{formatMoney(report.unbilled, currency)}</td>
               <td>{formatMoney(report.later, currency)}</td>
@@ -142,8 +141,9 @@ function UnpaidSection({ unpaid, currency }) {
 const PHONE_LIST_MAX = 3 // スマホの一覧に出す件数。それより多いときは「ほか○件」
 
 // 基本のスマホ：PC を簡単にしたもの。上に「残り」「今月の返済」、下に借入 3 件と合計（4 件以上は「ほか○件」で一覧）。選ぶと中身（数値の札 3 つ・グラフ）。入力と返す予定の表は PC だけ
-function LoansPhone({ items, totals, month, currency, unpaid }) {
+function LoansPhone({ items, totals, month, currency, unpaid, data }) {
   const [selectedId, setSelectedId] = useState(null)
+  const [tab, setTab] = useState('loans') // 借入（ローン・奨学金）／クレカの分割・リボ。初めは借入
   const [all, setAll] = useState(false)
   const selected = items.find((i) => i.loan.id === selectedId)
   if (selected) {
@@ -163,40 +163,42 @@ function LoansPhone({ items, totals, month, currency, unpaid }) {
   }
   const shown = all ? items : items.slice(0, PHONE_LIST_MAX)
   return <div className="report b-phone-p5 b-phone-loans">
-    <div className="b-pl-tiles">
-      <div className="b-pl-tile"><span className="lbl">{t('loans.sumRemain')}</span><strong>{formatMoney(totals.remain, currency)}</strong></div>
-      <div className="b-pl-tile"><span className="lbl">{t('loans.sumDue')}</span><strong>{formatMoney(totals.scheduled, currency)}</strong></div>
+    <Tabs prefix="loans-phone" label={t('loans.title')} tabs={[{ id: 'loans', title: t('loans.tabLoans') }, { id: 'plans', title: t('loans.tabPlans') }]} current={tab} onChange={setTab} />
+    <div role="tabpanel" id={panelDomId('loans-phone', tab)} aria-labelledby={tabDomId('loans-phone', tab)}>
+      {tab === 'loans' ? <>
+        <div className="b-pl-tiles">
+          <div className="b-pl-tile"><span className="lbl">{t('loans.sumRemain')}</span><strong>{formatMoney(totals.remain, currency)}</strong></div>
+          <div className="b-pl-tile"><span className="lbl">{t('loans.sumDue')}</span><strong>{formatMoney(totals.scheduled, currency)}</strong></div>
+        </div>
+        {items.length === 0 && <p className="note">{t('loans.phoneEmpty')}</p>}
+        <div className="b-pl-list">
+          {shown.map(({ loan, balance, borrowed }) => {
+            const pct = borrowed > 0 ? Math.min(100, Math.max(0, Math.round(((borrowed - balance) / borrowed) * 100))) : 0
+            return <button type="button" key={loan.id} className="b-pl-row" onClick={() => setSelectedId(loan.id)}>
+              <span className="b-pl-ic"><Icon name={KIND_ICONS[loan.kind]} /></span>
+              <span className="b-pl-name">{loan.name}</span>
+              <span className="b-pl-rem">{formatMoney(balance, currency)}</span>
+              <span className="b-pl-track"><span style={{ width: `${pct}%` }} /></span>
+            </button>
+          })}
+          {items.length > PHONE_LIST_MAX && <button type="button" className="b-pl-more" aria-expanded={all} onClick={() => setAll(!all)}>{all ? t('loans.less') : t('loans.more', { count: items.length - PHONE_LIST_MAX })}</button>}
+        </div>
+        {items.length > 0 && <p className="b-pl-total"><span>{t('loans.total')}</span><span>{t('loans.totalCount', { count: items.length })}</span><strong>{formatMoney(totals.remain, currency)}</strong></p>}
+      </> : <>
+    {unpaid.items.length === 0 ? <p className="note">{t('loans.plansEmpty')}</p> : <>
+      <PlanOverview phone foldItems overview={planOverview(unpaid.items.map((i) => i.report), data.accounts, data.entries, 6)} money={(n) => formatMoney(n, currency)} showCard />
+      <ul className="b-pl-cards">
+        {unpaid.items.map(({ account, report }) => (
+          <li key={account.id}>
+            <a href={cardHref(account.id)}><span className="b-pl-name user-text">{account.name}</span><b>{formatMoney(report.balance, currency)}</b></a>
+            <span className="b-pl-unpaid-sub">{t('card.later')} {formatMoney(report.later, currency)}　{t('card.next')} {formatMoney(report.next, currency)}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="note">{t('card.laterNote')}</p>
+    </>}
+      </>}
     </div>
-    {items.length === 0 && <p className="note">{t('loans.phoneEmpty')}</p>}
-    <div className="b-pl-list">
-      {shown.map(({ loan, balance, borrowed }) => {
-        const pct = borrowed > 0 ? Math.min(100, Math.max(0, Math.round(((borrowed - balance) / borrowed) * 100))) : 0
-        return <button type="button" key={loan.id} className="b-pl-row" onClick={() => setSelectedId(loan.id)}>
-          <span className="b-pl-ic"><Icon name={KIND_ICONS[loan.kind]} /></span>
-          <span className="b-pl-name">{loan.name}</span>
-          <span className="b-pl-rem">{formatMoney(balance, currency)}</span>
-          <span className="b-pl-track"><span style={{ width: `${pct}%` }} /></span>
-        </button>
-      })}
-      {items.length > PHONE_LIST_MAX && <button type="button" className="b-pl-more" aria-expanded={all} onClick={() => setAll(!all)}>{all ? t('loans.less') : t('loans.more', { count: items.length - PHONE_LIST_MAX })}</button>}
-    </div>
-    {items.length > 0 && <p className="b-pl-total"><span>{t('loans.total')}</span><span>{t('loans.totalCount', { count: items.length })}</span><strong>{formatMoney(totals.remain, currency)}</strong></p>}
-    {unpaid.items.length > 0 && (
-      // まだ払っていない分（クレカ・後払い）：初めは畳む（開閉の印つき）
-      <details className="b-pl-unpaid">
-        <summary><span>{t('loans.unpaidTitleShort')}</span><strong>{formatMoney(unpaid.totals.balance, currency)}</strong><Icon name="down" /></summary>
-        <ul>
-          {unpaid.items.map(({ account, report, plans }) => (
-            <li key={account.id}>
-              <a href={cardHref(account.id)}><span className="b-pl-name user-text">{account.name}</span><b>{formatMoney(report.balance, currency)}</b></a>
-              <span className="b-pl-unpaid-sub">{t('card.later')} {formatMoney(report.later, currency)}　{t('card.next')} {formatMoney(report.next, currency)}</span>
-              {(plans.installments.length > 0 || plans.revolving) && <UnpaidPlans plans={plans} currency={currency} />}
-            </li>
-          ))}
-        </ul>
-        <p className="note">{t('card.laterNote')}</p>
-      </details>
-    )}
   </div>
 }
 
@@ -274,32 +276,37 @@ export default function Loans({ data, update }) {
   const { items, totals } = loanOverview(data, month)
   const [selectedId, setSelectedId] = useState(null)
   const [adding, setAdding] = useState(false)
+  const [tab, setTab] = useState('loans') // 基本の PC：借入（ローン・奨学金）／クレカの分割・リボ。初めは借入
   const selected = items.find((i) => i.loan.id === selectedId) ?? items[0]
   const paidThisMonth = totals.due < totals.scheduled
   const unpaid = unpaidCards(data, today())
-  if (basicPhone) return <LoansPhone items={items} totals={totals} month={month} currency={currency} unpaid={unpaid} />
+  if (basicPhone) return <LoansPhone items={items} totals={totals} month={month} currency={currency} unpaid={unpaid} data={data} />
   return <div className="report b-page b-loans">
     <div className="b-page-head"><h2>{t('loans.title')}</h2><p>{t('basicPc.loansLead')}</p></div>
-    <div className="b-loan-tiles">
-      <div className="b-loan-tile"><span className="lbl">{t('loans.sumRemain')}</span><strong>{formatMoney(totals.remain, currency)}</strong><span className="sub">{t('loans.sumCount', { count: items.length })}</span></div>
-      <div className="b-loan-tile"><span className="lbl">{t('loans.sumDue')}</span><strong>{formatMoney(totals.scheduled, currency)}</strong></div>
-      <div className="b-loan-tile b-loan-free">
-        <span className="lbl">{t('loans.sumFree')}</span>
-        <strong>{formatMoney(totals.due, currency)}</strong>
-        <span className="sub"><span className="chip on">{t('loans.freeNext', { amount: formatMoney(totals.due, currency) })}</span> <span className="chip off">{t('loans.freeWhole', { amount: formatMoney(totals.remain, currency) })}</span></span>
-        <span className="sub">{t(paidThisMonth ? 'loans.freeNotePaid' : 'loans.freeNote')}</span>
+    <Tabs prefix="loans-basic" label={t('loans.title')} tabs={[{ id: 'loans', title: t('loans.tabLoans') }, { id: 'plans', title: t('loans.tabPlans') }]} current={tab} onChange={setTab} />
+    <div role="tabpanel" id={panelDomId('loans-basic', tab)} aria-labelledby={tabDomId('loans-basic', tab)}>
+      {tab === 'loans' ? <>
+      <div className="b-loan-tiles">
+        <div className="b-loan-tile"><span className="lbl">{t('loans.sumRemain')}</span><strong>{formatMoney(totals.remain, currency)}</strong><span className="sub">{t('loans.sumCount', { count: items.length })}</span></div>
+        <div className="b-loan-tile"><span className="lbl">{t('loans.sumDue')}</span><strong>{formatMoney(totals.scheduled, currency)}</strong></div>
+        <div className="b-loan-tile b-loan-free">
+          <span className="lbl">{t('loans.sumFree')}</span>
+          <strong>{formatMoney(totals.due, currency)}</strong>
+          <span className="sub"><span className="chip on">{t('loans.freeNext', { amount: formatMoney(totals.due, currency) })}</span> <span className="chip off">{t('loans.freeWhole', { amount: formatMoney(totals.remain, currency) })}</span></span>
+          <span className="sub">{t(paidThisMonth ? 'loans.freeNotePaid' : 'loans.freeNote')}</span>
+        </div>
       </div>
-    </div>
-    <div className="b-loan-body">
-      <div className="b-loan-list">
-        {adding
-          ? <AddForm data={data} update={update} month={month} onDone={(id) => { setAdding(false); if (id) setSelectedId(id) }} />
-          : <button type="button" className="b-loan-add" onClick={() => setAdding(true)}>{t('loans.add')}</button>}
-        {items.length === 0 && !adding && <p className="note">{t('loans.empty')}</p>}
-        {items.map((item) => <LoanRow key={item.loan.id} item={item} month={month} currency={currency} current={item === selected} onSelect={() => setSelectedId(item.loan.id)} />)}
+      <div className="b-loan-body">
+        <div className="b-loan-list">
+          {adding
+            ? <AddForm data={data} update={update} month={month} onDone={(id) => { setAdding(false); if (id) setSelectedId(id) }} />
+            : <button type="button" className="b-loan-add" onClick={() => setAdding(true)}>{t('loans.add')}</button>}
+          {items.length === 0 && !adding && <p className="note">{t('loans.empty')}</p>}
+          {items.map((item) => <LoanRow key={item.loan.id} item={item} month={month} currency={currency} current={item === selected} onSelect={() => setSelectedId(item.loan.id)} />)}
+        </div>
+        {selected && <Detail key={selected.loan.id} item={selected} data={data} update={update} month={month} currency={currency} />}
       </div>
-      {selected && <Detail key={selected.loan.id} item={selected} data={data} update={update} month={month} currency={currency} />}
+      </> : unpaid.items.length === 0 ? <p className="note">{t('loans.plansEmpty')}</p> : <UnpaidSection unpaid={unpaid} data={data} currency={currency} />}
     </div>
-    <UnpaidSection unpaid={unpaid} currency={currency} />
   </div>
 }

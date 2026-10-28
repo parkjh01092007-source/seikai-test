@@ -704,6 +704,22 @@ export function payLines(card, entries) {
   return lines.sort((x, y) => x.closingDate.localeCompare(y.closingDate))
 }
 
+// payLines を、分割とリボに分けたもの（見やすさの棒グラフ用。並びは締め日順にしない）
+export function payLinesByMode(card, entries) {
+  const own = entries.filter((e) => isPayEntry(e, card))
+  return {
+    installment: own.filter((e) => e.pay.mode === 'installment').flatMap((e) => installmentLines(e, card.closingDay)),
+    revolving: revolvingLines(own.filter((e) => e.pay.mode === 'revolving'), card.closingDay, card.revolving?.monthly ?? 0),
+  }
+}
+
+// 分割の買い物の名前。メモがあればメモ、空なら「科目・買った日」（例：家具・9/15）。fallback は、代わりの名前を使ったとき true
+export function payItemName(entry, accounts) {
+  if (entry.memo.trim() !== '') return { name: entry.memo, fallback: false }
+  const account = accounts.find((a) => a.id === entry.debitId)?.name ?? ''
+  return { name: t('plan.nameFallback', { account, month: Number(entry.date.slice(5, 7)), day: Number(entry.date.slice(8, 10)) }), fallback: true }
+}
+
 // カード1枚の計算。card でない科目・存在しない id は null
 // 数える仕訳（符号つき）：貸方＝カード（opening は除く。adjustment は含む）は ＋、借方＝カードの adjustment は −。借方＝カードの normal（返済・返品）は数えない
 // unbilled（未請求の利用額）＝最後の締め日より後の合計。確定分の調整（isClosedFix）は、日付に関係なく最後の締め日の期に入り、unbilled には入らない。
@@ -1002,8 +1018,12 @@ export function balanceSheet(accounts, entries, month) {
   return { month, assets, assetTotal, liabilities, liabilityTotal, equity, profit, equityTotal, liabilityEquityTotal, balanced: assetTotal === liabilityEquityTotal }
 }
 
+// 返し始めの前の奨学金か（kind が scholarship で repayFrom があり、月がそれより前）。返し始めの月からは普通の借入。repayFrom のない奨学金も普通の借入（loanDue と同じ向き）
+export const isScholarshipBefore = (loan, month) => loan.kind === 'scholarship' && loan.repayFrom !== undefined && month < loan.repayFrom
+
 // 月末の資産・負債と、その月の収支。記録のない月より前は出さない。
-export function balanceTrend(accounts, entries, endMonth, today, count = 12) {
+// loans（省略可）：返す前の奨学金を分けた値（netExScholarship・scholarshipBefore・scholarshipFrom・scholarships）と、純資産の内訳（cashTotal・savingTotal・otherAssetTotal・borrowTotal。借入は返す前の奨学金を除く負債）を足す
+export function balanceTrend(accounts, entries, endMonth, today, count = 12, loans = []) {
   if (!entries.length || !endMonth || !today || count <= 0) return []
   const first = entries.reduce((m, e) => e.date.slice(0, 7) < m ? e.date.slice(0, 7) : m, entries[0].date.slice(0, 7))
   let month = endMonth < today.slice(0, 7) ? endMonth : today.slice(0, 7)
@@ -1011,11 +1031,32 @@ export function balanceTrend(accounts, entries, endMonth, today, count = 12) {
   while (month >= first && result.length < count) {
     const sheet = balanceSheet(accounts, entries, month)
     const rows = accountBalances(accounts, entries.filter((e) => e.date.slice(0, 7) <= month)).rows
-    const earmarkTotal = sum(rows.filter((r) => r.account.type === 'asset' && r.account.role === 'earmark'), (r) => r.balance)
-    result.push({ month, assetTotal: sheet.assetTotal, liabilityTotal: sheet.liabilityTotal, netTotal: sheet.assetTotal - sheet.liabilityTotal, earmarkTotal, result: monthReport(accounts, entries, month).result })
+    const assetOf = (role) => sum(rows.filter((r) => r.account.type === 'asset' && (role === 'other' ? r.account.role !== 'cash' && r.account.role !== 'earmark' : r.account.role === role)), (r) => r.balance)
+    const earmarkTotal = assetOf('earmark')
+    const scholarships = loans.filter((l) => isScholarshipBefore(l, month)).map((l) => ({ id: l.id, balance: rows.find((r) => r.account.id === l.accountId)?.balance ?? 0, repayFrom: l.repayFrom }))
+    const scholarshipBefore = sum(scholarships, (x) => x.balance)
+    const netTotal = sheet.assetTotal - sheet.liabilityTotal
+    result.push({
+      month, assetTotal: sheet.assetTotal, liabilityTotal: sheet.liabilityTotal, netTotal, earmarkTotal, result: monthReport(accounts, entries, month).result,
+      cashTotal: assetOf('cash'), savingTotal: earmarkTotal, otherAssetTotal: assetOf('other'), borrowTotal: sheet.liabilityTotal - scholarshipBefore,
+      scholarshipBefore, scholarshipFrom: scholarships.length ? scholarships.map((x) => x.repayFrom).sort()[0] : null, scholarships, netExScholarship: netTotal + scholarshipBefore,
+    })
     month = previousMonth(month)
   }
   return result
+}
+
+// 先月からの純資産（奨学金を除く）の増減と、その理由。cur・prev は balanceTrend の行。
+// 理由：収支（その月の収支）／奨学金の受け取り（返す前の奨学金の残りの増減）／奨学金の返し始め（先月は返す前だった分が、今月から借入になる）／そのほか（開始残高の追加など。差から引いた残り）。0 の理由は出さない。足すと必ず差に合う
+export function netChangeReasons(cur, prev) {
+  const change = cur.netExScholarship - prev.netExScholarship
+  const was = new Map(prev.scholarships.map((x) => [x.id, x.balance]))
+  const now = new Map(cur.scholarships.map((x) => [x.id, x.balance]))
+  const receive = sum(cur.scholarships, (x) => x.balance - (was.get(x.id) ?? 0))
+  const start = -sum(prev.scholarships.filter((x) => !now.has(x.id)), (x) => x.balance)
+  const reasons = [{ id: 'result', amount: cur.result }, { id: 'receive', amount: receive }, { id: 'start', amount: start }]
+  reasons.push({ id: 'other', amount: change - sum(reasons, (r) => r.amount) })
+  return { change, reasons: reasons.filter((r) => r.amount !== 0) }
 }
 
 // B/S の勘定式の並び（左：資産の部、右：負債の部と純資産の部）。結果は balanceSheet のものを並べるだけ。

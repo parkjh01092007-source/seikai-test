@@ -208,6 +208,26 @@
   :root[data-theme='basic'] .b-month-redesign .b-trend-zero { stroke: var(--b-muted); stroke-dasharray: 3 4; }
   :root[data-theme='basic'] .b-month-redesign .b-trend-line { fill: none; stroke: var(--b-active-bar); stroke-width: 2; }
   :root[data-theme='basic'] .b-month-redesign .b-trend-dot { fill: var(--b-active-bar); }
+  :root[data-theme='basic'] .b-month-redesign .b-trend-grid { stroke: var(--b-side-line); }
+  :root[data-theme='basic'] .b-month-redesign .b-trend-chart .b-trend-point { fill: var(--b-text); }
+  :root[data-theme='basic'] .b-month-redesign .b-trend-zero-negative { stroke-width: 1.5; }
+  :root[data-theme='basic'] .b-month-redesign .b-month-living tr.total td { background: var(--b-clear); font-weight: var(--b-weight-normal); border-top: 0; border-bottom: 1px solid var(--b-side-line); }
+  :root[data-theme='basic'] .b-month-redesign .b-net-bars { display: grid; gap: var(--b-space-1); margin: var(--b-space-3) 0 var(--b-space-2); }
+  :root[data-theme='basic'] .b-month-redesign .b-net-bar { display: flex; height: var(--b-space-3); background: var(--b-table-head); overflow: hidden; margin-top: var(--b-space-2); }
+  :root[data-theme='basic'] .b-month-redesign .b-net-bar > span { display: block; height: 100%; }
+  :root[data-theme='basic'] .b-month-redesign .b-net-cash { background: var(--b-active-bar); }
+  :root[data-theme='basic'] .b-month-redesign .b-net-saving { background: var(--b-positive); }
+  :root[data-theme='basic'] .b-month-redesign .b-net-other { background: var(--b-line); }
+  :root[data-theme='basic'] .b-month-redesign .b-net-borrow, :root[data-theme='basic'] .b-month-redesign .b-net-shortfall { background: var(--b-negative); }
+  :root[data-theme='basic'] .b-month-redesign .b-net-net { background: var(--b-navy); }
+  :root[data-theme='basic'] .b-month-redesign .b-net-labels { display: grid; column-gap: var(--b-space-3); margin: var(--b-space-0); padding: var(--b-space-0); list-style: none; font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-month-redesign .b-net-labels li { display: grid; gap: var(--b-space-0); min-width: 0; padding-top: var(--b-space-1); white-space: nowrap; }
+  :root[data-theme='basic'] .b-month-redesign .b-net-labels .nm { display: flex; align-items: center; gap: var(--b-space-1); color: var(--b-muted); }
+  :root[data-theme='basic'] .b-month-redesign .b-net-labels strong { font-weight: var(--b-weight-normal); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-month-redesign .b-net-labels li:has(.b-net-net) strong { font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-month-redesign .b-net-swatch { display: inline-block; width: var(--b-space-2); height: var(--b-space-2); flex: none; }
+  :root[data-theme='basic'] .b-month-redesign .b-net-scholarship { margin: var(--b-space-2) var(--b-space-0) var(--b-space-0); font-size: var(--b-font-small); color: var(--b-muted); }
+  :root[data-theme='basic'] .b-month-redesign .b-net-with { margin: var(--b-space-0); font-size: var(--b-font-small); color: var(--b-muted); }
   :root[data-theme='basic'] .b-month-redesign .b-trend-table { overflow-x: auto; }
   :root[data-theme='basic'] .b-month-redesign .b-trend-table th:not(:first-child), :root[data-theme='basic'] .b-month-redesign .b-trend-table td:not(:first-child) { text-align: right; white-space: nowrap; }
   :root[data-theme='basic'] .b-month-redesign .b-month-books { border: 1px solid var(--b-side-line); background: var(--b-surface); }
@@ -644,6 +664,44 @@
   :root[data-theme='basic'] .b-card-detail .plan-later li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: var(--b-space-4); padding: var(--b-space-2) var(--b-space-0); border-bottom: 1px solid var(--b-line); font-variant-numeric: tabular-nums; }
   :root[data-theme='basic'] .b-card-detail .plan-later li b { text-align: right; }
   :root[data-theme='basic'] .b-card-detail .plan-later .plan-more { display: block; color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-plan { display: grid; gap: var(--b-space-5); margin-top: var(--b-space-3); }
+  :root[data-theme='basic'] .b-plan-tiles { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: var(--b-space-4); }
+  :root[data-theme='basic'] .b-plan-tile { display: grid; align-content: start; gap: var(--b-space-1); border: 1px solid var(--b-side-line); padding: var(--b-space-4) var(--b-space-5); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-plan-tile .lbl { color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-plan-nexttile { background: var(--b-active-bg); border-color: var(--b-active-bar); }
+  :root[data-theme='basic'] .b-plan-big { font-size: var(--b-font-heading); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-plan-mid { font-size: var(--b-font-large); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-plan-band { display: flex; gap: var(--b-space-0); height: var(--b-space-3); margin-top: var(--b-space-1); background: var(--b-table-head); }
+  :root[data-theme='basic'] .b-plan-band > span { display: block; height: 100%; }
+  :root[data-theme='basic'] .b-plan-split { background: var(--b-active-bar); }
+  :root[data-theme='basic'] .b-plan-revo { background: var(--b-positive); }
+  :root[data-theme='basic'] .b-plan-legend { display: flex; flex-wrap: wrap; gap: var(--b-space-1) var(--b-space-4); margin: var(--b-space-0); padding: var(--b-space-0); list-style: none; font-size: var(--b-font-small); color: var(--b-muted); }
+  :root[data-theme='basic'] .b-plan-legend li { display: flex; align-items: center; gap: var(--b-space-2); }
+  :root[data-theme='basic'] .b-plan-legend strong { color: var(--b-text); font-weight: var(--b-weight-normal); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-plan-swatch { display: inline-block; width: var(--b-space-3); height: var(--b-space-3); flex: none; }
+  :root[data-theme='basic'] .b-plan-cols { display: grid; grid-template-columns: 1.25fr 1fr; gap: var(--b-space-6); align-items: start; }
+  :root[data-theme='basic'] .b-plan-box { display: grid; gap: var(--b-space-3); min-width: 0; }
+  :root[data-theme='basic'] .b-plan-box h4 { margin: var(--b-space-0); font-size: var(--b-font-size); }
+  :root[data-theme='basic'] .b-plan-chart { display: flex; align-items: flex-end; gap: var(--b-space-2); height: 200px; border-bottom: 1px solid var(--b-line); }
+  :root[data-theme='basic'] .b-plan-col { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; opacity: 0.55; font-size: var(--b-font-small); font-variant-numeric: tabular-nums; text-align: center; }
+  :root[data-theme='basic'] .b-plan-col.dark { opacity: 1; font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-plan-col .v { overflow: hidden; text-overflow: clip; white-space: nowrap; }
+  :root[data-theme='basic'] .b-plan-stack { display: flex; flex-direction: column; min-height: 2px; }
+  :root[data-theme='basic'] .b-plan-stack > span { display: block; }
+  :root[data-theme='basic'] .b-plan-col .m { margin-top: var(--b-space-1); }
+  :root[data-theme='basic'] .b-plan-items { display: grid; gap: var(--b-space-3); margin: var(--b-space-0); padding: var(--b-space-0); list-style: none; }
+  :root[data-theme='basic'] .b-plan-item { display: grid; gap: var(--b-space-2); border: 1px solid var(--b-side-line); padding: var(--b-space-3) var(--b-space-4); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-plan-item .r1 { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--b-space-2); }
+  :root[data-theme='basic'] .b-plan-item .nm { font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-plan-item .tag { border: 1px solid var(--b-line); padding: 0 var(--b-space-2); color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-plan-item .tag.memo { border-style: dashed; }
+  :root[data-theme='basic'] .b-plan-item .rem { margin-left: auto; font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-plan-item .pips { display: flex; gap: var(--b-space-1); }
+  :root[data-theme='basic'] .b-plan-item .pips i { flex: 1; height: var(--b-space-3); background: var(--b-table-head); }
+  :root[data-theme='basic'] .b-plan-item .pips i.done { background: var(--b-active-bar); }
+  :root[data-theme='basic'] .b-plan-item .pips i.next { background: var(--b-active-bar); opacity: 0.45; }
+  :root[data-theme='basic'] .b-plan-item .r3 { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--b-space-1) var(--b-space-4); color: var(--b-muted); font-size: var(--b-font-small); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-plan-item .r3 b { color: var(--b-text); }
   :root[data-theme='basic'] .b-card-detail .card-revolving form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--b-space-4); }
   :root[data-theme='basic'] .b-card-detail .card-revolving .b-field { flex: 0 1 var(--b-field-w); }
   :root[data-theme='basic'] .b-cards .b-card-later { display: block; color: var(--b-muted); font-size: var(--b-font-small); }
@@ -652,6 +710,11 @@
 
   /* 借入のページの別枠：まだ払っていない分（クレカ・後払い） */
   :root[data-theme='basic'] .b-loans .b-loan-unpaid { margin-top: var(--b-space-8); }
+  :root[data-theme='basic'] .b-loans .b-loan-unpaid:first-child { margin-top: var(--b-space-0); }
+  :root[data-theme='basic'] .b-loans .b-loan-unpaid .b-plan { margin-bottom: var(--b-space-6); }
+  :root[data-theme='basic'] .b-loans .tabs { justify-content: flex-start; margin: var(--b-space-0) var(--b-space-0) var(--b-space-7); border-bottom: 1px solid var(--b-line); }
+  :root[data-theme='basic'] .b-loans .tabs .tab { flex: none; min-height: var(--b-control-h); padding: var(--b-space-2) var(--b-space-6); border: 1px solid var(--b-clear); background: var(--b-clear); color: var(--b-text); }
+  :root[data-theme='basic'] .b-loans .tabs .tab[aria-selected='true'] { border-color: var(--b-line); border-bottom-color: var(--b-bg); background: var(--b-bg); color: var(--b-active-bar); font-weight: var(--b-weight-bold); }
   :root[data-theme='basic'] .b-loans .b-loan-unpaid table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
   :root[data-theme='basic'] .b-loans .b-loan-unpaid th { padding: var(--b-space-2) var(--b-space-4); background: var(--b-table-head); color: var(--b-muted); font-size: var(--b-font-small); text-align: right; white-space: nowrap; }
   :root[data-theme='basic'] .b-loans .b-loan-unpaid td { padding: var(--b-space-3) var(--b-space-4); border-bottom: 1px solid var(--b-line); text-align: right; vertical-align: top; white-space: nowrap; }

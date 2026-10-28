@@ -111,7 +111,7 @@ export default function CreditCardDetail({ card, backHref, unit, entries = [], d
       {basicPhone ? <details className="b-phone-calcfold"><summary>{t('card.calcFold')}</summary><p className="note">{t('card.noteFormula', { date: card.lastClosing })} {t('card.noteRules')}</p></details> : <p className="note">
         {t('card.noteFormula', { date: card.lastClosing })} {t('card.noteRules')}
       </p>}
-      {(basicPc || basicPhone) && <CardPlans card={card} entries={entries} unit={unit} />}
+      {(basicPc || basicPhone) && <CardPlans card={card} entries={entries} accounts={data.accounts} unit={unit} />}
       {basicPc ? <div className="b-section-head"><h3>{t('card.periodsTitle')}</h3></div> : <h3>{t('card.periodsTitle')}</h3>}
       {periods.length === 0 ? <p className="note">{t('card.noUsage')}</p> : phone ? (
         // スマホの幅（spec-mobile.md 第6章）：請求期間ごとに2行。1行目に締め日と利用額、2行目に引き落とし予定日と（未確定）。PC は下の表のまま
