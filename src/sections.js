@@ -11,6 +11,7 @@ import Monthly from './sections/Monthly.jsx'
 import LedgerBook from './sections/LedgerBook.jsx'
 import Budgets from './sections/Budgets.jsx'
 import Loans from './sections/Loans.jsx'
+import Invest from './sections/Invest.jsx'
 import Settings from './sections/Settings.jsx'
 
 // タブの id → 画面の部品。入口・グループ・タブの並びと文言は nav.js（画面の定義）にある。タブを足すときは、nav.js と、ここに1行ずつ足す。
@@ -27,6 +28,7 @@ export const screens = {
   savings: Savings,
   budgets: Budgets,
   loans: Loans,
+  invest: Invest,
   accounts: Ledger,
   settings: Settings,
 }

@@ -11,6 +11,7 @@ import { Icon } from './Icon.jsx'
 import Tabs from './Tabs.jsx'
 import { panelDomId, tabDomId } from '../tabs.js'
 import PlanOverview from './PlanOverview.jsx'
+import PlanEntryEditor from './PlanEntryEditor.jsx'
 import { planOverview } from '../planView.js'
 import { useBasicPhone } from '../basicPhone.js'
 
@@ -111,7 +112,7 @@ function loanFacts(item, month, currency) {
 const KIND_ICONS = { scholarship: 'cap', loan: 'home', other: 'wallet' } // 種類の絵（icons.js）
 // 別枠：まだ払っていない分（クレカ・後払い）。カードごとに、引き落とし予定・未請求・先の分・残高と、分割・リボの内訳。カードの画面へのリンクつき
 const cardHref = (id) => toHash({ entry: 'ledger', tab: 'card', detailId: id })
-function UnpaidSection({ unpaid, data, currency }) {
+function UnpaidSection({ unpaid, data, update, currency }) {
   const { items, totals } = unpaid
   if (items.length === 0) return null
   const overview = planOverview(items.map((i) => i.report), data.accounts, data.entries)
@@ -119,7 +120,7 @@ function UnpaidSection({ unpaid, data, currency }) {
   return (
     <section className="b-loan-unpaid">
       <div className="b-section-head"><h3>{t('loans.unpaidTitle')}</h3><span className="note">{t('loans.unpaidTotal', { amount: formatMoney(totals.balance, currency) })}</span></div>
-      {(overview.items.length > 0) && <PlanOverview overview={overview} money={money} showCard />}
+      {(overview.items.length > 0) && <PlanOverview overview={overview} money={money} showCard editor={(item) => <PlanEntryEditor data={data} update={update} entryIds={item.entryIds} />} />}
       <table>
         <thead><tr><th>{t('common.account')}</th><th>{t('card.next')}</th><th>{t('card.unbilled')}</th><th>{t('card.later')}</th><th>{t('card.balanceTotal')}</th></tr></thead>
         <tbody>
@@ -313,7 +314,7 @@ export default function Loans({ data, update, detailId = null }) {
         </div>
         {selected && <Detail key={selected.loan.id} item={selected} data={data} update={update} month={month} currency={currency} />}
       </div>
-      </> : unpaid.items.length === 0 ? <p className="note">{t('loans.plansEmpty')}</p> : <UnpaidSection unpaid={unpaid} data={data} currency={currency} />}
+      </> : unpaid.items.length === 0 ? <p className="note">{t('loans.plansEmpty')}</p> : <UnpaidSection unpaid={unpaid} data={data} update={update} currency={currency} />}
     </div>
   </div>
 }

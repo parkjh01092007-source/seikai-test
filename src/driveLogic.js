@@ -151,6 +151,7 @@ export function isInitialData(data) {
     (data.entryPresets === undefined || (Array.isArray(data.entryPresets) && data.entryPresets.length === 0)) &&
     (data.noSpendDays === undefined || (Array.isArray(data.noSpendDays) && data.noSpendDays.length === 0)) &&
     (data.loans === undefined || (Array.isArray(data.loans) && data.loans.length === 0)) &&
+    (data.holdings === undefined || (Array.isArray(data.holdings) && data.holdings.length === 0)) &&
     Array.isArray(data.accounts) && data.accounts.every((a) => a.preset !== undefined || a.key !== undefined) &&
     (fav?.debit?.length ?? 0) === 0 && (fav?.credit?.length ?? 0) === 0
 }

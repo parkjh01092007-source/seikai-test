@@ -7,6 +7,7 @@ import {
 import { today } from '../today.js'
 import { toHash } from '../route.js'
 import { loanOfEntry } from '../loanView.js'
+import { holdingOfEntry } from '../investView.js'
 import { t } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
 import { usePhone } from '../layout.js'
@@ -322,7 +323,7 @@ export const KIND_LABELS = {
   get adjustment() { return t('entries.kind.adjustment') },
 }
 
-function EntryRow({ entry, number, accounts, formAccounts, loanId, favorites, currency, editing, onEdit, onCancel, onSave, onDelete, marked, markRef }) {
+function EntryRow({ entry, number, accounts, formAccounts, lock, favorites, currency, editing, onEdit, onCancel, onSave, onDelete, marked, markRef }) {
   const gunjoPc = useGunjoPc()
   const basicPc = useBasicPc()
   const name = (id) => accounts.find((a) => a.id === id)?.name ?? ''
@@ -379,7 +380,7 @@ function EntryRow({ entry, number, accounts, formAccounts, loanId, favorites, cu
         <span className="cell">{name(entry.creditId)}</span>
         <span className="amount">{formatYen(entry.amount)}</span>
         <span className="b-entry-ops">
-          {loanId ? <a className="b-loan-link" href={loanHref(loanId)}>{t('entries.loanLink')}</a> : canEditEntry(entry) && <>
+          {lock ? <a className="b-loan-link" href={lock.href}>{t(lock.label)}</a> : canEditEntry(entry) && <>
             <IconButton icon="edit" label={t('common.edit')} onClick={onEdit} />
             <IconButton icon="trash" className="b-danger" label={t('common.delete')} onClick={onDelete} />
           </>}
@@ -410,7 +411,7 @@ function EntryRow({ entry, number, accounts, formAccounts, loanId, favorites, cu
 }
 
 // スマホの幅の1件（spec-mobile.md 5.2）：2行のカード。押すと開く（開いている行は1つだけ。Entries が持つ）。開くと、全部の文字と、編集・削除（開始残高・残高調整は種類だけ）が出る
-function EntryCard({ entry, number, accounts, loanId, currency, open, onToggle, onEdit, onDelete, marked, markRef }) {
+function EntryCard({ entry, number, accounts, lock, currency, open, onToggle, onEdit, onDelete, marked, markRef }) {
   const basicPhone = useBasicPhone()
   const name = (id) => accounts.find((a) => a.id === id)?.name ?? ''
   const detailId = `card-${entry.id}`
@@ -424,7 +425,7 @@ function EntryCard({ entry, number, accounts, loanId, currency, open, onToggle, 
         {entry.pay && basicPhone && <span className="pay-mark">{payMarkText(entry.pay)}</span>}
       </button>
       <div id={detailId} className="card-actions" hidden={!open}>
-        {loanId ? <a className="b-loan-link" href={loanHref(loanId)}>{t('entries.loanLink')}</a> : canEditEntry(entry) ? (
+        {lock ? <a className="b-loan-link" href={lock.href}>{t(lock.label)}</a> : canEditEntry(entry) ? (
           <>
             <IconButton icon="edit" label={t('common.edit')} withText onClick={onEdit} />
             <IconButton icon="trash" label={t('common.delete')} withText className="danger" onClick={onDelete} />
@@ -436,6 +437,7 @@ function EntryCard({ entry, number, accounts, loanId, currency, open, onToggle, 
 }
 
 const loanHref = (loanId) => toHash({ entry: 'ledger', tab: 'loans', detailId: loanId }) // 借入の仕訳は、借入のページで直す
+const investHref = (holdingId) => toHash({ entry: 'ledger', tab: 'invest', detailId: holdingId }) // 投資の銘柄の仕訳は、投資のページで直す
 
 const ORDER_LABELS = { asc: 'entries.orderAsc', desc: 'entries.orderDesc' } // 日付の枠の並びの切り替えボタンの文言（辞書のキー）
 
@@ -481,8 +483,11 @@ export default function Entries({ data, update, detailId = null }) { // detailId
   // 基本のテーマだけ：借入の仕訳は、借入のページで直す。ここでは直す・消すを出さず、新しい仕訳の科目の選択肢からも借入の科目を外す
   const lockLoans = basicPc || basicPhone
   const loans = data.loans ?? []
-  const pickAccounts = lockLoans && loans.length > 0 ? accounts.filter((a) => !loans.some((l) => l.accountId === a.id)) : accounts
-  const lastEntry = lastNormalEntry(lockLoans && loans.length > 0 ? entries.filter((e) => !loanOfEntry(loans, e)) : entries, data.subscriptions) // 「前回と同じ入力」の元（定期支払いの自動記入は除く）
+  const holdings = data.holdings ?? []
+  const lockOf = (e) => { const l = loanOfEntry(loans, e); if (l) return { href: loanHref(l.id), label: 'entries.loanLink' }; const h = holdingOfEntry(holdings, e); return h ? { href: investHref(h.id), label: 'entries.investLink' } : undefined }
+  const lockedIds = new Set([...loans.map((l) => l.accountId), ...holdings.map((h) => h.accountId)])
+  const pickAccounts = lockLoans && lockedIds.size > 0 ? accounts.filter((a) => !lockedIds.has(a.id)) : accounts
+  const lastEntry = lastNormalEntry(lockLoans && lockedIds.size > 0 ? entries.filter((e) => !lockOf(e)) : entries, data.subscriptions) // 「前回と同じ入力」の元（定期支払いの自動記入は除く）
   const last = lastCreditId(entries)
   const creditId = entryAccountOptions(pickAccounts).some((a) => a.id === last) ? last : '' // 選択肢にあるときだけ使う
   const newInitial = { date: today(), amount: '', debitId: '', creditId, memo: '', living: defaultLiving(accounts, '', creditId), ...PAY_DEFAULT }
@@ -667,7 +672,7 @@ export default function Entries({ data, update, detailId = null }) { // detailId
                       onSave: save(e),
                       onDelete: () => remove(e),
                       formAccounts: pickAccounts,
-                      loanId: lockLoans ? loanOfEntry(loans, e)?.id : undefined,
+                      lock: lockLoans ? lockOf(e) : undefined,
                       marked: markId === e.id,
                       markRef,
                     }

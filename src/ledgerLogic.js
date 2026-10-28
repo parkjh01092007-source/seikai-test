@@ -829,6 +829,22 @@ export function laterPeriods(laterLines) {
 }
 
 // 一覧・元帳の小さい印：「分割 12」「リボ」
+// クレカ個別ページの「このカードの分割・リボの仕訳」：そのカードの分割・リボの買い物（新しい順。終わった分割も入る）。card は cardReport の結果。
+// 分割は count（回数）・done（締め日が最後の締め日以前の回の数）、リボは counted（カードにリボの設定があるか。なければ一括として数えている）
+const newestFirst = (a, b) => (a.date === b.date ? (a.createdAt < b.createdAt ? 1 : -1) : a.date < b.date ? 1 : -1)
+export function cardPayEntries(card, entries) {
+  const { account, lastClosing } = card
+  return entries
+    .filter((e) => e.kind === 'normal' && e.creditId === account.id && e.pay !== undefined)
+    .sort(newestFirst)
+    .map((entry) => entry.pay.mode === 'installment'
+      ? { entry, count: entry.pay.count, done: installmentLines(entry, account.closingDay).filter((l) => l.closingDate <= lastClosing).length, counted: true }
+      : { entry, count: null, done: null, counted: account.revolving !== undefined })
+}
+
+// そのカードの引き落とし（借方＝カードの通常の仕訳。返済・返品も入る）。新しい順
+export const cardRepayEntries = (card, entries) => entries.filter((e) => e.kind === 'normal' && e.debitId === card.account.id).sort(newestFirst)
+
 export const payMarkText = (pay) => (pay.mode === 'revolving' ? t('entries.payMarkRevolving') : t('entries.payMarkInstallment', { count: pay.count }))
 
 // クレカのリボの設定（毎月の支払い額・年率）を変える。monthlyText と rateText が両方空なら、設定をやめる（revolving を消す。リボの仕訳は一括として数える）。

@@ -11,8 +11,10 @@ const monthLabel = (closingDate) => t('loans.monthLabel', { year: closingDate.sl
 // 基本の PC：分割・リボの見やすさ。合計と割合の帯・次の引き落とし分・先の請求の月ごとの棒・買い物ごとの進み。overview は planView.js の planOverview の結果、money は金額の文字
 // クレカの個別ページ（1 枚）と、借入のページの別枠（カードをまとめて。showCard で、買い物ごとにカード名を添える）の両方で使う
 // phone：スマホ（縦に並べる）。foldItems：スマホで買い物ごとの残りを畳む（借入ページ）。畳まないスマホ（クレカ個別ページ）は、「先の請求の予定｜買い物ごとの残り」のタブで切り替える（初めは先の請求の予定）
-export default function PlanOverview({ overview, money, showCard = false, phone = false, foldItems = false }) {
+// editor（PC だけ）：買い物ごとの残りの行を押すと、その仕訳を直す・消す入力がその場で開く。渡さなければ、今までの画面
+export default function PlanOverview({ overview, money, showCard = false, phone = false, foldItems = false, editor = null }) {
   const [tab, setTab] = useState('schedule')
+  const [openId, setOpenId] = useState(null)
   const { total, split, revo, bars, more, moreAmount, items, firstPay, laterFrom, endClosing } = overview
   const max = Math.max(...bars.map((b) => b.split + b.revo), 1)
   const parts = [['split', 'plan.split', split], ['revo', 'plan.revolving', revo]]
@@ -38,8 +40,7 @@ export default function PlanOverview({ overview, money, showCard = false, phone 
   )
   const list = (
     <ul className="b-plan-items">
-      {items.map((i) => (
-        <li key={i.id} className="b-plan-item">
+      {items.map((i) => { const open = editor !== null && openId === i.id; const body = <>
           <div className="r1">
             {phone && <span className="ic"><Icon name={PLAN_ICONS[i.kind]} /></span>}
             <span className="nm"><span className="user-text">{i.kind === 'revolving' ? t('plan.revolving') : i.name}</span></span>
@@ -48,6 +49,7 @@ export default function PlanOverview({ overview, money, showCard = false, phone 
             {i.kind === 'revolving' && i.rate > 0 && <span className="tag">{t('loans.ratePerYear', { rate: String(i.rate / 100) })}</span>}
             {showCard && <span className="tag"><span className="user-text">{i.cardName}</span></span>}
             <b className="rem">{t('plan.remain', { amount: money(i.remaining) })}</b>
+            {editor !== null && <button type="button" className="edit" aria-expanded={open}>{t(open ? 'plan.editClose' : 'plan.edit')}{!open && <Icon name="chevRight" />}</button>}
           </div>
           {i.kind === 'installment' && (
             <div className="pips" role="img" aria-label={t('plan.progressAria', { count: i.count, done: i.done })}>
@@ -59,8 +61,12 @@ export default function PlanOverview({ overview, money, showCard = false, phone 
             <span>{t('plan.monthly', { amount: money(i.monthly) })}</span>
             <span>{t('plan.until', { month: monthLabel(i.endClosing) })}</span>
           </div>
+        </>
+        return editor === null ? <li key={i.id} className="b-plan-item">{body}</li> : <li key={i.id} className={`b-plan-item${open ? ' open' : ''}`}>
+          <div className="hit" onClick={() => setOpenId(open ? null : i.id)}>{body}</div>
+          {open && <div className="b-plan-editor">{editor(i)}</div>}
         </li>
-      ))}
+      })}
     </ul>
   )
   return (

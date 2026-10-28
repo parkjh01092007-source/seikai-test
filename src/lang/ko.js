@@ -457,6 +457,15 @@ export default {
   'plan.until': '{month}까지',
   'plan.remain': '남은 금액 {amount}',
   'plan.noMemo': '메모 없음',
+  'plan.edit': '수정', // 仮訳（未監修）
+  'plan.editClose': '닫기', // 仮訳（未監修）
+  // 카드 분할・리볼 분개 목록: 仮訳（未監修）
+  'payLedger.title': '이 카드의 할부・리볼 분개',
+  'payLedger.buys': '구매',
+  'payLedger.repays': '결제',
+  'payLedger.progress': '{count}회 중 {done}회 완료',
+  'payLedger.revolvingOff': '리볼 설정이 없어서 일시불로 계산합니다',
+  'payLedger.phoneViewOnly': '수정・삭제는 PC에서 합니다.',
   'plan.nameFallback': '{account}・{month}/{day}',
   'plan.progressAria': '{count}회 중 {done}회 납부',
   'card.laterNote': '{date} 이후에 내는 할부・리볼빙은 다음 청구 기간에 들어가기 전까지 자유롭게 쓸 수 있는 금액에서 빼지 않습니다.',
@@ -488,6 +497,8 @@ export default {
   // 借りているお金のページ：仮訳（未監修）
   'nav.tab.loans': '대출',
   'nav.tabEn.loans': 'LOANS',
+  'nav.tab.invest': '투자', // 仮訳（未監修）
+  'nav.tabEn.invest': 'INVEST',
   'basicPc.loansLead': '대출 잔액과 상환 예정 확인・입력',
   'loans.title': '대출',
   'loans.sumRemain': '빌린 돈의 잔액',
@@ -577,6 +588,110 @@ export default {
   'loans.rowOpening': '시작 잔액',
   'loans.rowAdjust': '잔액 조정',
   'entries.loanLink': '대출 페이지에서 수정',
+  'entries.investLink': '투자 페이지에서 수정', // 仮訳（未監修）
+  // 투자 페이지: 仮訳（未監修）
+  'invest.title': '투자',
+  'invest.lead': '매입가(취득원가)와, 직접 입력한 가격으로 본 시가',
+  'invest.kind.jpStock': '일본 주식',
+  'invest.kind.fund': '투자신탁',
+  'invest.kind.usStock': '미국 주식',
+  'invest.nisa': 'NISA',
+  'invest.errUnits': '수량은 0보다 큰 수로 입력해 주세요(소수는 4자리까지)',
+  'invest.errPrice': '가격은 1엔 이상의 정수로 입력해 주세요',
+  'invest.errKind': '종류를 선택해 주세요',
+  'invest.errName': '이름은 {max}자까지입니다',
+  'invest.errAmount': '금액을 1엔 이상으로 입력해 주세요',
+  'invest.errTrade': '매수 기록을 찾을 수 없습니다',
+  'invest.memoBuy': '매수: {name}',
+  'invest.sumCost': '취득원가(합계)',
+  'invest.sumValue': '시가(가격을 입력한 종목)',
+  'invest.sumGain': '평가손익(가격을 입력한 종목)',
+  'invest.sumCount': '{count}종목',
+  'invest.sumMissing': '가격이 없는 종목 {count}개',
+  'invest.add': '종목 추가',
+  'invest.empty': '아직 종목이 없습니다',
+  'invest.fKind': '종류',
+  'invest.fName': '이름',
+  'invest.fNisa': 'NISA 계좌로 매수',
+  'invest.fSellFee': '매도 수수료 예상(엔)',
+  'invest.create': '만들기',
+  'invest.noPriceShort': '가격 없음',
+  'invest.costLabel': '취득원가',
+  'invest.unitsLabel': '수량',
+  'invest.valueLabel': '시가',
+  'invest.gainLabel': '평가손익',
+  'invest.priceDate': '{date} 가격 {price}',
+  'invest.noPrice': '가격을 입력하면 시가와 평가손익이 표시됩니다',
+  'invest.afterSaleTitle': '지금 팔면 손에 남을 예상 금액',
+  'invest.afterFee': '매도 수수료',
+  'invest.afterTax': '세금',
+  'invest.afterNisa': '없음(NISA)',
+  'invest.buyTitle': '매수',
+  'invest.units': '수량(주・좌)',
+  'invest.buyAmount': '지불한 금액(수수료 포함・엔)',
+  'invest.recordBuy': '매수 기록',
+  'invest.quoteTitle': '가격 입력',
+  'invest.priceStock': '가격(1주당・엔)',
+  'invest.priceFund': '가격(1만 좌당・엔)',
+  'invest.saveQuote': '가격 저장',
+  'invest.buysTitle': '매수 기록',
+  'invest.buysEmpty': '아직 매수 기록이 없습니다',
+  'invest.rowBuy': '매수',
+  'invest.unitsValue': '{units}주・좌',
+  'invest.quotesTitle': '입력한 가격',
+  'invest.metaTitle': '설정',
+  'invest.remove': '이 종목을 목록에서 제외',
+  'invest.removeConfirm': '「{name}」을(를) 목록에서 제외할까요? 계정과목과 분개는 남습니다.',
+  'invest.phoneViewOnly': '기록・수정・삭제는 PC에서 합니다.',
+  'invest.chartAll': '전체 추이', // 仮訳（未監修）
+  'invest.chartEmpty': '아직 매수 기록이 없어서 그래프가 없습니다', // 仮訳（未監修）
+  'invest.chartNoPrice': '가격을 입력하면 시가 선이 표시됩니다', // 仮訳（未監修）
+  'invest.chartAria': '{name} 추이({from}부터 {to}까지)', // 仮訳（未監修）
+  'invest.rangeAria': '기간', // 仮訳（未監修）
+  'invest.rangeM1': '1개월', // 仮訳（未監修）
+  'invest.rangeM3': '3개월', // 仮訳（未監修）
+  'invest.rangeM6': '6개월', // 仮訳（未監修）
+  'invest.rangeY1': '1년', // 仮訳（未監修）
+  'invest.rangeAll': '전체', // 仮訳（未監修）
+  'invest.legendCost': '취득원가', // 仮訳（未監修）
+  'invest.legendValue': '시가', // 仮訳（未監修）
+  'invest.legendGain': '시가가 위(이익)', // 仮訳（未監修）
+  'invest.legendLoss': '시가가 아래(손실)', // 仮訳（未監修）
+  // 투자: 매도 (仮訳・未監修)
+  'invest.gainName': '매도이익',
+  'invest.lossName': '매도손실',
+  'invest.feeName': '매매수수료',
+  'invest.taxName': '투자 세금',
+  'invest.memoSellCost': '매도(원가): {name}',
+  'invest.memoSellGain': '매도이익: {name}',
+  'invest.memoSellLoss': '매도손실: {name}',
+  'invest.memoSellFee': '매도 수수료: {name}',
+  'invest.memoSellTax': '세금: {name}',
+  'invest.errOversell': '보유 수량보다 많이 팔 수 없습니다(매수를 지우면 이후 매도가 부족해지는 경우도 같습니다)',
+  'invest.errSellAccount': '「{name}」이라는 이름의 다른 종류 계정과목이 이미 있습니다',
+  'invest.sellTitle': '매도',
+  'invest.received': '받은 금액(엔)',
+  'invest.sellFee': '수수료(엔)',
+  'invest.sellTax': '세금(엔. 예상액이 들어 있습니다. 명세의 금액으로 고칠 수 있습니다)',
+  'invest.pvGross': '매도 금액 {amount}',
+  'invest.pvCost': '원가(이동평균) {amount}',
+  'invest.pvGain': '매도이익 {amount}',
+  'invest.pvLoss': '매도손실 {amount}',
+  'invest.recordSell': '매도 기록',
+  'invest.sellsTitle': '매도 기록',
+  'invest.rowSell': '매도',
+  'invest.rowGain': '이익',
+  'invest.rowLoss': '손실',
+  'invest.errUsd': '달러 가격은 0보다 큰 수로 입력해 주세요(소수는 2자리까지)',
+  'invest.errFx': '환율은 0보다 큰 수로 입력해 주세요(소수는 2자리까지)',
+  'invest.usd': '{amount} 달러',
+  'invest.fxText': '1달러 = {rate}엔',
+  'invest.quoteUsd': '{usd}({fx})',
+  'invest.priceUsd': '가격(1주당・달러)',
+  'invest.fxRate': '환율(1달러당・엔)',
+  'invest.buyAmountUs': '지불한 금액(수수료 포함・명세의 엔)',
+  'invest.soldOut': '매도 완료',
+  'invest.soldOutNote': '전부 팔았습니다. 보유 수량이 0이라 시가가 없습니다.',
   'loans.historyRow': '{month}부터　금리 {rate}　상환액 {amount}',
   'loans.remove': '이 대출을 목록에서 제외',
   'loans.removeConfirm': '"{name}"을(를) 목록에서 제외할까요? 계정과목과 분개는 남습니다.',
@@ -1251,6 +1366,10 @@ export default {
   // 借りているお金：仮訳（未監修）
   'import.loansShape': '대출 데이터의 형식이 올바르지 않습니다',
   'import.loansInvalid': '대출 데이터가 올바르지 않습니다(이름・부채 계정과목・금리・상환액・상환일을 확인해 주세요)',
+  'import.holdingsShape': '투자 데이터의 형식이 올바르지 않습니다', // 仮訳（未監修）
+  'import.holdingsInvalid': '투자 데이터가 올바르지 않습니다', // 仮訳（未監修）
+  'import.holdingIdDup': '투자 데이터의 id가 중복되어 있습니다', // 仮訳（未監修）
+  'import.holdingAccountDup': '같은 자산 계정과목을 두 종목이 사용하고 있습니다', // 仮訳（未監修）
   'import.loanIdDup': '대출 id가 중복되었습니다',
   'import.loanAccountDup': '같은 부채 계정과목이 여러 대출에 사용되고 있습니다',
 

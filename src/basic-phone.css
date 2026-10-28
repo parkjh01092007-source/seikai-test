@@ -765,6 +765,64 @@
   :root[data-theme='basic'] .b-phone-loans .b-pl-fact { display: flex; flex-direction: column; gap: var(--b-space-1); min-width: 0; padding: var(--b-space-2) var(--b-space-3); border: 1px solid var(--b-line); background: var(--b-surface); }
   :root[data-theme='basic'] .b-phone-loans .b-pl-fact .k { color: var(--b-muted); font-size: var(--b-font-small); }
   :root[data-theme='basic'] .b-phone-loans .b-pl-fact .v { font-weight: var(--b-weight-bold); font-size: var(--b-font-label); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+
+  /* 投資のページ（スマホ。見るだけ）：色・罫線・余白は変数 */
+  :root[data-theme='basic'] .b-phone-invest { display: flex; flex-direction: column; gap: var(--b-space-3); }
+  :root[data-theme='basic'] .b-phone-invest .b-loan-tiles { display: grid; grid-template-columns: 1fr; gap: var(--b-space-2); }
+  :root[data-theme='basic'] .b-phone-invest .b-loan-tile { display: flex; flex-direction: column; gap: var(--b-space-1); padding: var(--b-space-3) var(--b-space-4); border: 1px solid var(--b-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-phone-invest .b-loan-tile .lbl, :root[data-theme='basic'] .b-phone-invest .b-loan-tile .sub { color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-phone-invest .b-loan-tile strong { color: var(--b-navy); font-size: var(--b-font-large); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-phone-invest .b-loan-detail { display: flex; flex-direction: column; gap: var(--b-space-3); }
+  :root[data-theme='basic'] .b-phone-invest .b-loan-dhead { display: flex; flex-direction: column; gap: var(--b-space-1); }
+  :root[data-theme='basic'] .b-phone-invest .b-loan-dhead h3 { margin: var(--b-space-0); display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--b-space-2); }
+  :root[data-theme='basic'] .b-phone-invest .b-loan-dhead h3 small { color: var(--b-muted); font-size: var(--b-font-small); font-weight: var(--b-weight-regular); }
+  :root[data-theme='basic'] .b-phone-invest .b-loan-dhead p { margin: var(--b-space-0); display: flex; gap: var(--b-space-2); align-items: baseline; }
+  :root[data-theme='basic'] .b-phone-invest .b-loan-dhead p strong { color: var(--b-navy); font-size: var(--b-font-large); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-phone-invest .b-loan-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--b-space-2); }
+  :root[data-theme='basic'] .b-phone-invest .b-loan-fact { display: flex; flex-direction: column; gap: var(--b-space-1); min-width: 0; padding: var(--b-space-2) var(--b-space-3); border: 1px solid var(--b-line); background: var(--b-surface); }
+  :root[data-theme='basic'] .b-phone-invest .b-loan-fact .k { color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-phone-invest .b-loan-fact .v { font-weight: var(--b-weight-bold); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-phone-invest .b-loan-fact .v small { display: block; color: var(--b-muted); font-size: var(--b-font-small); font-weight: var(--b-weight-regular); }
+  :root[data-theme='basic'] .b-phone-invest .b-section-head h3 { margin: var(--b-space-0); font-size: var(--b-font-label); }
+  :root[data-theme='basic'] .b-phone-invest .b-loan-elist { margin: var(--b-space-0); padding: var(--b-space-0); list-style: none; }
+  :root[data-theme='basic'] .b-phone-invest .b-loan-erow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--b-space-1) var(--b-space-3); padding: var(--b-space-2) var(--b-space-3); border-bottom: 1px solid var(--b-line); list-style: none; }
+  :root[data-theme='basic'] .b-phone-invest .b-loan-erow .d { color: var(--b-muted); font-size: var(--b-font-small); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-phone-invest .b-loan-erow .m { grid-column: 1 / 3; color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-phone-invest .b-loan-erow .a { grid-row: 1 / 3; grid-column: 3; align-self: center; font-weight: var(--b-weight-bold); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-phone-invest .b-inv-quotes ul { display: flex; flex-direction: column; gap: var(--b-space-1); margin: var(--b-space-0); padding: var(--b-space-0); list-style: none; }
+  :root[data-theme='basic'] .b-phone-invest .b-inv-quotes li { display: flex; justify-content: space-between; }
+
+  /* 投資のページ（基本のテーマ）：銘柄の一覧、今売ったら手元に残る見込み、価格の一覧。色・罫線・余白は変数 */
+  :root[data-theme='basic'] .b-inv-list { display: flex; flex-direction: column; gap: var(--b-space-2); }
+  :root[data-theme='basic'] .b-inv-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--b-space-1) var(--b-space-4); padding: var(--b-space-3) var(--b-space-4); border: 1px solid var(--b-line); background: var(--b-surface); color: inherit; font: inherit; text-align: left; cursor: pointer; }
+  :root[data-theme='basic'] .b-inv-row.current { border-color: var(--b-navy); box-shadow: inset 3px 0 0 var(--b-navy); }
+  :root[data-theme='basic'] .b-inv-row .nm { font-weight: var(--b-weight-bold); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-inv-row .v { text-align: right; font-variant-numeric: tabular-nums; font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-inv-row .sub { color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-inv-row .sub.g { text-align: right; font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-inv-row .tag, :root[data-theme='basic'] .b-inv-detail .tag { margin-left: var(--b-space-2); border: 1px solid var(--b-navy); padding: 0 var(--b-space-2); color: var(--b-navy); font-size: var(--b-font-small); font-weight: var(--b-weight-regular); }
+  :root[data-theme='basic'] .b-inv-after { display: flex; flex-direction: column; gap: var(--b-space-1); padding: var(--b-space-4) var(--b-space-5); border: 1px solid var(--b-navy); background: var(--b-total-bg); }
+  :root[data-theme='basic'] .b-inv-after h4 { margin: var(--b-space-0); color: var(--b-muted); font-size: var(--b-font-label); font-weight: var(--b-weight-regular); }
+  :root[data-theme='basic'] .b-inv-after .big { margin: var(--b-space-0); color: var(--b-navy); font-size: var(--b-font-large); font-weight: var(--b-weight-bold); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-inv-after .calc { margin: var(--b-space-0); color: var(--b-muted); font-size: var(--b-font-small); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-inv-quotes h4 { margin: var(--b-space-0) var(--b-space-0) var(--b-space-2); color: var(--b-muted); font-size: var(--b-font-label); }
+  :root[data-theme='basic'] .b-inv-quotes ul { display: flex; flex-wrap: wrap; gap: var(--b-space-2) var(--b-space-5); margin: var(--b-space-0); padding: var(--b-space-0); list-style: none; font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-inv-quotes li { display: flex; align-items: center; gap: var(--b-space-3); }
+  :root[data-theme='basic'] .b-check { display: flex; align-items: center; gap: var(--b-space-2); }
+  :root[data-theme='basic'] .b-inv-buy .m { color: var(--b-muted); }
+
+  /* クレカ個別ページ：このカードの分割・リボの仕訳（買い物・引き落とし）。色・罫線・余白は変数 */
+  :root[data-theme='basic'] .b-pay-ledger h4 { margin: var(--b-space-4) var(--b-space-0) var(--b-space-2); color: var(--b-muted); font-size: var(--b-font-label); }
+  :root[data-theme='basic'] .b-pay-list { margin: var(--b-space-0); padding: var(--b-space-0); list-style: none; }
+  :root[data-theme='basic'] .b-pay-row { border-bottom: 1px solid var(--b-line); }
+  :root[data-theme='basic'] .b-pay-row.open { background: var(--b-total-bg); }
+  :root[data-theme='basic'] .b-pay-row .r1 { display: flex; align-items: baseline; gap: var(--b-space-4); padding: var(--b-space-2) var(--b-space-4); }
+  :root[data-theme='basic'] .b-pay-row .d { color: var(--b-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  :root[data-theme='basic'] .b-pay-row .nm { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-pay-row .tag { margin-left: var(--b-space-2); border: 1px solid var(--b-line); padding: 0 var(--b-space-2); color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-pay-row .a { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  :root[data-theme='basic'] .b-pay-row .r2 { margin: var(--b-space-0); padding: var(--b-space-0) var(--b-space-4) var(--b-space-2); color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-pay-row .edit { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; margin: calc((1em - 44px) / 2) var(--b-space-0); padding: var(--b-space-0); border: 0; background: none; color: var(--b-navy); cursor: pointer; font: inherit; font-size: var(--b-font-small); white-space: nowrap; }
   :root[data-theme='basic'] .b-phone-loans .b-loan-ledger { display: flex; flex-direction: column; gap: var(--b-space-3); }
   :root[data-theme='basic'] .b-phone-loans .b-loan-elist { display: flex; flex-direction: column; margin: var(--b-space-0); padding: var(--b-space-0); list-style: none; }
   :root[data-theme='basic'] .b-phone-loans .b-loan-erow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--b-space-1) var(--b-space-3); padding: var(--b-space-2) var(--b-space-3); border-bottom: 1px solid var(--b-line); }

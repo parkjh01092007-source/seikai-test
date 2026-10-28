@@ -649,6 +649,71 @@
   :root[data-theme='basic'] .b-loan-erow .ops { display: flex; gap: var(--b-space-2); min-width: var(--b-space-6); }
   :root[data-theme='basic'] .b-loan-link { color: var(--b-navy); font-size: var(--b-font-small); text-decoration: underline; white-space: nowrap; }
 
+  /* 投資のグラフ（取得原価の階段の線・時価の線と点）：色・罫線・余白は変数 */
+  :root[data-theme='basic'] .b-inv-chart { display: flex; flex-direction: column; gap: var(--b-space-2); }
+  :root[data-theme='basic'] .b-inv-chart-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--b-space-3); }
+  :root[data-theme='basic'] .b-inv-range { display: flex; }
+  :root[data-theme='basic'] .b-inv-range button { min-height: 36px; padding: var(--b-space-1) var(--b-space-4); border: 1px solid var(--b-line); margin-left: -1px; background: var(--b-surface); color: var(--b-navy); font: inherit; font-size: var(--b-font-small); cursor: pointer; }
+  :root[data-theme='basic'] .b-inv-range button[aria-pressed='true'] { background: var(--b-navy); border-color: var(--b-navy); color: var(--b-surface); position: relative; }
+  :root[data-theme='basic'] .b-inv-legend { display: flex; gap: var(--b-space-4); margin: var(--b-space-0); padding: var(--b-space-0); list-style: none; color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-inv-legend li { display: flex; align-items: center; gap: var(--b-space-2); }
+  :root[data-theme='basic'] .b-inv-legend .sw { display: inline-block; width: 20px; height: 0; border-top: 2px dashed var(--b-chart-cost); }
+  :root[data-theme='basic'] .b-inv-legend .sw.val { border-top: 3px solid var(--b-chart-value); }
+  :root[data-theme='basic'] .b-inv-legend .sw.gain, :root[data-theme='basic'] .b-inv-legend .sw.loss { height: 10px; border-top: 0; }
+  :root[data-theme='basic'] .b-inv-legend .sw.gain { background: var(--b-gain-fill); outline: 1px solid var(--b-gain-fill); }
+  :root[data-theme='basic'] .b-inv-legend .sw.loss { background: var(--b-loss-fill); outline: 1px solid var(--b-loss-fill); }
+  :root[data-theme='basic'] .b-inv-chart-box { width: 100%; }
+  :root[data-theme='basic'] .b-inv-chart-box svg { display: block; }
+  :root[data-theme='basic'] .b-inv-chart-box text { fill: var(--b-muted); font-size: var(--b-font-small); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-inv-line-cost { stroke: var(--b-chart-cost); stroke-width: 2; stroke-dasharray: 6 4; }
+  :root[data-theme='basic'] .b-inv-line-val { stroke: var(--b-chart-value); stroke-width: 2.5; }
+  :root[data-theme='basic'] .b-inv-dot-val { fill: var(--b-chart-value); }
+  :root[data-theme='basic'] .b-inv-fill.gain { fill: var(--b-gain-fill); }
+  :root[data-theme='basic'] .b-inv-fill.loss { fill: var(--b-loss-fill); }
+  :root[data-theme='basic'] .b-inv-total { display: flex; flex-direction: column; gap: var(--b-space-2); margin-bottom: var(--b-space-5); }
+
+  /* 投資のページ（基本のテーマ）：銘柄の一覧、今売ったら手元に残る見込み、価格の一覧。色・罫線・余白は変数 */
+  :root[data-theme='basic'] .b-inv-list { display: flex; flex-direction: column; gap: var(--b-space-2); }
+  :root[data-theme='basic'] .b-inv-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--b-space-1) var(--b-space-4); padding: var(--b-space-3) var(--b-space-4); border: 1px solid var(--b-line); background: var(--b-surface); color: inherit; font: inherit; text-align: left; cursor: pointer; }
+  :root[data-theme='basic'] .b-inv-row.current { border-color: var(--b-navy); box-shadow: inset 3px 0 0 var(--b-navy); }
+  :root[data-theme='basic'] .b-inv-row .nm { font-weight: var(--b-weight-bold); overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-inv-row .v { text-align: right; font-variant-numeric: tabular-nums; font-weight: var(--b-weight-bold); }
+  :root[data-theme='basic'] .b-inv-row .sub { color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-inv-row .sub.g { text-align: right; font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-inv-row .tag, :root[data-theme='basic'] .b-inv-detail .tag { margin-left: var(--b-space-2); border: 1px solid var(--b-navy); padding: 0 var(--b-space-2); color: var(--b-navy); font-size: var(--b-font-small); font-weight: var(--b-weight-regular); }
+  :root[data-theme='basic'] .b-inv-after { display: flex; flex-direction: column; gap: var(--b-space-1); padding: var(--b-space-4) var(--b-space-5); border: 1px solid var(--b-navy); background: var(--b-total-bg); }
+  :root[data-theme='basic'] .b-inv-after h4 { margin: var(--b-space-0); color: var(--b-muted); font-size: var(--b-font-label); font-weight: var(--b-weight-regular); }
+  :root[data-theme='basic'] .b-inv-after .big { margin: var(--b-space-0); color: var(--b-navy); font-size: var(--b-font-large); font-weight: var(--b-weight-bold); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-inv-after .calc { margin: var(--b-space-0); color: var(--b-muted); font-size: var(--b-font-small); font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-inv-quotes h4 { margin: var(--b-space-0) var(--b-space-0) var(--b-space-2); color: var(--b-muted); font-size: var(--b-font-label); }
+  :root[data-theme='basic'] .b-inv-quotes ul { display: flex; flex-wrap: wrap; gap: var(--b-space-2) var(--b-space-5); margin: var(--b-space-0); padding: var(--b-space-0); list-style: none; font-variant-numeric: tabular-nums; }
+  :root[data-theme='basic'] .b-inv-quotes li { display: flex; align-items: center; gap: var(--b-space-3); }
+  :root[data-theme='basic'] .b-check { display: flex; align-items: center; gap: var(--b-space-2); }
+  :root[data-theme='basic'] .b-inv-buy .m { color: var(--b-muted); }
+
+  /* クレカ個別ページ：このカードの分割・リボの仕訳（買い物・引き落とし）。色・罫線・余白は変数 */
+  :root[data-theme='basic'] .b-pay-ledger h4 { margin: var(--b-space-4) var(--b-space-0) var(--b-space-2); color: var(--b-muted); font-size: var(--b-font-label); }
+  :root[data-theme='basic'] .b-pay-list { margin: var(--b-space-0); padding: var(--b-space-0); list-style: none; }
+  :root[data-theme='basic'] .b-pay-row { border-bottom: 1px solid var(--b-line); }
+  :root[data-theme='basic'] .b-pay-row.open { background: var(--b-total-bg); }
+  :root[data-theme='basic'] .b-pay-row .r1 { display: flex; align-items: baseline; gap: var(--b-space-4); padding: var(--b-space-2) var(--b-space-4); }
+  :root[data-theme='basic'] .b-pay-row .d { color: var(--b-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  :root[data-theme='basic'] .b-pay-row .nm { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+  :root[data-theme='basic'] .b-pay-row .tag { margin-left: var(--b-space-2); border: 1px solid var(--b-line); padding: 0 var(--b-space-2); color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-pay-row .a { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  :root[data-theme='basic'] .b-pay-row .r2 { margin: var(--b-space-0); padding: var(--b-space-0) var(--b-space-4) var(--b-space-2); color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-pay-row .edit { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; margin: calc((1em - 44px) / 2) var(--b-space-0); padding: var(--b-space-0); border: 0; background: none; color: var(--b-navy); cursor: pointer; font: inherit; font-size: var(--b-font-small); white-space: nowrap; }
+
+  /* 買い物ごとの残りの行を押すと、その仕訳の直す・消すが開く（基本の PC だけ。色・罫線・余白は変数） */
+  :root[data-theme='basic'] .b-plan-item .hit { cursor: pointer; }
+  :root[data-theme='basic'] .b-plan-item .edit { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; margin: calc((1em - 44px) / 2) var(--b-space-0); padding: var(--b-space-0); border: 0; background: none; color: var(--b-navy); cursor: pointer; font: inherit; font-size: var(--b-font-small); text-decoration: none; white-space: nowrap; }
+  :root[data-theme='basic'] .b-plan-item.open { background: var(--b-total-bg); }
+  :root[data-theme='basic'] .b-plan-editor { display: flex; flex-direction: column; gap: var(--b-space-3); padding: var(--b-space-4); border-top: 1px solid var(--b-navy); }
+  :root[data-theme='basic'] .b-plan-edit { display: flex; flex-direction: column; gap: var(--b-space-3); align-items: flex-start; }
+  :root[data-theme='basic'] .b-plan-edit form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--b-space-3) var(--b-space-4); }
+  :root[data-theme='basic'] .b-plan-edit form label { display: flex; flex-direction: column; gap: var(--b-space-1); color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-plan-edit .pay-fields { flex-basis: 100%; }
+
   /* 仕訳の入力：支払い方法（貸方がクレカのときだけ。一括／分割（回数）／リボ）と、一覧の小さい印。色・文字・余白は変数 */
   :root[data-theme='basic'] .b-entries .pay-fields { display: flex; flex-basis: 100%; flex-wrap: wrap; align-items: center; gap: var(--b-space-3) var(--b-space-4); }
   :root[data-theme='basic'] .b-entries .pay-label { color: var(--b-muted); font-size: var(--b-font-small); }

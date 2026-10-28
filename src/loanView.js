@@ -156,7 +156,7 @@ export function unpaidCards(data, today) {
 }
 
 // ---- 借入ごとの専用ページ（返済・受け取りの記録、仕訳の一覧）。自動の仕訳は作らない。保存の形は変えない（仕訳の借方か貸方が借入の科目なら、その借入の仕訳） ----
-const isYmd = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(`${s}T00:00:00Z`)) && new Date(`${s}T00:00:00Z`).toISOString().startsWith(s)
+export const isYmd = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(`${s}T00:00:00Z`)) && new Date(`${s}T00:00:00Z`).toISOString().startsWith(s)
 
 // 仕訳の画面でロックする借入の仕訳か：通常の仕訳で、借方か貸方が借入の科目。該当する借入（なければ undefined）
 export const loanOfEntry = (loans, entry) => (entry.kind === 'normal' ? loans.find((l) => l.accountId === entry.debitId || l.accountId === entry.creditId) : undefined)

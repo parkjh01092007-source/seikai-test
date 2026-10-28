@@ -14,6 +14,10 @@
   --b-navy: #203b5c;
   --b-negative: #b42318;
   --b-positive: #28604d;
+  --b-chart-cost: #6f7a74; /* 投資のグラフ：取得原価の点線（灰色） */
+  --b-chart-value: #e8590c; /* 時価の線と点（はっきりした色） */
+  --b-gain-fill: rgba(204, 51, 36, 0.18); /* 時価が上（益）：赤系の薄い塗り */
+  --b-loss-fill: rgba(34, 81, 138, 0.18); /* 時価が下（損）：青系の薄い塗り */
   --b-line: #a3afa6;
   --b-table-head: #ecf0ed;
   --b-total-bg: #f0f3f0;

@@ -27,9 +27,9 @@ export function planOverview(reports, accounts, entries, barMonths = BAR_MONTHS)
     const plans = cardPayPlans(report, entries)
     for (const p of plans.installments) {
       const { name, fallback } = payItemName(p.entry, accounts)
-      items.push({ id: p.entry.id, kind: 'installment', name, fallback, cardName: account.name, count: p.count, done: p.count - p.left, left: p.left, monthly: p.monthly, remaining: p.remaining, endClosing: p.endClosing, rate: p.rate })
+      items.push({ id: p.entry.id, entryIds: [p.entry.id], kind: 'installment', name, fallback, cardName: account.name, count: p.count, done: p.count - p.left, left: p.left, monthly: p.monthly, remaining: p.remaining, endClosing: p.endClosing, rate: p.rate })
     }
-    if (plans.revolving) items.push({ id: `${account.id}-revolving`, kind: 'revolving', name: null, fallback: false, cardName: account.name, count: null, done: null, left: plans.revolving.left, monthly: plans.revolving.monthly, remaining: plans.revolving.remaining, endClosing: plans.revolving.endClosing, rate: plans.revolving.rate })
+    if (plans.revolving) items.push({ id: `${account.id}-revolving`, entryIds: entries.filter((e) => e.creditId === account.id && e.pay?.mode === 'revolving').map((e) => e.id), kind: 'revolving', name: null, fallback: false, cardName: account.name, count: null, done: null, left: plans.revolving.left, monthly: plans.revolving.monthly, remaining: plans.revolving.remaining, endClosing: plans.revolving.endClosing, rate: plans.revolving.rate })
   }
   const months = [...byMonth.keys()].sort()
   const all = []
