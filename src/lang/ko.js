@@ -443,7 +443,7 @@ export default {
   'plan.total': '아직 내지 않은 금액（합계）',
   'plan.split': '할부',
   'plan.revolving': '리볼빙',
-  'plan.next': '{date} 결제에 들어가는 금액',
+  'plan.payOn': '{date} 결제 할부・리볼빙',
   'plan.endLast': '마지막으로 끝나는 달',
   'plan.chartTitle': '앞으로의 청구 예정（결제월별）',
   'plan.barMonth': '{month}월',

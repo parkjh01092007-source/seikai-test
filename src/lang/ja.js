@@ -408,7 +408,7 @@ export default {
   'plan.total': 'まだ払っていない分（合計）',
   'plan.split': '分割',
   'plan.revolving': 'リボ',
-  'plan.next': '{date} の引き落としに入る分',
+  'plan.payOn': '{date} に払う分割・リボ',
   'plan.endLast': '最後に終わる月',
   'plan.chartTitle': '先の請求の予定（引き落としの月ごと）',
   'plan.barMonth': '{month}月',

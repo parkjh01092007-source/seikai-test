@@ -113,7 +113,7 @@ const cardHref = (id) => toHash({ entry: 'ledger', tab: 'card', detailId: id })
 function UnpaidSection({ unpaid, data, currency }) {
   const { items, totals } = unpaid
   if (items.length === 0) return null
-  const overview = planOverview(items.map((i) => i.report), data.accounts, data.entries, undefined, today())
+  const overview = planOverview(items.map((i) => i.report), data.accounts, data.entries)
   const money = (n) => formatMoney(n, currency)
   return (
     <section className="b-loan-unpaid">
@@ -165,7 +165,7 @@ function LoansPhone({ items, totals, month, currency, unpaid, data }) {
     </div>
   }
   const shown = all ? items : items.slice(0, PHONE_LIST_MAX)
-  const phoneOverview = planOverview(unpaid.items.map((i) => i.report), data.accounts, data.entries, 6, today())
+  const phoneOverview = planOverview(unpaid.items.map((i) => i.report), data.accounts, data.entries, 6)
   return <div className="report b-phone-p5 b-phone-loans">
     <Tabs prefix="loans-phone" label={t('loans.title')} tabs={[{ id: 'loans', title: t('loans.tabLoans') }, { id: 'plans', title: t('loans.tabPlans') }]} current={tab} onChange={setTab} />
     <div role="tabpanel" id={panelDomId('loans-phone', tab)} aria-labelledby={tabDomId('loans-phone', tab)}>
