@@ -23,6 +23,14 @@ export function parseUnits(text) {
 // 価格の入力：円の整数（1 以上）
 // ドルの価格（小数 2 桁まで）→ セント。為替レート（1 ドルあたりの円。小数 2 桁まで）→ 1/100 円。どちらも 0 より大きい
 const parseHundredths = (text, errorKey) => { const m = /^(\d+)(?:\.(\d{1,2}))?$/.exec(String(text).trim()); const n = m ? Number(m[1]) * 100 + Number((m[2] ?? '').padEnd(2, '0')) : 0; return n >= 1 ? { value: n } : { error: t(errorKey) } }
+// 手数料の％（小数 2 桁まで・0〜100）→ 1/100 ％。空は 0
+export function parseFeePct(text) {
+  const s = String(text ?? '').trim()
+  if (s === '') return { pct: 0 }
+  const m = /^(\d+)(?:\.(\d{1,2}))?$/.exec(s)
+  const n = m ? Number(m[1]) * 100 + Number((m[2] ?? '').padEnd(2, '0')) : -1
+  return n >= 0 && n <= 10000 ? { pct: n } : { error: t('invest.errPct') }
+}
 export const parseUsd = (text) => parseHundredths(text, 'invest.errUsd')
 export const parseFx = (text) => parseHundredths(text, 'invest.errFx')
 export const hundredthsText = (n) => `${Math.floor(n / 100).toLocaleString('en-US')}.${String(n % 100).padStart(2, '0')}`
@@ -47,12 +55,15 @@ export const quoteValue = (h, units, q) => marketValue(h.kind, units, q.price, q
 
 // 銘柄 1 つの数字。cost＝取得原価（科目の残高）、quote＝いちばん新しい価格（なければ null）、value・gain（評価損益）は価格がなければ null。
 // afterSale：今売ったら手元に残る見込み { value, fee, tax, net }。時価 − 売る時の手数料の見込み − 税（益があるときだけ。NISA は 0）。持っていない・価格なしは null。警告ではなく、見込みの数字だけ
+// 売る時の手数料の見込み（円）。％（sellFeePct＝1/100 ％。0.55％は 55）があれば「売る金額 × ％」（切り捨て）。なければ、古い形の円（sellFee）をそのまま
+export const feeEstimate = (h, gross) => (h.sellFeePct ? Math.floor((gross * h.sellFeePct) / 10000) : h.sellFee ?? 0)
+
 export function holdingSummary(data, h) {
   const cost = accountBalances(data.accounts, data.entries).rows.find((r) => r.account.id === h.accountId)?.balance ?? 0
   const units = unitsHeld(h)
   const quote = latestQuote(h)
   const value = quote && units > 0 ? quoteValue(h, units, quote) : null
-  const fee = h.sellFee ?? 0
+  const fee = value === null ? 0 : feeEstimate(h, value)
   const tax = value === null || h.nisa ? 0 : Math.floor((Math.max(0, value - fee - cost) * TAX_PPM) / 1000000)
   return { holding: h, cost, units, quote, value, gain: value === null ? null : value - cost, afterSale: value === null ? null : { value, fee, tax, net: value - fee - tax } }
 }
@@ -70,24 +81,26 @@ export function investOverview(data) {
 // 仕訳の画面でロックする：銘柄の科目を使う通常の仕訳の銘柄（なければ undefined）
 export const holdingOfEntry = (holdings, entry) => (entry.kind === 'normal' ? holdings.find((h) => h.accountId === entry.debitId || h.accountId === entry.creditId) : undefined)
 
-// 銘柄を作る：資産の科目 1 つ（その他の資産）＋ holding。input：{ kind, name, nisa, sellFeeText }。成功: { account, holding } / 失敗: { error }
+// 銘柄を作る：資産の科目 1 つ（その他の資産）＋ holding。input：{ kind, name, nisa, sellFeePctText }（空なら 0％）。成功: { account, holding } / 失敗: { error }
 export function newHolding(input, accounts, now = new Date().toISOString()) {
   if (!HOLDING_KINDS.includes(input.kind)) return { error: t('invest.errKind') }
   const n = validateAccountName(String(input.name), accounts)
   if (n.error) return { error: n.error }
   if (n.name.length > HOLDING_NAME_MAX) return { error: t('invest.errName', { max: HOLDING_NAME_MAX }) }
-  const fee = parseOpeningAmount(String(input.sellFeeText ?? '').trim())
+  const fee = parseFeePct(input.sellFeePctText)
   if (fee.error) return { error: fee.error }
   const account = newAccount(n.name, 'asset', 'other', now)
-  return { account, holding: { id: crypto.randomUUID(), name: n.name, kind: input.kind, nisa: !!input.nisa, currency: input.kind === 'us-stock' ? 'USD' : 'JPY', accountId: account.id, trades: [], quotes: [], ...(fee.amount > 0 && { sellFee: fee.amount }), createdAt: now } }
+  return { account, holding: { id: crypto.randomUUID(), name: n.name, kind: input.kind, nisa: !!input.nisa, currency: input.kind === 'us-stock' ? 'USD' : 'JPY', accountId: account.id, trades: [], quotes: [], ...(fee.pct > 0 && { sellFeePct: fee.pct }), createdAt: now } }
 }
 
 // NISA の印・売る時の手数料の見込みを直す。成功: { holding } / 失敗: { error }
-export function editHoldingMeta(h, { nisa, sellFeeText }) {
-  const fee = parseOpeningAmount(String(sellFeeText).trim())
+// ％を入れると sellFeePct にして、古い円（sellFee）は外す。空は、％があれば外して 0％に。古い円だけの銘柄は、空のままなら円を残す（0 と入れたら外す）
+export function editHoldingMeta(h, { nisa, sellFeePctText }) {
+  const fee = parseFeePct(sellFeePctText)
   if (fee.error) return { error: fee.error }
-  const { sellFee: _old, ...rest } = h
-  return { holding: { ...rest, nisa: !!nisa, ...(fee.amount > 0 && { sellFee: fee.amount }) } }
+  const keepYen = String(sellFeePctText ?? '').trim() === '' && !h.sellFeePct
+  const { sellFee, sellFeePct: _old, ...rest } = h
+  return { holding: { ...rest, nisa: !!nisa, ...(keepYen && sellFee > 0 && { sellFee }), ...(fee.pct > 0 && { sellFeePct: fee.pct }) } }
 }
 
 // 買う：仕訳（借方＝銘柄の科目、貸方＝払う口座。金額は手数料込みの取得原価）と、数量の記録（trade）。成功: { entries, holdings } / 失敗: { error }。渡したデータは変えない
@@ -251,7 +264,7 @@ export function estimateSell(data, h, { date, unitsText, feeText }) {
   const { held, cost } = costAt(data, h, date, u.units)
   if (u.units > held) return null
   const gross = quoteValue(h, u.units, q)
-  const f = feeText === undefined ? { amount: h.sellFee ?? 0 } : parseOpeningAmount(String(feeText).trim())
+  const f = feeText === undefined ? { amount: feeEstimate(h, gross) } : parseOpeningAmount(String(feeText).trim())
   const fee = f.error ? 0 : f.amount
   const tax = h.nisa ? 0 : Math.floor((Math.max(0, gross - fee - cost) * TAX_PPM) / 1000000)
   return { received: Math.max(0, gross - fee - tax), fee, tax }

@@ -16,7 +16,7 @@ const firstCash = (accounts) => { const list = cashAccounts(accounts); return (l
 
 // 銘柄を足す：名前・種類・NISA・売る時の手数料の見込み。銘柄ごとに資産の科目を 1 つ作る（investView.newHolding）
 function AddForm({ data, update, onDone }) {
-  const [f, setF] = useState({ kind: 'jp-stock', name: '', nisa: false, sellFeeText: '' })
+  const [f, setF] = useState({ kind: 'jp-stock', name: '', nisa: false, sellFeePctText: '' })
   const [error, setError] = useState('')
   const set = (k) => (e) => setF((s) => ({ ...s, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }))
   const submit = (e) => {
@@ -30,7 +30,7 @@ function AddForm({ data, update, onDone }) {
     <div className="b-loan-fields">
       <Field label={t('invest.fKind')}><select value={f.kind} onChange={set('kind')}>{HOLDING_KINDS.map((k) => <option key={k} value={k}>{t(KIND_LABELS[k])}</option>)}</select></Field>
       <Field label={t('invest.fName')}><input value={f.name} onChange={set('name')} /></Field>
-      <Field label={t('invest.fSellFee')}><input inputMode="numeric" value={f.sellFeeText} onChange={set('sellFeeText')} /></Field>
+      <Field label={t('invest.fSellFee')}><input inputMode="decimal" value={f.sellFeePctText} onChange={set('sellFeePctText')} /></Field>
     </div>
     <label className="b-check"><input type="checkbox" checked={f.nisa} onChange={set('nisa')} />{t('invest.fNisa')}</label>
     {error && <p className="error" role="alert">{error}</p>}
@@ -150,22 +150,22 @@ function Detail({ item, data, update, currency, readOnly, onRemoved }) {
   const { holding: h, cost, units, quote, value, gain, afterSale } = item
   const [buy, setBuy] = useState(() => ({ date: today(), units: '', amount: '', fromId: firstCash(data.accounts) }))
   const [quoteF, setQuoteF] = useState(() => ({ date: today(), price: '', rate: h.currency === 'USD' && quote ? hundredths(quote.rate) : '' })) // 為替レートは、前に入れた値を初めに入れておく
-  const [meta, setMeta] = useState(() => ({ nisa: h.nisa, sellFee: String(h.sellFee ?? '') }))
-  const [sell, setSell] = useState(() => ({ date: today(), units: '', received: '', fee: String(h.sellFee ?? ''), tax: '', toId: firstCash(data.accounts) }))
-  const [touched, setTouched] = useState({ received: false, tax: false }) // 手で直した欄は、見込みで上書きしない
+  const [meta, setMeta] = useState(() => ({ nisa: h.nisa, sellFeePct: h.sellFeePct ? hundredths(h.sellFeePct) : '' }))
+  const [sell, setSell] = useState(() => ({ date: today(), units: '', received: '', fee: h.sellFeePct ? '' : String(h.sellFee ?? ''), tax: '', toId: firstCash(data.accounts) }))
+  const [touched, setTouched] = useState({ received: false, tax: false, fee: false }) // 手で直した欄は、見込みで上書きしない
   const sellInput = (s) => ({ date: s.date, unitsText: s.units, receivedText: s.received, feeText: s.fee, taxText: s.tax, toId: s.toId })
   const sellPreview = computeSell(data, h, sellInput(sell))
   const setSellField = (k) => (e) => {
     const next = { ...sell, [k]: e.target.value }
-    const tc = { ...touched, ...(k === 'received' || k === 'tax' ? { [k]: true } : {}) }
+    const tc = { ...touched, ...(k === 'received' || k === 'tax' || k === 'fee' ? { [k]: true } : {}) }
     if (k === 'received' && !tc.tax) {
       const u = parseUnits(next.units)
       const r = Number(next.received)
       if (!u.error && Number.isInteger(r) && r >= 0) next.tax = String(taxFromReceived(r, costAt(data, h, next.date, u.units).cost, h.nisa))
     }
     if (['units', 'date', 'fee'].includes(k)) { // 数量・日付・手数料を変えたら、見込み（受け取った金額・税）を入れ直す
-      const est = estimateSell(data, h, { date: next.date, unitsText: next.units, feeText: next.fee })
-      if (est) { if (!tc.received) next.received = String(est.received); if (!tc.tax) next.tax = String(est.tax) }
+      const est = estimateSell(data, h, { date: next.date, unitsText: next.units, feeText: k === 'fee' || tc.fee ? next.fee : undefined }) // 手数料を手で直していなければ、見込み（時価 × ％）
+      if (est) { if (!tc.fee) next.fee = String(est.fee); if (!tc.received) next.received = String(est.received); if (!tc.tax) next.tax = String(est.tax) }
       else if (!tc.received && k === 'units') { next.received = ''; if (!tc.tax) next.tax = '' }
     }
     setSell(next)
@@ -177,8 +177,8 @@ function Detail({ item, data, update, currency, readOnly, onRemoved }) {
     const r = recordSell(data, h, sellInput(sell))
     if (r.error) { setError('sell', r.error); return }
     update({ ...data, accounts: r.accounts, entries: r.entries, holdings: r.holdings })
-    setSell({ ...sell, units: '', received: '', tax: '' })
-    setTouched({ received: false, tax: false })
+    setSell({ ...sell, units: '', received: '', tax: '', fee: h.sellFeePct ? '' : String(h.sellFee ?? '') })
+    setTouched({ received: false, tax: false, fee: false })
     setError('sell', '')
   }
   const [errors, setErrors] = useState({})
@@ -201,7 +201,7 @@ function Detail({ item, data, update, currency, readOnly, onRemoved }) {
     setError('quote', '')
   }
   const saveMeta = (next) => {
-    const r = editHoldingMeta(h, { nisa: next.nisa, sellFeeText: next.sellFee })
+    const r = editHoldingMeta(h, { nisa: next.nisa, sellFeePctText: next.sellFeePct })
     if (r.error) { setError('meta', r.error); return }
     replace(r.holding)
     setError('meta', '')
@@ -282,8 +282,9 @@ function Detail({ item, data, update, currency, readOnly, onRemoved }) {
       <h4>{t('invest.metaTitle')}</h4>
       <label className="b-check"><input type="checkbox" checked={meta.nisa} onChange={(e) => { const next = { ...meta, nisa: e.target.checked }; setMeta(next); saveMeta(next) }} />{t('invest.fNisa')}</label>
       <div className="b-loan-fields">
-        <Field label={t('invest.fSellFee')}><input inputMode="numeric" value={meta.sellFee} onChange={(e) => setMeta({ ...meta, sellFee: e.target.value })} onBlur={() => saveMeta(meta)} /></Field>
+        <Field label={t('invest.fSellFee')}><input inputMode="decimal" value={meta.sellFeePct} onChange={(e) => setMeta({ ...meta, sellFeePct: e.target.value })} onBlur={() => saveMeta(meta)} /></Field>
       </div>
+      {!h.sellFeePct && h.sellFee > 0 && <p className="note">{t('invest.legacyFee', { fee: formatMoney(h.sellFee, currency) })}</p>}
       {errors.meta && <p className="error" role="alert">{errors.meta}</p>}
       <div className="b-loan-actions"><button type="button" className="b-danger" onClick={remove}>{t('invest.remove')}</button></div>
     </div>}

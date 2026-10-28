@@ -331,7 +331,7 @@ function validLoan(l, accountsById) {
 // 投資の銘柄（holdings。v14）。銘柄ごとに、別々の資産の科目を 1 つ持つ（帳簿の残高＝取得原価）。
 // kind：jp-stock・us-stock・fund。通貨：米国株は USD、ほかは JPY。数量 units は 1/10000 単位の整数（1 以上）。
 // trades：{ id, date, side: buy|sell, units, entryIds（仕訳の id。仕訳が消えていても読める＝ほかの見た目で消せるため。数えるのは科目の残高）}。
-// sellFee（任意）：売る時の手数料の見込み（円・0 以上の整数）。price は、円は 1 円単位、ドルはセント。quotes：手で入れる価格 { date, price（通貨の 1/100。1 以上）, rate（米国株だけ必須。1 ドルあたりの円の 1/100。1 以上）}。同じ日の価格は 2 つ持たない
+// sellFeePct（任意）：売る時の手数料の見込み（％の 1/100・1〜10000 の整数。0.55％は 55）。sellFee（任意・古い形）：同じ見込みを円で持つ（0 以上の整数）。どちらもあれば sellFeePct を使う。price は、円は 1 円単位、ドルはセント。quotes：手で入れる価格 { date, price（通貨の 1/100。1 以上）, rate（米国株だけ必須。1 ドルあたりの円の 1/100。1 以上）}。同じ日の価格は 2 つ持たない
 const HOLDING_KINDS = ['jp-stock', 'us-stock', 'fund']
 const HOLDING_NAME_MAX = 30
 const validTrade = (x) =>
@@ -343,7 +343,7 @@ function validHolding(h, accountsById) {
   const usd = isObj(h) && h.kind === 'us-stock'
   return (
     isObj(h) && isStr(h.id) && HOLDING_KINDS.includes(h.kind) && isStr(h.name) && h.name.trim() !== '' && h.name.length <= HOLDING_NAME_MAX &&
-    typeof h.nisa === 'boolean' && h.currency === (usd ? 'USD' : 'JPY') && account?.type === 'asset' && (h.sellFee === undefined || (isInt(h.sellFee) && h.sellFee >= 0)) &&
+    typeof h.nisa === 'boolean' && h.currency === (usd ? 'USD' : 'JPY') && account?.type === 'asset' && (h.sellFee === undefined || (isInt(h.sellFee) && h.sellFee >= 0)) && (h.sellFeePct === undefined || (isInt(h.sellFeePct) && h.sellFeePct >= 1 && h.sellFeePct <= 10000)) &&
     Array.isArray(h.trades) && h.trades.every(validTrade) && unique(h.trades.map((x) => x.id)) &&
     Array.isArray(h.quotes) && h.quotes.every((x) => validQuote(x, usd)) && unique(h.quotes.map((x) => x.date)) && isStr(h.createdAt)
   )
