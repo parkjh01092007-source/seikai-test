@@ -1,6 +1,6 @@
 // データの読み書きはこのファイルだけで行う。保存先を変えるときはここだけ直す。
 import { t, getLanguage } from './text.js'
-import { ENTRY_PRESET_NAME_LOAD_MAX, ENTRY_HIDDEN_KEYS, makeInitialAccounts, addKeys, addCardRoles, addPresets, addLiving, addFixed, hasFixed, applySubscriptions, emptySettings, sanitizeSettings, defaultCurrency, isCurrency, budgetKindAllows, isBudgetMonth, LOAN_KINDS, LOAN_NAME_MAX, hasLivingMonth, livingAccount, TYPES, ROLES, LIABILITY_ROLES, PRESETS, KINDS, LIVING, SPECIAL_KEYS, isDate } from './ledgerLogic.js'
+import { USAGES, ENTRY_PRESET_NAME_LOAD_MAX, ENTRY_HIDDEN_KEYS, makeInitialAccounts, addKeys, addCardRoles, addPresets, addLiving, addFixed, hasFixed, applySubscriptions, emptySettings, sanitizeSettings, defaultCurrency, isCurrency, budgetKindAllows, isBudgetMonth, LOAN_KINDS, LOAN_NAME_MAX, hasLivingMonth, livingAccount, TYPES, ROLES, LIABILITY_ROLES, PRESETS, KINDS, LIVING, SPECIAL_KEYS, isDate } from './ledgerLogic.js'
 
 const KEY = 'orenoyome'
 export const SCHEMA_VERSION = 13
@@ -173,6 +173,8 @@ function validPreset(a, v8) {
 }
 
 // livingMonth：v9 から。収益の科目（調整益を除く）は same・next のどちらかを必ず持つ。ほかの科目と v8 以前は持たない
+// usage：v13 から。収益の科目（調整益を除く）だけが持てる任意の項目（持たなければ生活費。画面は、生活費を項目なしで保存する）
+const validUsage = (a, v13) => a.usage === undefined || (v13 && hasLivingMonth(a) && USAGES.includes(a.usage))
 const validLivingMonth = (a, v9) => (v9 && hasLivingMonth(a) ? LIVING.includes(a.livingMonth) : a.livingMonth === undefined)
 
 // fixed：v10 から。費用の科目（調整損を除く）は真偽値を必ず持つ。ほかの科目と v9 以前は持たない
@@ -190,7 +192,7 @@ function validAccount(a, v7, v8, v9, v10, v13) {
     TYPES.includes(a.type) &&
     (a.key === undefined || SPECIAL_KEYS.includes(a.key)) &&
     validRole(a, v7) && validCardDays(a, v7) &&
-    (!v7 || a.key !== 'credit-card' || a.role === 'card') && validPreset(a, v8) && validLivingMonth(a, v9) && validFixed(a, v10) && validRevolving(a, v13) &&
+    (!v7 || a.key !== 'credit-card' || a.role === 'card') && validPreset(a, v8) && validLivingMonth(a, v9) && validUsage(a, v13) && validFixed(a, v10) && validRevolving(a, v13) &&
     typeof a.active === 'boolean' && isStr(a.createdAt) && isStr(a.updatedAt)
   )
 }

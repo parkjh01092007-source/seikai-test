@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import './entries.css'
 import {
-  entryAccountOptions, validateEntryInput, livingAccount, defaultLiving, livingOnAccountChange, livingOptionLabel, newEntry, editEntry, lastCreditId, lastNormalEntry, copyInputFromEntry, presetToFormValues, presetSummary, canMarkNoSpend, isNoSpendShown, noSpendPickerDays, applyNoSpendPick, validateEntryPresetInput, newEntryPreset, canAddEntryPreset, markNoSpendDay, unmarkNoSpendDay, NO_SPEND_BACK_DAYS, favoriteOptionGroups, accountLabelWithType,
+  entryAccountOptions, validateEntryInput, livingAccount, usageOf, defaultLiving, livingOnAccountChange, livingOptionLabel, newEntry, editEntry, lastCreditId, lastNormalEntry, copyInputFromEntry, presetToFormValues, presetSummary, canMarkNoSpend, isNoSpendShown, noSpendPickerDays, applyNoSpendPick, validateEntryPresetInput, newEntryPreset, canAddEntryPreset, markNoSpendDay, unmarkNoSpendDay, NO_SPEND_BACK_DAYS, favoriteOptionGroups, accountLabelWithType,
   entriesOfMonth, groupEntriesByDate, groupByTens, canEditEntry, formatMoney, formatYen, currencyUnit, roadDays, isCard, PAY_DEFAULT, payInitial, payMarkText,
 } from '../ledgerLogic.js'
 import { today } from '../today.js'
@@ -179,7 +179,7 @@ export function EntryForm({ accounts, initial, submitLabel, submitIcon = 'plus',
   ) : null
   // 「前回と同じ入力」「今日は使っていない」「プリセットに追加」のボタン：新しい仕訳の枠（欄）の外、見出しの右端（群青の札・基本）／入力画面の上端（スマホ）に出す。quickHost（見出しの中の置き場所）があれば、そこへ移す。なければ、欄の中に出す
   const placeQuick = quickRow && quickHost ? createPortal(quickRow, quickHost) : quickRow
-  const showLiving = livingAccount(accounts, f.debitId, f.creditId) !== undefined // 収益の科目（調整益を除く）を選んだときだけ
+  const showLiving = usageOf(livingAccount(accounts, f.debitId, f.creditId)) === 'living' && livingAccount(accounts, f.debitId, f.creditId) !== undefined // 収益の科目（調整益を除く）で、使い道が生活費のときだけ
   const payCard = (basicPc || basicPhone) && !adding ? accounts.find((a) => a.id === f.creditId && isCard(a)) : undefined // 貸方がクレカのときだけ、支払い方法（一括／分割／リボ）を出す。基本の PC・スマホだけ
   useEffect(() => { onValues?.(f) }, [f]) // eslint-disable-line react-hooks/exhaustive-deps
 

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import './balance.css'
 import '../print.css'
-import { monthReport, livingBalance, balanceSheet, balanceTrend, netChangeReasons, balanceSheetColumns, profitLossRows, previousMonth, nextMonth, issuedLabel, formatYen, formatMoney, currencyUnit, roadDays, expenseBreakdown } from '../ledgerLogic.js'
+import { monthReport, livingBalance, balanceSheet, balanceTrend, netChangeReasons, USAGE_LABELS, balanceSheetColumns, profitLossRows, previousMonth, nextMonth, issuedLabel, formatYen, formatMoney, currencyUnit, roadDays, expenseBreakdown } from '../ledgerLogic.js'
 import { expenseBars, netBarParts } from '../monthlyView.js'
 import TrendLine from './TrendLine.jsx'
 import Tabs from './Tabs.jsx'
@@ -102,6 +102,9 @@ function BalanceSheetStack({ sheet }) {
 }
 
 // 生活費のやりくり（仕様 5.14）：数えた収入を1件ずつ（日付・科目・金額・先月入金／今月入金）、収入合計、支出合計。通常の表示だけ（印刷用表示には出さない）
+// 生活費に数えなかった収入（使い道が生活費でない科目）を、1 件ずつ灰色で（ないときは何も出さない）
+const otherUsage = (i) => t(USAGE_LABELS[i.usage])
+
 function LivingTable({ living, currency, showDifference = false }) {
   const day = (date) => date.slice(5).replace('-', '/')
   const paid = (l) => t(l === 'next' ? 'living.prevPaid' : 'living.thisPaid')
@@ -118,6 +121,8 @@ function LivingTable({ living, currency, showDifference = false }) {
         <tr className="total"><td>{t('monthly.livingIncomeTotal')}</td><td className={cls(living.incomeTotal)}>{formatMoney(living.incomeTotal, currency)}</td><td /></tr>
         <tr className="total"><td>{t('monthly.livingExpenseTotal')}</td><td>{formatMoney(living.expenseTotal, currency)}</td><td /></tr>
         {showDifference && <tr className="total"><td>{t('basicPc.difference')}</td><td className={cls(living.result)}>{formatMoney(living.result, currency)}</td><td /></tr>}
+        {living.others.items.length > 0 && <tr className="other-head"><td colSpan="3">{t('monthly.livingOthersHead')}</td></tr>}
+        {living.others.items.map((i, n) => <tr key={`o${n}`} className="other"><td className="wrap">{i.date.slice(5).replace('-', '/')} {i.account.name}</td><td className={cls(i.amount)}>{formatMoney(i.amount, currency)}</td><td className="text">{otherUsage(i)}</td></tr>)}
       </tbody>
     </table></div>
   )
@@ -138,6 +143,13 @@ function LivingList({ living, currency }) {
       ))}
       <li className="total"><span className="name">{t('monthly.livingIncomeTotal')}</span><span className={`value ${cls(living.incomeTotal)}`}>{formatMoney(living.incomeTotal, currency)}</span></li>
       <li className="total"><span className="name">{t('monthly.livingExpenseTotal')}</span><span className="value">{formatMoney(living.expenseTotal, currency)}</span></li>
+      {living.others.items.map((i, n) => (
+        <li key={`o${n}`} className="other">
+          <span className="name">{i.date.slice(5).replace('-', '/')} {i.account.name}</span>
+          <span className={`value ${cls(i.amount)}`}>{formatMoney(i.amount, currency)}</span>
+          <span className="sub">{otherUsage(i)}</span>
+        </li>
+      ))}
     </ul>
   )
 }
@@ -257,6 +269,7 @@ function BasicMonthly({ accounts, entries, loans, currency, month, setMonth, rep
   const livingPart = living && <section className="b-month-card b-month-living">
     <div className="b-month-heading"><h3>{t('monthly.livingTitle')}</h3><strong className={cls(living.result)}>{money(living.result)}</strong></div>
     <p>{t('monthly.livingFormula', { income: money(living.incomeTotal), expense: money(living.expenseTotal) })}</p>
+    {living.others.items.length > 0 && <p className="b-living-others">{t('monthly.livingOthers', { total: money(living.others.total), parts: ['saving', 'repay', 'special'].filter((u) => living.others.byUsage[u] !== 0).map((u) => t('monthly.livingOthersPart', { name: t(USAGE_LABELS[u]), amount: money(living.others.byUsage[u]) })).join(t('monthly.reasonJoin')) })}</p>}
     {living.items.length === 0 ? <p className="note">{t('monthly.livingNone')}</p> : phone ? <LivingList living={living} currency={currency} /> : <LivingTable living={living} currency={currency} />}
     {phone ? <details className="b-living-difference"><summary><span className="chev" aria-hidden="true">›</span>{t('monthly.livingDifferenceTitle')}</summary><p>{t('monthly.livingDifference')}</p></details> : <p className="note">{t('monthly.livingDifference')}</p>}
   </section>

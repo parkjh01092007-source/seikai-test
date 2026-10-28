@@ -427,6 +427,7 @@
   :root[data-theme='basic'] .ledger .acct-detail > .fixed-flag { gap: var(--b-space-2); color: var(--b-muted); font-size: var(--b-font-size); min-height: var(--b-phone-control); overflow-wrap: anywhere; }
   :root[data-theme='basic'] .ledger .acct-detail > .fixed-flag { min-width: var(--b-phone-control); }
   :root[data-theme='basic'] .ledger .acct-detail > .living-month select { font-size: var(--b-phone-font); }
+  :root[data-theme='basic'] .ledger .acct-detail > .usage-select .note { font-size: var(--b-font-small); }
   :root[data-theme='basic'] .ledger .acct-detail > .icon-only,
   :root[data-theme='basic'] .b-phone-skills .skill-row > .icon-only { border-color: var(--b-negative); color: var(--b-negative); background: var(--b-clear); }
 
@@ -582,6 +583,8 @@
   :root[data-theme='basic'] .b-month-redesign .b-trend-grid { stroke: var(--b-side-line); }
   :root[data-theme='basic'] .b-month-redesign .b-trend-chart .b-trend-point { fill: var(--b-text); }
   :root[data-theme='basic'] .b-month-redesign .b-trend-zero-negative { stroke-width: 1.5; }
+  :root[data-theme='basic'] .b-month-redesign .b-living-others { margin: var(--b-space-0); color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-month-redesign .b-month-living .rows2 > li.other { color: var(--b-muted); }
   :root[data-theme='basic'] .b-month-redesign .b-month-living .rows2 > li.total { background: var(--b-clear); font-weight: var(--b-weight-normal); border-top: 0; border-bottom: 1px solid var(--b-side-line); }
   :root[data-theme='basic'] .b-month-redesign .b-month-living .rows2 > li.total .name { font-weight: var(--b-weight-normal); }
   :root[data-theme='basic'] .b-month-redesign .b-net-bars { display: grid; gap: var(--b-space-1); margin: var(--b-space-3) 0 var(--b-space-2); }

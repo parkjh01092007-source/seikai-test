@@ -1119,6 +1119,17 @@ export default {
   'error.accountPrefixed': '{name}: {message}',
   'error.dayRange': '{label}은(는) 1~31의 숫자로 입력해 주세요',
   'error.dayOfMonth': '매월의 날은 1~31의 숫자로 입력해 주세요',
+  // 収入の使い道：仮訳（未監修）
+  'usage.label': '이 수입의 용도',
+  'usage.living': '생활비',
+  'usage.saving': '저축',
+  'usage.repay': '대출 상환',
+  'usage.special': '특별 지출',
+  'usage.note': '바꾸면 지난달의 생활비 수지에도 반영됩니다.',
+  'monthly.livingOthers': '생활비로 쓰지 않는 수입 {total}（{parts}）',
+  'monthly.livingOthersPart': '{name} {amount}',
+  'monthly.livingOthersHead': '생활비에 포함하지 않은 수입',
+  'error.usageInvalid': '수입 용도를 바꿀 수 없습니다（수익 계정에서만 바꿀 수 있습니다）', // 仮訳
   'error.cardNotFound': '카드를 찾을 수 없습니다',
   'error.adjustAccountsMissing': '조정이익・조정손실 계정과목을 찾을 수 없습니다',
   'error.actualEmpty': '실제 잔액을 입력해 주세요',

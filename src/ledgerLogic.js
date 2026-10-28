@@ -23,8 +23,20 @@ export const ROLE_LABELS = {
 export const KINDS = ['normal', 'opening', 'adjustment']
 // 生活費の月（仕様 3.9・5.14）。same＝受け取った月の生活費、next＝翌月の生活費
 export const LIVING = ['same', 'next']
+// 収入の使い道（収益の科目ごと。調整益を除く）：生活費／貯金／借入の返済／特別な出費。持っていない科目は 'living'（今と同じ）。生活費の収入だけが、月次の「生活費のやりくり」に数えられる
+export const USAGES = ['living', 'saving', 'repay', 'special']
 // 生活費の月の決まり（livingMonth）を持つ科目：収益のうち、調整益を除いたもの
 export const hasLivingMonth = (account) => account?.type === 'revenue' && account.key !== 'adjust-gain'
+export const usageOf = (account) => account?.usage ?? 'living'
+export const USAGE_LABELS = { living: 'usage.living', saving: 'usage.saving', repay: 'usage.repay', special: 'usage.special' } // 辞書のキー
+
+// 収益の科目の「この収入の使い道」を変える。'living'（今と同じ）にしたら項目を消す（持たないデータと同じ形に保つ）。変えると、過去の月の「生活費のやりくり」にも効く（仕訳ごとの印は付けない）。
+// 成功: { accounts } / 失敗: { error }。渡した accounts は変えない
+export function setUsage(accounts, accountId, usage, now = new Date().toISOString()) {
+  const account = accounts.find((a) => a.id === accountId)
+  if (!hasLivingMonth(account) || !USAGES.includes(usage)) return { error: t('error.usageInvalid') }
+  return { accounts: accounts.map((a) => (a.id === accountId ? (({ usage: _u, ...rest }) => ({ ...rest, ...(usage !== 'living' && { usage }), updatedAt: now }))(a) : a)) }
+}
 // 固定費の印（fixed。v10。docs/formulas.md）を持つ科目：費用のうち、調整損を除いたもの（調整損は日ごとの費用に入らない）
 export const hasFixed = (account) => account?.type === 'expense' && account.key !== 'adjust-loss'
 // 最初から固定費の初期科目（preset）と、移行で古い科目に付ける値。名前の一致では決めない（本人が作った「家賃」などは OFF から始まり、本人が ON にする）
@@ -178,7 +190,7 @@ export function validateAccountName(name, accounts, selfId) {
 // type を変えたら role を整える（asset は role 必須、liability は other、ほかは role なし）。締め日・引き落とし日は消える。
 // 収益にしたら生活費の月の決まりは same、収益から変えたら消える（区分を変えられるのは仕訳のない科目だけなので、仕訳には影響しない）
 export function changeType(account, type, role, now = new Date().toISOString()) {
-  const { role: _old, closingDay: _closing, payDay: _pay, livingMonth: _living, fixed: _fixed, ...rest } = account
+  const { role: _old, closingDay: _closing, payDay: _pay, livingMonth: _living, usage: _usage, fixed: _fixed, ...rest } = account
   return {
     ...rest, type,
     ...(type === 'asset' && { role: role ?? 'other' }), ...(type === 'liability' && { role: 'other' }),
@@ -218,21 +230,28 @@ export function livingOnAccountChange(accounts, before, after) {
 // 生活費のやりくり（仕様 5.14）。month の生活費になる収入（kind が normal で living を持つ仕訳）と、その月の支出を比べる。
 // same は日付の月、next は翌月の生活費。収益の科目が貸方なら +、借方（取り消し）なら −（両側が収益なら差し引き0）。調整益・開始残高・残高調整は数えない
 // items：{ id, date, account, amount, living }（日付順）。expenseTotal は monthReport と同じ（開始残高・残高調整は入らない）
+// 使い道が生活費でない科目（usage が saving・repay・special）の収入は、items・incomeTotal に入れず、others に分ける：{ total, byUsage: { saving, repay, special }, items（items と同じ形に usage つき）}。月の決め方（same・next）は同じ
 export function livingBalance(entries, accounts, month) {
   const byId = new Map(accounts.map((a) => [a.id, a]))
   const items = []
+  const others = { total: 0, byUsage: { saving: 0, repay: 0, special: 0 }, items: [] }
   for (const e of [...entries].sort(byDateThenCreated)) {
     if (e.kind !== 'normal' || !LIVING.includes(e.living)) continue
     const m = e.date.slice(0, 7)
     if ((e.living === 'next' ? nextMonth(m) : m) !== month) continue
     for (const [id, sign] of [[e.creditId, 1], [e.debitId, -1]]) {
       const account = byId.get(id)
-      if (hasLivingMonth(account)) items.push({ id: e.id, date: e.date, account, amount: sign * e.amount, living: e.living })
+      if (!hasLivingMonth(account)) continue
+      const usage = usageOf(account)
+      if (usage === 'living') { items.push({ id: e.id, date: e.date, account, amount: sign * e.amount, living: e.living }); continue }
+      others.items.push({ id: e.id, date: e.date, account, amount: sign * e.amount, living: e.living, usage })
+      others.byUsage[usage] += sign * e.amount
+      others.total += sign * e.amount
     }
   }
   const incomeTotal = sum(items, (i) => i.amount)
   const expenseTotal = monthReport(accounts, entries, month).expenseTotal
-  return { items, incomeTotal, expenseTotal, result: incomeTotal - expenseTotal }
+  return { items, incomeTotal, expenseTotal, result: incomeTotal - expenseTotal, others }
 }
 
 // v8 → v9：収益の科目（調整益を除く）に same、それを使う通常の仕訳に same を付ける。持っているものは変えない。元の配列は変えない

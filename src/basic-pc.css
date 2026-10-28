@@ -211,6 +211,9 @@
   :root[data-theme='basic'] .b-month-redesign .b-trend-grid { stroke: var(--b-side-line); }
   :root[data-theme='basic'] .b-month-redesign .b-trend-chart .b-trend-point { fill: var(--b-text); }
   :root[data-theme='basic'] .b-month-redesign .b-trend-zero-negative { stroke-width: 1.5; }
+  :root[data-theme='basic'] .b-month-redesign .b-living-others { margin: var(--b-space-0); color: var(--b-muted); font-size: var(--b-font-small); }
+  :root[data-theme='basic'] .b-month-redesign .b-month-living tr.other td { color: var(--b-muted); }
+  :root[data-theme='basic'] .b-month-redesign .b-month-living tr.other-head td { padding-top: var(--b-space-4); color: var(--b-muted); font-size: var(--b-font-small); }
   :root[data-theme='basic'] .b-month-redesign .b-month-living tr.total td { background: var(--b-clear); font-weight: var(--b-weight-normal); border-top: 0; border-bottom: 1px solid var(--b-side-line); }
   :root[data-theme='basic'] .b-month-redesign .b-net-bars { display: grid; gap: var(--b-space-1); margin: var(--b-space-3) 0 var(--b-space-2); }
   :root[data-theme='basic'] .b-month-redesign .b-net-bar { display: flex; height: var(--b-space-3); background: var(--b-table-head); overflow: hidden; margin-top: var(--b-space-2); }

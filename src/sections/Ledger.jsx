@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import './ledger.css'
 import {
   TYPES, TYPE_LABELS, ROLES, ROLE_LABELS, newAccount, changeType, validateAccountName,
-  isProtected, hasLivingMonth, hasFixed, canDeleteAccount, canChangeType, canChangeRole, hasBudget, removeAccountFromSettings, presetsUsingAccount, removeAccountFromPresets,
+  isProtected, hasLivingMonth, usageOf, setUsage, USAGES, USAGE_LABELS, hasFixed, canDeleteAccount, canChangeType, canChangeRole, hasBudget, removeAccountFromSettings, presetsUsingAccount, removeAccountFromPresets,
 } from '../ledgerLogic.js'
 import { t } from '../text.js'
 import { useConfirm } from './ConfirmDialog.jsx'
@@ -11,6 +11,7 @@ import { usePhone } from '../layout.js'
 import { Icon, IconButton } from './Icon.jsx'
 import { useGunjoPc } from '../gunjoPc.js'
 import { useBasicPc } from '../basicPc.js'
+import { useBasicPhone } from '../basicPhone.js'
 import { useBandHost } from './bandHost.js'
 import { BandStat } from './PageBand.jsx'
 
@@ -37,6 +38,9 @@ function AccountEditor({ account, accounts, entries, subscriptions, budgets, ent
   const confirm = useConfirm()
   const gunjoPc = useGunjoPc() // 群青の PC：部品の間の空白を描かない（間は 12px の余白だけ）
   const sp = gunjoPc ? null : ' '
+  const basicPc = useBasicPc()
+  const basicPhone = useBasicPhone()
+  const basic = basicPc || basicPhone // 基本のテーマだけ、収入の使い道の選択を出す
   const locked = isProtected(account)
   const deletable = canDeleteAccount(account, entries, subscriptions, budgets)
   const typeEditable = canChangeType(account, entries, subscriptions, budgets)
@@ -66,7 +70,12 @@ function AccountEditor({ account, accounts, entries, subscriptions, budgets, ent
       {account.type === 'liability' && (
         <span className="note">{sp}{ROLE_LABELS[account.role]}{account.role === 'card' && t('ledger.cardDays', { closing: account.closingDay, pay: account.payDay })}</span>
       )}{sp}
-      {hasLivingMonth(account) && (
+      {basic && hasLivingMonth(account) && (
+        <label className="living-month usage-select">{t('usage.label')} <select value={usageOf(account)} onChange={(e) => onChange(setUsage([account], account.id, e.target.value).accounts[0])}>
+          {USAGES.map((u) => <option key={u} value={u}>{t(USAGE_LABELS[u])}</option>)}
+        </select><span className="note">{t('usage.note')}</span></label>
+      )}{sp}
+      {hasLivingMonth(account) && usageOf(account) === 'living' && (
         <label className="living-month">{t('living.month')} <select value={account.livingMonth} onChange={(e) => touch({ livingMonth: e.target.value })}>
           <option value="same">{t('living.same')}</option>
           <option value="next">{t('living.next')}</option>
