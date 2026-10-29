@@ -1,9 +1,9 @@
 import { useRef } from 'react'
-import { PRESET_ICON_PICKER, PRESET_ICON_LABELS } from '../icons.js'
+import { PRESET_ICON_PICKER, PRESET_ICON_LABELS, PRESET_ICON_DEFAULT } from '../icons.js'
 import { t } from '../text.js'
 import { Icon } from './Icon.jsx'
 
-// 記号の選択（radiogroup。矢印で移動）。used：ほかのプリセットが使っている記号（小さい点を出す。選べはする）。選んだものは反転
+// 記号の選択（radiogroup。矢印で移動）。used：ほかのプリセットが使っている記号（小さい点を出す。選べはする）。選んだものは反転。選んだ記号をもう一度押すと外れる（初めの記号に戻る）
 export default function IconPicker({ value, onChange, used }) {
   const ref = useRef(null)
   const ids = PRESET_ICON_PICKER
@@ -27,7 +27,7 @@ export default function IconPicker({ value, onChange, used }) {
           <span key={id} className="pset-icon-cell">{/* span で包む：群青の PC の「隣り合う部品は余白で 12px」規則に、格子を巻き込まないため（間は格子の gap） */}
           <button type="button" role="radio" aria-checked={on} data-icon={id} tabIndex={id === tab ? 0 : -1}
             className={`icon-only pset-icon-opt${on ? ' on' : ''}${dup ? ' used' : ''}`}
-            aria-label={label} title={label} onClick={() => onChange(id)}>
+            aria-label={label} title={label} onClick={() => onChange(on ? PRESET_ICON_DEFAULT : id)}>
             <Icon name={id} />{dup && <i className="pset-dot" aria-hidden="true" />}
           </button>
           </span>

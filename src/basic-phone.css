@@ -339,7 +339,8 @@
   :root[data-theme='basic'] .settings .pset-icons { gap: var(--b-space-2); }
   :root[data-theme='basic'] .settings button.icon-only { width: var(--b-phone-control); height: var(--b-phone-control); padding: var(--b-space-0); }
   /* 汎用buttonの白い面を上書き：記号の選択中の反転と使用済みの点を残す。 */
-  :root[data-theme='basic'] .settings .pset-icon-opt.on { border-color: var(--b-navy); background: var(--b-navy); color: var(--b-surface); }
+  :root[data-theme='basic'] .settings .pset-icon-opt.on,
+  :root[data-theme='basic'] .b-phone-entries .sheet .pset-icon-opt.on { border-color: var(--b-navy); background: var(--b-active-bg); box-shadow: inset 0 0 0 1px var(--b-navy); color: var(--b-navy); }
   :root[data-theme='basic'] .settings .pset-dot { background: currentColor; }
   :root[data-theme='basic'] .settings .pset-submit { border-color: var(--b-navy); background: var(--b-navy); color: var(--b-surface); font-weight: var(--b-weight-bold); }
   :root[data-theme='basic'] .settings .save-settings .row { padding-block: var(--b-space-2); border-bottom: 1px solid var(--b-side-line); }
