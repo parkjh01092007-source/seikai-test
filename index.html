@@ -5,6 +5,8 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <!-- 読み込みを許す先だけを決める（CSP）。スクリプト・書体・画像・manifest・service worker は、自分のサイトだけ。通信は、自分のサイトと Google ドライブ（www.googleapis.com）だけ。ログインの画面（accounts.google.com）へは、ページごと移るので、ここには要らない。インラインのスクリプトは使わない（開発用の vite dev だけが要るので、vite.config.js が、開発のときだけこの 1 行を外す）。style-src の 'unsafe-inline' は、画面の style 属性（棒の長さなど）のため -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://www.googleapis.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>正解</title>
   </head>
